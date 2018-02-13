@@ -299,26 +299,6 @@
       <pos x="780" y="420"/>
     </visualElement>
     <visualElement>
-      <elementName>And</elementName>
-      <elementAttributes>
-        <entry>
-          <string>rotation</string>
-          <rotation rotation="1"/>
-        </entry>
-        <entry>
-          <string>Bits</string>
-          <int>3</int>
-        </entry>
-        <entry>
-          <string>inverterConfig</string>
-          <inverterConfig>
-            <string>In_1</string>
-          </inverterConfig>
-        </entry>
-      </elementAttributes>
-      <pos x="1020" y="940"/>
-    </visualElement>
-    <visualElement>
       <elementName>D_FF</elementName>
       <elementAttributes>
         <entry>
@@ -781,20 +761,6 @@ on write</string>
         </entry>
       </elementAttributes>
       <pos x="1540" y="1880"/>
-    </visualElement>
-    <visualElement>
-      <elementName>Splitter</elementName>
-      <elementAttributes>
-        <entry>
-          <string>Input Splitting</string>
-          <string>1*3</string>
-        </entry>
-        <entry>
-          <string>Output Splitting</string>
-          <string>3</string>
-        </entry>
-      </elementAttributes>
-      <pos x="1000" y="980"/>
     </visualElement>
     <visualElement>
       <elementName>And</elementName>
@@ -1372,10 +1338,6 @@ not just on rising edge</string>
       <p2 x="2200" y="1280"/>
     </wire>
     <wire>
-      <p1 x="980" y="1280"/>
-      <p2 x="1760" y="1280"/>
-    </wire>
-    <wire>
       <p1 x="2320" y="1280"/>
       <p2 x="2340" y="1280"/>
     </wire>
@@ -1616,6 +1578,10 @@ not just on rising edge</string>
       <p2 x="2100" y="940"/>
     </wire>
     <wire>
+      <p1 x="1040" y="940"/>
+      <p2 x="1060" y="940"/>
+    </wire>
+    <wire>
       <p1 x="2100" y="940"/>
       <p2 x="2200" y="940"/>
     </wire>
@@ -1820,10 +1786,6 @@ not just on rising edge</string>
       <p2 x="1520" y="980"/>
     </wire>
     <wire>
-      <p1 x="980" y="980"/>
-      <p2 x="1000" y="980"/>
-    </wire>
-    <wire>
       <p1 x="540" y="1620"/>
       <p2 x="780" y="1620"/>
     </wire>
@@ -1968,10 +1930,6 @@ not just on rising edge</string>
       <p2 x="2240" y="1000"/>
     </wire>
     <wire>
-      <p1 x="980" y="1000"/>
-      <p2 x="1000" y="1000"/>
-    </wire>
-    <wire>
       <p1 x="820" y="1640"/>
       <p2 x="840" y="1640"/>
     </wire>
@@ -2092,10 +2050,6 @@ not just on rising edge</string>
       <p2 x="2100" y="1020"/>
     </wire>
     <wire>
-      <p1 x="980" y="1020"/>
-      <p2 x="1000" y="1020"/>
-    </wire>
-    <wire>
       <p1 x="1400" y="1660"/>
       <p2 x="1520" y="1660"/>
     </wire>
@@ -2181,7 +2135,7 @@ not just on rising edge</string>
     </wire>
     <wire>
       <p1 x="1040" y="460"/>
-      <p2 x="1040" y="880"/>
+      <p2 x="1040" y="940"/>
     </wire>
     <wire>
       <p1 x="1680" y="1440"/>
@@ -2496,20 +2450,8 @@ not just on rising edge</string>
       <p2 x="980" y="500"/>
     </wire>
     <wire>
-      <p1 x="980" y="980"/>
-      <p2 x="980" y="1000"/>
-    </wire>
-    <wire>
       <p1 x="980" y="1600"/>
       <p2 x="980" y="1640"/>
-    </wire>
-    <wire>
-      <p1 x="980" y="1000"/>
-      <p2 x="980" y="1020"/>
-    </wire>
-    <wire>
-      <p1 x="980" y="1020"/>
-      <p2 x="980" y="1280"/>
     </wire>
     <wire>
       <p1 x="980" y="1640"/>
@@ -2578,10 +2520,6 @@ not just on rising edge</string>
     <wire>
       <p1 x="1760" y="800"/>
       <p2 x="1760" y="860"/>
-    </wire>
-    <wire>
-      <p1 x="1760" y="1280"/>
-      <p2 x="1760" y="1560"/>
     </wire>
     <wire>
       <p1 x="1760" y="1560"/>
@@ -2718,10 +2656,6 @@ not just on rising edge</string>
     <wire>
       <p1 x="1020" y="440"/>
       <p2 x="1020" y="740"/>
-    </wire>
-    <wire>
-      <p1 x="1020" y="960"/>
-      <p2 x="1020" y="980"/>
     </wire>
   </wires>
   <measurementOrdering>
