@@ -254,20 +254,20 @@
       <elementAttributes>
         <entry>
           <string>Label</string>
-          <string>10</string>
+          <string>9</string>
         </entry>
       </elementAttributes>
-      <pos x="820" y="300"/>
+      <pos x="760" y="560"/>
     </visualElement>
     <visualElement>
       <elementName>Out</elementName>
       <elementAttributes>
         <entry>
           <string>Label</string>
-          <string>9</string>
+          <string>10</string>
         </entry>
       </elementAttributes>
-      <pos x="760" y="560"/>
+      <pos x="820" y="300"/>
     </visualElement>
     <visualElement>
       <elementName>Out</elementName>
