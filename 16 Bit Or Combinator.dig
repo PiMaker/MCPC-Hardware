@@ -25,6 +25,10 @@
           <string>16</string>
         </entry>
         <entry>
+          <string>isHighZ</string>
+          <boolean>true</boolean>
+        </entry>
+        <entry>
           <string>Output Splitting</string>
           <string>1*16</string>
         </entry>
