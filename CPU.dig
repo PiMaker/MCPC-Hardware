@@ -20,7 +20,7 @@
         </entry>
         <entry>
           <string>Data</string>
-          <data size="131072">5,e4</data>
+          <data size="131072">3,6,ff,fe,d3,3b,5,3a,5b,33</data>
         </entry>
         <entry>
           <string>inverterConfig</string>
@@ -30,7 +30,7 @@
         </entry>
         <entry>
           <string>lastDataFile</string>
-          <string>E:\Repos\MCPC\Programs\test_SET.hex</string>
+          <string>E:\Repos\MCPC\Programs\test_ALU_ADD.hex</string>
         </entry>
       </elementAttributes>
       <pos x="680" y="240"/>
@@ -322,8 +322,12 @@
       <elementName>Clock</elementName>
       <elementAttributes>
         <entry>
+          <string>runRealTime</string>
+          <boolean>true</boolean>
+        </entry>
+        <entry>
           <string>Frequency</string>
-          <int>5</int>
+          <int>20</int>
         </entry>
       </elementAttributes>
       <pos x="200" y="-640"/>
@@ -841,14 +845,14 @@
       <elementAttributes>
         <entry>
           <string>rotation</string>
-          <rotation rotation="2"/>
+          <rotation rotation="1"/>
         </entry>
         <entry>
           <string>NetName</string>
           <string>IF_EN</string>
         </entry>
       </elementAttributes>
-      <pos x="-500" y="-160"/>
+      <pos x="-480" y="-300"/>
     </visualElement>
     <visualElement>
       <elementName>LED</elementName>
@@ -1746,6 +1750,316 @@ therefore it can be abused as literal for BUS addr.</string>
       </elementAttributes>
       <pos x="-200" y="-320"/>
     </visualElement>
+    <visualElement>
+      <elementName>And</elementName>
+      <elementAttributes>
+        <entry>
+          <string>inverterConfig</string>
+          <inverterConfig>
+            <string>In_2</string>
+          </inverterConfig>
+        </entry>
+      </elementAttributes>
+      <pos x="1540" y="20"/>
+    </visualElement>
+    <visualElement>
+      <elementName>ALU.dig</elementName>
+      <elementAttributes/>
+      <pos x="2380" y="480"/>
+    </visualElement>
+    <visualElement>
+      <elementName>Splitter</elementName>
+      <elementAttributes>
+        <entry>
+          <string>Input Splitting</string>
+          <string>1*8</string>
+        </entry>
+      </elementAttributes>
+      <pos x="1440" y="-200"/>
+    </visualElement>
+    <visualElement>
+      <elementName>Or</elementName>
+      <elementAttributes>
+        <entry>
+          <string>rotation</string>
+          <rotation rotation="3"/>
+        </entry>
+      </elementAttributes>
+      <pos x="-480" y="-280"/>
+    </visualElement>
+    <visualElement>
+      <elementName>Tunnel</elementName>
+      <elementAttributes>
+        <entry>
+          <string>rotation</string>
+          <rotation rotation="1"/>
+        </entry>
+        <entry>
+          <string>NetName</string>
+          <string>ALU_IF_EN</string>
+        </entry>
+      </elementAttributes>
+      <pos x="-520" y="-300"/>
+    </visualElement>
+    <visualElement>
+      <elementName>Tunnel</elementName>
+      <elementAttributes>
+        <entry>
+          <string>NetName</string>
+          <string>DATA_WRITE</string>
+        </entry>
+      </elementAttributes>
+      <pos x="2580" y="520"/>
+    </visualElement>
+    <visualElement>
+      <elementName>Driver</elementName>
+      <elementAttributes>
+        <entry>
+          <string>Bits</string>
+          <int>16</int>
+        </entry>
+      </elementAttributes>
+      <pos x="2540" y="520"/>
+    </visualElement>
+    <visualElement>
+      <elementName>Tunnel</elementName>
+      <elementAttributes>
+        <entry>
+          <string>rotation</string>
+          <rotation rotation="2"/>
+        </entry>
+        <entry>
+          <string>NetName</string>
+          <string>CLK</string>
+        </entry>
+      </elementAttributes>
+      <pos x="1880" y="280"/>
+    </visualElement>
+    <visualElement>
+      <elementName>Counter</elementName>
+      <elementAttributes>
+        <entry>
+          <string>Bits</string>
+          <int>2</int>
+        </entry>
+      </elementAttributes>
+      <pos x="1900" y="260"/>
+    </visualElement>
+    <visualElement>
+      <elementName>Tunnel</elementName>
+      <elementAttributes>
+        <entry>
+          <string>rotation</string>
+          <rotation rotation="3"/>
+        </entry>
+        <entry>
+          <string>NetName</string>
+          <string>CONT_ALU</string>
+        </entry>
+      </elementAttributes>
+      <pos x="2040" y="360"/>
+    </visualElement>
+    <visualElement>
+      <elementName>Or</elementName>
+      <elementAttributes/>
+      <pos x="1760" y="280"/>
+    </visualElement>
+    <visualElement>
+      <elementName>Tunnel</elementName>
+      <elementAttributes>
+        <entry>
+          <string>rotation</string>
+          <rotation rotation="2"/>
+        </entry>
+        <entry>
+          <string>NetName</string>
+          <string>RST</string>
+        </entry>
+      </elementAttributes>
+      <pos x="1740" y="280"/>
+    </visualElement>
+    <visualElement>
+      <elementName>Decoder</elementName>
+      <elementAttributes>
+        <entry>
+          <string>Selector Bits</string>
+          <int>2</int>
+        </entry>
+        <entry>
+          <string>rotation</string>
+          <rotation rotation="3"/>
+        </entry>
+      </elementAttributes>
+      <pos x="2100" y="240"/>
+    </visualElement>
+    <visualElement>
+      <elementName>Tunnel</elementName>
+      <elementAttributes>
+        <entry>
+          <string>rotation</string>
+          <rotation rotation="3"/>
+        </entry>
+        <entry>
+          <string>NetName</string>
+          <string>CONT_ALU</string>
+        </entry>
+      </elementAttributes>
+      <pos x="1360" y="400"/>
+    </visualElement>
+    <visualElement>
+      <elementName>D_FF</elementName>
+      <elementAttributes>
+        <entry>
+          <string>Bits</string>
+          <int>16</int>
+        </entry>
+      </elementAttributes>
+      <pos x="2240" y="460"/>
+    </visualElement>
+    <visualElement>
+      <elementName>D_FF</elementName>
+      <elementAttributes>
+        <entry>
+          <string>Bits</string>
+          <int>16</int>
+        </entry>
+      </elementAttributes>
+      <pos x="2240" y="520"/>
+    </visualElement>
+    <visualElement>
+      <elementName>Tunnel</elementName>
+      <elementAttributes>
+        <entry>
+          <string>NetName</string>
+          <string>ALU_IF_EN</string>
+        </entry>
+      </elementAttributes>
+      <pos x="2120" y="400"/>
+    </visualElement>
+    <visualElement>
+      <elementName>Tunnel</elementName>
+      <elementAttributes>
+        <entry>
+          <string>rotation</string>
+          <rotation rotation="2"/>
+        </entry>
+        <entry>
+          <string>NetName</string>
+          <string>DATA_READ</string>
+        </entry>
+      </elementAttributes>
+      <pos x="1980" y="520"/>
+    </visualElement>
+    <visualElement>
+      <elementName>Or</elementName>
+      <elementAttributes/>
+      <pos x="-160" y="360"/>
+    </visualElement>
+    <visualElement>
+      <elementName>Tunnel</elementName>
+      <elementAttributes>
+        <entry>
+          <string>rotation</string>
+          <rotation rotation="2"/>
+        </entry>
+        <entry>
+          <string>NetName</string>
+          <string>CONT_ALU</string>
+        </entry>
+      </elementAttributes>
+      <pos x="-200" y="440"/>
+    </visualElement>
+    <visualElement>
+      <elementName>Seven-Seg-Hex</elementName>
+      <elementAttributes/>
+      <pos x="-380" y="-740"/>
+    </visualElement>
+    <visualElement>
+      <elementName>Seven-Seg-Hex</elementName>
+      <elementAttributes/>
+      <pos x="-280" y="-740"/>
+    </visualElement>
+    <visualElement>
+      <elementName>Seven-Seg-Hex</elementName>
+      <elementAttributes/>
+      <pos x="-180" y="-740"/>
+    </visualElement>
+    <visualElement>
+      <elementName>Seven-Seg-Hex</elementName>
+      <elementAttributes/>
+      <pos x="-80" y="-740"/>
+    </visualElement>
+    <visualElement>
+      <elementName>Tunnel</elementName>
+      <elementAttributes>
+        <entry>
+          <string>rotation</string>
+          <rotation rotation="2"/>
+        </entry>
+        <entry>
+          <string>NetName</string>
+          <string>PC_OUT</string>
+        </entry>
+      </elementAttributes>
+      <pos x="-480" y="-580"/>
+    </visualElement>
+    <visualElement>
+      <elementName>Splitter</elementName>
+      <elementAttributes>
+        <entry>
+          <string>Input Splitting</string>
+          <string>16</string>
+        </entry>
+        <entry>
+          <string>Output Splitting</string>
+          <string>12-15,8-11,4-7,0-3</string>
+        </entry>
+      </elementAttributes>
+      <pos x="-460" y="-580"/>
+    </visualElement>
+    <visualElement>
+      <elementName>Const</elementName>
+      <elementAttributes>
+        <entry>
+          <string>rotation</string>
+          <rotation rotation="1"/>
+        </entry>
+        <entry>
+          <string>Value</string>
+          <long>0</long>
+        </entry>
+      </elementAttributes>
+      <pos x="-120" y="-560"/>
+    </visualElement>
+    <visualElement>
+      <elementName>Tunnel</elementName>
+      <elementAttributes>
+        <entry>
+          <string>rotation</string>
+          <rotation rotation="3"/>
+        </entry>
+        <entry>
+          <string>NetName</string>
+          <string>PC_OUT</string>
+        </entry>
+      </elementAttributes>
+      <pos x="0" y="-80"/>
+    </visualElement>
+    <visualElement>
+      <elementName>Text</elementName>
+      <elementAttributes>
+        <entry>
+          <string>textFontSize</string>
+          <int>32</int>
+        </entry>
+        <entry>
+          <string>Description</string>
+          <string>Program
+Counter:</string>
+        </entry>
+      </elementAttributes>
+      <pos x="-540" y="-700"/>
+    </visualElement>
   </visualElements>
   <wires>
     <wire>
@@ -1797,8 +2111,48 @@ therefore it can be abused as literal for BUS addr.</string>
       <p2 x="-160" y="260"/>
     </wire>
     <wire>
+      <p1 x="1960" y="260"/>
+      <p2 x="2040" y="260"/>
+    </wire>
+    <wire>
+      <p1 x="1660" y="260"/>
+      <p2 x="1900" y="260"/>
+    </wire>
+    <wire>
+      <p1 x="-300" y="-520"/>
+      <p2 x="380" y="-520"/>
+    </wire>
+    <wire>
+      <p1 x="-440" y="-520"/>
+      <p2 x="-400" y="-520"/>
+    </wire>
+    <wire>
       <p1 x="-440" y="520"/>
       <p2 x="1440" y="520"/>
+    </wire>
+    <wire>
+      <p1 x="2500" y="520"/>
+      <p2 x="2520" y="520"/>
+    </wire>
+    <wire>
+      <p1 x="2560" y="520"/>
+      <p2 x="2580" y="520"/>
+    </wire>
+    <wire>
+      <p1 x="2300" y="520"/>
+      <p2 x="2320" y="520"/>
+    </wire>
+    <wire>
+      <p1 x="1980" y="520"/>
+      <p2 x="2220" y="520"/>
+    </wire>
+    <wire>
+      <p1 x="2340" y="520"/>
+      <p2 x="2380" y="520"/>
+    </wire>
+    <wire>
+      <p1 x="2220" y="520"/>
+      <p2 x="2240" y="520"/>
     </wire>
     <wire>
       <p1 x="400" y="-140"/>
@@ -1815,6 +2169,10 @@ therefore it can be abused as literal for BUS addr.</string>
     <wire>
       <p1 x="-200" y="-140"/>
       <p2 x="0" y="-140"/>
+    </wire>
+    <wire>
+      <p1 x="1420" y="-140"/>
+      <p2 x="1440" y="-140"/>
     </wire>
     <wire>
       <p1 x="180" y="140"/>
@@ -1869,6 +2227,14 @@ therefore it can be abused as literal for BUS addr.</string>
       <p2 x="-240" y="400"/>
     </wire>
     <wire>
+      <p1 x="2080" y="400"/>
+      <p2 x="2120" y="400"/>
+    </wire>
+    <wire>
+      <p1 x="-180" y="400"/>
+      <p2 x="-160" y="400"/>
+    </wire>
+    <wire>
       <p1 x="340" y="400"/>
       <p2 x="400" y="400"/>
     </wire>
@@ -1907,6 +2273,10 @@ therefore it can be abused as literal for BUS addr.</string>
     <wire>
       <p1 x="2060" y="20"/>
       <p2 x="2080" y="20"/>
+    </wire>
+    <wire>
+      <p1 x="1420" y="20"/>
+      <p2 x="1540" y="20"/>
     </wire>
     <wire>
       <p1 x="1180" y="-280"/>
@@ -1949,20 +2319,40 @@ therefore it can be abused as literal for BUS addr.</string>
       <p2 x="-240" y="280"/>
     </wire>
     <wire>
-      <p1 x="800" y="280"/>
-      <p2 x="960" y="280"/>
+      <p1 x="1880" y="280"/>
+      <p2 x="1900" y="280"/>
     </wire>
     <wire>
-      <p1 x="-300" y="-540"/>
-      <p2 x="380" y="-540"/>
+      <p1 x="1740" y="280"/>
+      <p2 x="1760" y="280"/>
+    </wire>
+    <wire>
+      <p1 x="800" y="280"/>
+      <p2 x="960" y="280"/>
     </wire>
     <wire>
       <p1 x="440" y="-540"/>
       <p2 x="780" y="-540"/>
     </wire>
     <wire>
+      <p1 x="-440" y="-540"/>
+      <p2 x="-140" y="-540"/>
+    </wire>
+    <wire>
+      <p1 x="-80" y="-540"/>
+      <p2 x="-40" y="-540"/>
+    </wire>
+    <wire>
       <p1 x="-500" y="540"/>
       <p2 x="1460" y="540"/>
+    </wire>
+    <wire>
+      <p1 x="2060" y="540"/>
+      <p2 x="2240" y="540"/>
+    </wire>
+    <wire>
+      <p1 x="2320" y="540"/>
+      <p2 x="2380" y="540"/>
     </wire>
     <wire>
       <p1 x="380" y="-160"/>
@@ -1981,12 +2371,16 @@ therefore it can be abused as literal for BUS addr.</string>
       <p2 x="2260" y="-160"/>
     </wire>
     <wire>
-      <p1 x="-480" y="-160"/>
-      <p2 x="-460" y="-160"/>
+      <p1 x="1420" y="-160"/>
+      <p2 x="1440" y="-160"/>
     </wire>
     <wire>
       <p1 x="2260" y="-160"/>
       <p2 x="2280" y="-160"/>
+    </wire>
+    <wire>
+      <p1 x="-480" y="-160"/>
+      <p2 x="-460" y="-160"/>
     </wire>
     <wire>
       <p1 x="660" y="160"/>
@@ -2061,6 +2455,10 @@ therefore it can be abused as literal for BUS addr.</string>
       <p2 x="2000" y="40"/>
     </wire>
     <wire>
+      <p1 x="1600" y="40"/>
+      <p2 x="1660" y="40"/>
+    </wire>
+    <wire>
       <p1 x="280" y="40"/>
       <p2 x="540" y="40"/>
     </wire>
@@ -2093,6 +2491,10 @@ therefore it can be abused as literal for BUS addr.</string>
       <p2 x="2800" y="-300"/>
     </wire>
     <wire>
+      <p1 x="1820" y="300"/>
+      <p2 x="1900" y="300"/>
+    </wire>
+    <wire>
       <p1 x="580" y="300"/>
       <p2 x="680" y="300"/>
     </wire>
@@ -2105,8 +2507,20 @@ therefore it can be abused as literal for BUS addr.</string>
       <p2 x="80" y="300"/>
     </wire>
     <wire>
+      <p1 x="-440" y="-560"/>
+      <p2 x="-240" y="-560"/>
+    </wire>
+    <wire>
       <p1 x="-520" y="560"/>
       <p2 x="1480" y="560"/>
+    </wire>
+    <wire>
+      <p1 x="1620" y="560"/>
+      <p2 x="2340" y="560"/>
+    </wire>
+    <wire>
+      <p1 x="2360" y="560"/>
+      <p2 x="2380" y="560"/>
     </wire>
     <wire>
       <p1 x="680" y="-180"/>
@@ -2123,6 +2537,10 @@ therefore it can be abused as literal for BUS addr.</string>
     <wire>
       <p1 x="1100" y="-180"/>
       <p2 x="1140" y="-180"/>
+    </wire>
+    <wire>
+      <p1 x="1420" y="-180"/>
+      <p2 x="1440" y="-180"/>
     </wire>
     <wire>
       <p1 x="240" y="180"/>
@@ -2157,6 +2575,10 @@ therefore it can be abused as literal for BUS addr.</string>
       <p2 x="680" y="-440"/>
     </wire>
     <wire>
+      <p1 x="-200" y="440"/>
+      <p2 x="-180" y="440"/>
+    </wire>
+    <wire>
       <p1 x="900" y="-60"/>
       <p2 x="940" y="-60"/>
     </wire>
@@ -2183,6 +2605,10 @@ therefore it can be abused as literal for BUS addr.</string>
     <wire>
       <p1 x="1880" y="-60"/>
       <p2 x="1900" y="-60"/>
+    </wire>
+    <wire>
+      <p1 x="1420" y="-60"/>
+      <p2 x="1440" y="-60"/>
     </wire>
     <wire>
       <p1 x="620" y="60"/>
@@ -2233,6 +2659,10 @@ therefore it can be abused as literal for BUS addr.</string>
       <p2 x="2220" y="-320"/>
     </wire>
     <wire>
+      <p1 x="1740" y="320"/>
+      <p2 x="1760" y="320"/>
+    </wire>
+    <wire>
       <p1 x="280" y="320"/>
       <p2 x="640" y="320"/>
     </wire>
@@ -2257,8 +2687,32 @@ therefore it can be abused as literal for BUS addr.</string>
       <p2 x="660" y="320"/>
     </wire>
     <wire>
+      <p1 x="-440" y="-580"/>
+      <p2 x="-340" y="-580"/>
+    </wire>
+    <wire>
+      <p1 x="-480" y="-580"/>
+      <p2 x="-460" y="-580"/>
+    </wire>
+    <wire>
+      <p1 x="-320" y="-580"/>
+      <p2 x="-220" y="-580"/>
+    </wire>
+    <wire>
+      <p1 x="-120" y="-580"/>
+      <p2 x="-20" y="-580"/>
+    </wire>
+    <wire>
+      <p1 x="-220" y="-580"/>
+      <p2 x="-120" y="-580"/>
+    </wire>
+    <wire>
       <p1 x="-540" y="580"/>
       <p2 x="1500" y="580"/>
+    </wire>
+    <wire>
+      <p1 x="1500" y="580"/>
+      <p2 x="2320" y="580"/>
     </wire>
     <wire>
       <p1 x="-580" y="-200"/>
@@ -2267,6 +2721,14 @@ therefore it can be abused as literal for BUS addr.</string>
     <wire>
       <p1 x="2420" y="-200"/>
       <p2 x="2480" y="-200"/>
+    </wire>
+    <wire>
+      <p1 x="1420" y="-200"/>
+      <p2 x="1440" y="-200"/>
+    </wire>
+    <wire>
+      <p1 x="1460" y="-200"/>
+      <p2 x="1620" y="-200"/>
     </wire>
     <wire>
       <p1 x="580" y="200"/>
@@ -2297,12 +2759,24 @@ therefore it can be abused as literal for BUS addr.</string>
       <p2 x="120" y="-460"/>
     </wire>
     <wire>
+      <p1 x="2300" y="460"/>
+      <p2 x="2340" y="460"/>
+    </wire>
+    <wire>
+      <p1 x="2220" y="460"/>
+      <p2 x="2240" y="460"/>
+    </wire>
+    <wire>
       <p1 x="-320" y="-80"/>
       <p2 x="-260" y="-80"/>
     </wire>
     <wire>
       <p1 x="1960" y="-80"/>
       <p2 x="2040" y="-80"/>
+    </wire>
+    <wire>
+      <p1 x="1420" y="-80"/>
+      <p2 x="1440" y="-80"/>
     </wire>
     <wire>
       <p1 x="300" y="80"/>
@@ -2369,6 +2843,10 @@ therefore it can be abused as literal for BUS addr.</string>
       <p2 x="460" y="-340"/>
     </wire>
     <wire>
+      <p1 x="1740" y="340"/>
+      <p2 x="2040" y="340"/>
+    </wire>
+    <wire>
       <p1 x="1340" y="340"/>
       <p2 x="1360" y="340"/>
     </wire>
@@ -2377,12 +2855,20 @@ therefore it can be abused as literal for BUS addr.</string>
       <p2 x="1440" y="340"/>
     </wire>
     <wire>
+      <p1 x="2040" y="340"/>
+      <p2 x="2540" y="340"/>
+    </wire>
+    <wire>
       <p1 x="220" y="-600"/>
       <p2 x="240" y="-600"/>
     </wire>
     <wire>
       <p1 x="320" y="-600"/>
       <p2 x="360" y="-600"/>
+    </wire>
+    <wire>
+      <p1 x="2080" y="600"/>
+      <p2 x="2360" y="600"/>
     </wire>
     <wire>
       <p1 x="1420" y="-220"/>
@@ -2413,8 +2899,16 @@ therefore it can be abused as literal for BUS addr.</string>
       <p2 x="-160" y="-480"/>
     </wire>
     <wire>
+      <p1 x="2340" y="480"/>
+      <p2 x="2380" y="480"/>
+    </wire>
+    <wire>
+      <p1 x="2080" y="480"/>
+      <p2 x="2240" y="480"/>
+    </wire>
+    <wire>
       <p1 x="-20" y="-100"/>
-      <p2 x="200" y="-100"/>
+      <p2 x="0" y="-100"/>
     </wire>
     <wire>
       <p1 x="-500" y="-100"/>
@@ -2429,6 +2923,14 @@ therefore it can be abused as literal for BUS addr.</string>
       <p2 x="1900" y="-100"/>
     </wire>
     <wire>
+      <p1 x="1420" y="-100"/>
+      <p2 x="1440" y="-100"/>
+    </wire>
+    <wire>
+      <p1 x="0" y="-100"/>
+      <p2 x="200" y="-100"/>
+    </wire>
+    <wire>
       <p1 x="-400" y="-100"/>
       <p2 x="-260" y="-100"/>
     </wire>
@@ -2439,6 +2941,10 @@ therefore it can be abused as literal for BUS addr.</string>
     <wire>
       <p1 x="680" y="100"/>
       <p2 x="700" y="100"/>
+    </wire>
+    <wire>
+      <p1 x="1520" y="100"/>
+      <p2 x="1880" y="100"/>
     </wire>
     <wire>
       <p1 x="880" y="-360"/>
@@ -2473,16 +2979,20 @@ therefore it can be abused as literal for BUS addr.</string>
       <p2 x="1220" y="-360"/>
     </wire>
     <wire>
-      <p1 x="-140" y="360"/>
-      <p2 x="-80" y="360"/>
-    </wire>
-    <wire>
       <p1 x="-260" y="360"/>
       <p2 x="-240" y="360"/>
     </wire>
     <wire>
       <p1 x="1340" y="360"/>
       <p2 x="1360" y="360"/>
+    </wire>
+    <wire>
+      <p1 x="-100" y="360"/>
+      <p2 x="-80" y="360"/>
+    </wire>
+    <wire>
+      <p1 x="-180" y="360"/>
+      <p2 x="-160" y="360"/>
     </wire>
     <wire>
       <p1 x="2900" y="-240"/>
@@ -2537,6 +3047,10 @@ therefore it can be abused as literal for BUS addr.</string>
       <p2 x="120" y="-500"/>
     </wire>
     <wire>
+      <p1 x="2320" y="500"/>
+      <p2 x="2380" y="500"/>
+    </wire>
+    <wire>
       <p1 x="-20" y="-120"/>
       <p2 x="0" y="-120"/>
     </wire>
@@ -2565,8 +3079,8 @@ therefore it can be abused as literal for BUS addr.</string>
       <p2 x="-280" y="-120"/>
     </wire>
     <wire>
-      <p1 x="-280" y="-120"/>
-      <p2 x="-260" y="-120"/>
+      <p1 x="1420" y="-120"/>
+      <p2 x="1440" y="-120"/>
     </wire>
     <wire>
       <p1 x="0" y="-120"/>
@@ -2575,6 +3089,10 @@ therefore it can be abused as literal for BUS addr.</string>
     <wire>
       <p1 x="-440" y="-120"/>
       <p2 x="-360" y="-120"/>
+    </wire>
+    <wire>
+      <p1 x="-280" y="-120"/>
+      <p2 x="-260" y="-120"/>
     </wire>
     <wire>
       <p1 x="880" y="120"/>
@@ -2597,16 +3115,12 @@ therefore it can be abused as literal for BUS addr.</string>
       <p2 x="2140" y="-380"/>
     </wire>
     <wire>
+      <p1 x="-400" y="-380"/>
+      <p2 x="-80" y="-380"/>
+    </wire>
+    <wire>
       <p1 x="1500" y="-380"/>
       <p2 x="1520" y="-380"/>
-    </wire>
-    <wire>
-      <p1 x="-180" y="380"/>
-      <p2 x="-140" y="380"/>
-    </wire>
-    <wire>
-      <p1 x="1340" y="380"/>
-      <p2 x="1360" y="380"/>
     </wire>
     <wire>
       <p1 x="200" y="-640"/>
@@ -2617,28 +3131,12 @@ therefore it can be abused as literal for BUS addr.</string>
       <p2 x="280" y="-640"/>
     </wire>
     <wire>
-      <p1 x="640" y="320"/>
-      <p2 x="640" y="400"/>
-    </wire>
-    <wire>
-      <p1 x="640" y="-640"/>
-      <p2 x="640" y="-580"/>
-    </wire>
-    <wire>
-      <p1 x="640" y="-140"/>
-      <p2 x="640" y="-20"/>
-    </wire>
-    <wire>
-      <p1 x="640" y="80"/>
-      <p2 x="640" y="100"/>
-    </wire>
-    <wire>
       <p1 x="0" y="-140"/>
       <p2 x="0" y="-120"/>
     </wire>
     <wire>
-      <p1 x="900" y="-80"/>
-      <p2 x="900" y="-60"/>
+      <p1 x="0" y="-100"/>
+      <p2 x="0" y="-80"/>
     </wire>
     <wire>
       <p1 x="1540" y="-420"/>
@@ -2649,16 +3147,12 @@ therefore it can be abused as literal for BUS addr.</string>
       <p2 x="1540" y="-340"/>
     </wire>
     <wire>
-      <p1 x="2180" y="-100"/>
-      <p2 x="2180" y="-40"/>
-    </wire>
-    <wire>
-      <p1 x="2180" y="-40"/>
-      <p2 x="2180" y="-20"/>
-    </wire>
-    <wire>
       <p1 x="-520" y="-120"/>
       <p2 x="-520" y="560"/>
+    </wire>
+    <wire>
+      <p1 x="-520" y="-300"/>
+      <p2 x="-520" y="-280"/>
     </wire>
     <wire>
       <p1 x="520" y="400"/>
@@ -2667,18 +3161,6 @@ therefore it can be abused as literal for BUS addr.</string>
     <wire>
       <p1 x="520" y="-640"/>
       <p2 x="520" y="-580"/>
-    </wire>
-    <wire>
-      <p1 x="2440" y="-380"/>
-      <p2 x="2440" y="-340"/>
-    </wire>
-    <wire>
-      <p1 x="2440" y="-340"/>
-      <p2 x="2440" y="-300"/>
-    </wire>
-    <wire>
-      <p1 x="-140" y="360"/>
-      <p2 x="-140" y="380"/>
     </wire>
     <wire>
       <p1 x="780" y="-600"/>
@@ -2697,8 +3179,12 @@ therefore it can be abused as literal for BUS addr.</string>
       <p2 x="780" y="-300"/>
     </wire>
     <wire>
-      <p1 x="-400" y="-260"/>
-      <p2 x="-400" y="-100"/>
+      <p1 x="2060" y="280"/>
+      <p2 x="2060" y="540"/>
+    </wire>
+    <wire>
+      <p1 x="2320" y="500"/>
+      <p2 x="2320" y="520"/>
     </wire>
     <wire>
       <p1 x="2320" y="-320"/>
@@ -2709,16 +3195,16 @@ therefore it can be abused as literal for BUS addr.</string>
       <p2 x="2320" y="-360"/>
     </wire>
     <wire>
+      <p1 x="2320" y="540"/>
+      <p2 x="2320" y="580"/>
+    </wire>
+    <wire>
       <p1 x="2320" y="-360"/>
       <p2 x="2320" y="-340"/>
     </wire>
     <wire>
       <p1 x="2320" y="-300"/>
       <p2 x="2320" y="-280"/>
-    </wire>
-    <wire>
-      <p1 x="1680" y="-460"/>
-      <p2 x="1680" y="-280"/>
     </wire>
     <wire>
       <p1 x="-20" y="320"/>
@@ -2733,16 +3219,8 @@ therefore it can be abused as literal for BUS addr.</string>
       <p2 x="-20" y="-340"/>
     </wire>
     <wire>
-      <p1 x="660" y="-600"/>
-      <p2 x="660" y="-580"/>
-    </wire>
-    <wire>
-      <p1 x="660" y="-160"/>
-      <p2 x="660" y="0"/>
-    </wire>
-    <wire>
-      <p1 x="660" y="80"/>
-      <p2 x="660" y="160"/>
+      <p1 x="-20" y="-600"/>
+      <p2 x="-20" y="-580"/>
     </wire>
     <wire>
       <p1 x="2580" y="-240"/>
@@ -2781,22 +3259,6 @@ therefore it can be abused as literal for BUS addr.</string>
       <p2 x="280" y="440"/>
     </wire>
     <wire>
-      <p1 x="920" y="20"/>
-      <p2 x="920" y="40"/>
-    </wire>
-    <wire>
-      <p1 x="2200" y="-320"/>
-      <p2 x="2200" y="-300"/>
-    </wire>
-    <wire>
-      <p1 x="2200" y="-360"/>
-      <p2 x="2200" y="-340"/>
-    </wire>
-    <wire>
-      <p1 x="2200" y="-100"/>
-      <p2 x="2200" y="160"/>
-    </wire>
-    <wire>
       <p1 x="-540" y="-120"/>
       <p2 x="-540" y="580"/>
     </wire>
@@ -2807,10 +3269,6 @@ therefore it can be abused as literal for BUS addr.</string>
     <wire>
       <p1 x="540" y="-40"/>
       <p2 x="540" y="40"/>
-    </wire>
-    <wire>
-      <p1 x="2460" y="-460"/>
-      <p2 x="2460" y="-320"/>
     </wire>
     <wire>
       <p1 x="800" y="-640"/>
@@ -2829,18 +3287,6 @@ therefore it can be abused as literal for BUS addr.</string>
       <p2 x="800" y="-180"/>
     </wire>
     <wire>
-      <p1 x="1440" y="-380"/>
-      <p2 x="1440" y="-360"/>
-    </wire>
-    <wire>
-      <p1 x="1440" y="340"/>
-      <p2 x="1440" y="520"/>
-    </wire>
-    <wire>
-      <p1 x="160" y="40"/>
-      <p2 x="160" y="80"/>
-    </wire>
-    <wire>
       <p1 x="2080" y="-40"/>
       <p2 x="2080" y="20"/>
     </wire>
@@ -2849,28 +3295,16 @@ therefore it can be abused as literal for BUS addr.</string>
       <p2 x="2080" y="160"/>
     </wire>
     <wire>
-      <p1 x="1700" y="-300"/>
-      <p2 x="1700" y="-280"/>
+      <p1 x="2080" y="280"/>
+      <p2 x="2080" y="400"/>
     </wire>
     <wire>
-      <p1 x="1700" y="-340"/>
-      <p2 x="1700" y="-320"/>
+      <p1 x="2080" y="400"/>
+      <p2 x="2080" y="480"/>
     </wire>
     <wire>
-      <p1 x="420" y="420"/>
-      <p2 x="420" y="440"/>
-    </wire>
-    <wire>
-      <p1 x="420" y="240"/>
-      <p2 x="420" y="380"/>
-    </wire>
-    <wire>
-      <p1 x="420" y="-560"/>
-      <p2 x="420" y="-480"/>
-    </wire>
-    <wire>
-      <p1 x="420" y="-600"/>
-      <p2 x="420" y="-580"/>
+      <p1 x="2080" y="480"/>
+      <p2 x="2080" y="600"/>
     </wire>
     <wire>
       <p1 x="1060" y="-60"/>
@@ -2881,23 +3315,23 @@ therefore it can be abused as literal for BUS addr.</string>
       <p2 x="1060" y="-320"/>
     </wire>
     <wire>
-      <p1 x="680" y="-640"/>
-      <p2 x="680" y="-580"/>
+      <p1 x="2340" y="460"/>
+      <p2 x="2340" y="480"/>
     </wire>
     <wire>
-      <p1 x="680" y="-180"/>
-      <p2 x="680" y="20"/>
+      <p1 x="2340" y="520"/>
+      <p2 x="2340" y="560"/>
     </wire>
     <wire>
-      <p1 x="680" y="100"/>
-      <p2 x="680" y="140"/>
+      <p1 x="-40" y="-600"/>
+      <p2 x="-40" y="-540"/>
     </wire>
     <wire>
       <p1 x="40" y="-580"/>
       <p2 x="40" y="-420"/>
     </wire>
     <wire>
-      <p1 x="-300" y="-540"/>
+      <p1 x="-300" y="-520"/>
       <p2 x="-300" y="-460"/>
     </wire>
     <wire>
@@ -2905,20 +3339,8 @@ therefore it can be abused as literal for BUS addr.</string>
       <p2 x="-300" y="0"/>
     </wire>
     <wire>
-      <p1 x="940" y="-60"/>
-      <p2 x="940" y="-40"/>
-    </wire>
-    <wire>
       <p1 x="300" y="-140"/>
       <p2 x="300" y="80"/>
-    </wire>
-    <wire>
-      <p1 x="2220" y="-400"/>
-      <p2 x="2220" y="-360"/>
-    </wire>
-    <wire>
-      <p1 x="2220" y="-100"/>
-      <p2 x="2220" y="140"/>
     </wire>
     <wire>
       <p1 x="560" y="-640"/>
@@ -2933,52 +3355,12 @@ therefore it can be abused as literal for BUS addr.</string>
       <p2 x="560" y="80"/>
     </wire>
     <wire>
-      <p1 x="1200" y="-320"/>
-      <p2 x="1200" y="-280"/>
-    </wire>
-    <wire>
-      <p1 x="1200" y="-420"/>
-      <p2 x="1200" y="-340"/>
-    </wire>
-    <wire>
-      <p1 x="-180" y="-460"/>
-      <p2 x="-180" y="-340"/>
-    </wire>
-    <wire>
       <p1 x="820" y="-600"/>
       <p2 x="820" y="-580"/>
     </wire>
     <wire>
-      <p1 x="1460" y="-20"/>
-      <p2 x="1460" y="540"/>
-    </wire>
-    <wire>
-      <p1 x="180" y="140"/>
-      <p2 x="180" y="180"/>
-    </wire>
-    <wire>
       <p1 x="2100" y="-460"/>
       <p2 x="2100" y="-420"/>
-    </wire>
-    <wire>
-      <p1 x="-440" y="-40"/>
-      <p2 x="-440" y="520"/>
-    </wire>
-    <wire>
-      <p1 x="-440" y="-140"/>
-      <p2 x="-440" y="-120"/>
-    </wire>
-    <wire>
-      <p1 x="-440" y="-200"/>
-      <p2 x="-440" y="-180"/>
-    </wire>
-    <wire>
-      <p1 x="440" y="-640"/>
-      <p2 x="440" y="-580"/>
-    </wire>
-    <wire>
-      <p1 x="440" y="-540"/>
-      <p2 x="440" y="-460"/>
     </wire>
     <wire>
       <p1 x="1080" y="20"/>
@@ -2989,36 +3371,20 @@ therefore it can be abused as literal for BUS addr.</string>
       <p2 x="1080" y="-200"/>
     </wire>
     <wire>
-      <p1 x="1720" y="-480"/>
-      <p2 x="1720" y="-300"/>
+      <p1 x="2360" y="560"/>
+      <p2 x="2360" y="600"/>
     </wire>
     <wire>
       <p1 x="-60" y="-360"/>
       <p2 x="-60" y="-340"/>
     </wire>
     <wire>
-      <p1 x="700" y="-600"/>
-      <p2 x="700" y="-580"/>
-    </wire>
-    <wire>
       <p1 x="1340" y="340"/>
       <p2 x="1340" y="360"/>
     </wire>
     <wire>
-      <p1 x="1340" y="360"/>
-      <p2 x="1340" y="380"/>
-    </wire>
-    <wire>
-      <p1 x="960" y="20"/>
-      <p2 x="960" y="80"/>
-    </wire>
-    <wire>
-      <p1 x="960" y="120"/>
-      <p2 x="960" y="280"/>
-    </wire>
-    <wire>
-      <p1 x="2240" y="-100"/>
-      <p2 x="2240" y="-40"/>
+      <p1 x="-320" y="-600"/>
+      <p2 x="-320" y="-580"/>
     </wire>
     <wire>
       <p1 x="-580" y="-200"/>
@@ -3045,6 +3411,382 @@ therefore it can be abused as literal for BUS addr.</string>
       <p2 x="580" y="440"/>
     </wire>
     <wire>
+      <p1 x="2120" y="-440"/>
+      <p2 x="2120" y="-400"/>
+    </wire>
+    <wire>
+      <p1 x="1100" y="180"/>
+      <p2 x="1100" y="200"/>
+    </wire>
+    <wire>
+      <p1 x="-80" y="-540"/>
+      <p2 x="-80" y="-380"/>
+    </wire>
+    <wire>
+      <p1 x="80" y="-580"/>
+      <p2 x="80" y="-440"/>
+    </wire>
+    <wire>
+      <p1 x="1360" y="160"/>
+      <p2 x="1360" y="300"/>
+    </wire>
+    <wire>
+      <p1 x="1360" y="380"/>
+      <p2 x="1360" y="400"/>
+    </wire>
+    <wire>
+      <p1 x="-340" y="-480"/>
+      <p2 x="-340" y="-460"/>
+    </wire>
+    <wire>
+      <p1 x="-340" y="20"/>
+      <p2 x="-340" y="100"/>
+    </wire>
+    <wire>
+      <p1 x="-340" y="-160"/>
+      <p2 x="-340" y="-140"/>
+    </wire>
+    <wire>
+      <p1 x="-340" y="-600"/>
+      <p2 x="-340" y="-580"/>
+    </wire>
+    <wire>
+      <p1 x="340" y="-180"/>
+      <p2 x="340" y="-140"/>
+    </wire>
+    <wire>
+      <p1 x="340" y="400"/>
+      <p2 x="340" y="440"/>
+    </wire>
+    <wire>
+      <p1 x="2900" y="-320"/>
+      <p2 x="2900" y="-300"/>
+    </wire>
+    <wire>
+      <p1 x="2900" y="-260"/>
+      <p2 x="2900" y="-240"/>
+    </wire>
+    <wire>
+      <p1 x="1620" y="-200"/>
+      <p2 x="1620" y="560"/>
+    </wire>
+    <wire>
+      <p1 x="1880" y="-60"/>
+      <p2 x="1880" y="-40"/>
+    </wire>
+    <wire>
+      <p1 x="1880" y="-40"/>
+      <p2 x="1880" y="100"/>
+    </wire>
+    <wire>
+      <p1 x="600" y="-640"/>
+      <p2 x="600" y="-580"/>
+    </wire>
+    <wire>
+      <p1 x="600" y="-40"/>
+      <p2 x="600" y="0"/>
+    </wire>
+    <wire>
+      <p1 x="600" y="0"/>
+      <p2 x="600" y="100"/>
+    </wire>
+    <wire>
+      <p1 x="2400" y="-280"/>
+      <p2 x="2400" y="-160"/>
+    </wire>
+    <wire>
+      <p1 x="-100" y="360"/>
+      <p2 x="-100" y="380"/>
+    </wire>
+    <wire>
+      <p1 x="100" y="-400"/>
+      <p2 x="100" y="-360"/>
+    </wire>
+    <wire>
+      <p1 x="360" y="-80"/>
+      <p2 x="360" y="-60"/>
+    </wire>
+    <wire>
+      <p1 x="360" y="-620"/>
+      <p2 x="360" y="-600"/>
+    </wire>
+    <wire>
+      <p1 x="620" y="-600"/>
+      <p2 x="620" y="-580"/>
+    </wire>
+    <wire>
+      <p1 x="620" y="-40"/>
+      <p2 x="620" y="-20"/>
+    </wire>
+    <wire>
+      <p1 x="620" y="160"/>
+      <p2 x="620" y="180"/>
+    </wire>
+    <wire>
+      <p1 x="620" y="-20"/>
+      <p2 x="620" y="60"/>
+    </wire>
+    <wire>
+      <p1 x="880" y="-80"/>
+      <p2 x="880" y="120"/>
+    </wire>
+    <wire>
+      <p1 x="880" y="-360"/>
+      <p2 x="880" y="-140"/>
+    </wire>
+    <wire>
+      <p1 x="1140" y="-180"/>
+      <p2 x="1140" y="-160"/>
+    </wire>
+    <wire>
+      <p1 x="2420" y="-360"/>
+      <p2 x="2420" y="-200"/>
+    </wire>
+    <wire>
+      <p1 x="-120" y="-600"/>
+      <p2 x="-120" y="-580"/>
+    </wire>
+    <wire>
+      <p1 x="-120" y="-580"/>
+      <p2 x="-120" y="-560"/>
+    </wire>
+    <wire>
+      <p1 x="-380" y="-500"/>
+      <p2 x="-380" y="-20"/>
+    </wire>
+    <wire>
+      <p1 x="380" y="-160"/>
+      <p2 x="380" y="-140"/>
+    </wire>
+    <wire>
+      <p1 x="380" y="-20"/>
+      <p2 x="380" y="0"/>
+    </wire>
+    <wire>
+      <p1 x="380" y="-520"/>
+      <p2 x="380" y="-500"/>
+    </wire>
+    <wire>
+      <p1 x="1660" y="40"/>
+      <p2 x="1660" y="260"/>
+    </wire>
+    <wire>
+      <p1 x="640" y="320"/>
+      <p2 x="640" y="400"/>
+    </wire>
+    <wire>
+      <p1 x="640" y="-640"/>
+      <p2 x="640" y="-580"/>
+    </wire>
+    <wire>
+      <p1 x="640" y="-140"/>
+      <p2 x="640" y="-20"/>
+    </wire>
+    <wire>
+      <p1 x="640" y="80"/>
+      <p2 x="640" y="100"/>
+    </wire>
+    <wire>
+      <p1 x="900" y="-80"/>
+      <p2 x="900" y="-60"/>
+    </wire>
+    <wire>
+      <p1 x="2180" y="-100"/>
+      <p2 x="2180" y="-40"/>
+    </wire>
+    <wire>
+      <p1 x="2180" y="-40"/>
+      <p2 x="2180" y="-20"/>
+    </wire>
+    <wire>
+      <p1 x="2440" y="-380"/>
+      <p2 x="2440" y="-340"/>
+    </wire>
+    <wire>
+      <p1 x="2440" y="-340"/>
+      <p2 x="2440" y="-300"/>
+    </wire>
+    <wire>
+      <p1 x="-140" y="-600"/>
+      <p2 x="-140" y="-540"/>
+    </wire>
+    <wire>
+      <p1 x="-400" y="-260"/>
+      <p2 x="-400" y="-100"/>
+    </wire>
+    <wire>
+      <p1 x="-400" y="-520"/>
+      <p2 x="-400" y="-380"/>
+    </wire>
+    <wire>
+      <p1 x="1680" y="-460"/>
+      <p2 x="1680" y="-280"/>
+    </wire>
+    <wire>
+      <p1 x="660" y="-600"/>
+      <p2 x="660" y="-580"/>
+    </wire>
+    <wire>
+      <p1 x="660" y="-160"/>
+      <p2 x="660" y="0"/>
+    </wire>
+    <wire>
+      <p1 x="660" y="80"/>
+      <p2 x="660" y="160"/>
+    </wire>
+    <wire>
+      <p1 x="920" y="20"/>
+      <p2 x="920" y="40"/>
+    </wire>
+    <wire>
+      <p1 x="2200" y="-320"/>
+      <p2 x="2200" y="-300"/>
+    </wire>
+    <wire>
+      <p1 x="2200" y="-360"/>
+      <p2 x="2200" y="-340"/>
+    </wire>
+    <wire>
+      <p1 x="2200" y="-100"/>
+      <p2 x="2200" y="160"/>
+    </wire>
+    <wire>
+      <p1 x="2460" y="-460"/>
+      <p2 x="2460" y="-320"/>
+    </wire>
+    <wire>
+      <p1 x="1440" y="-380"/>
+      <p2 x="1440" y="-360"/>
+    </wire>
+    <wire>
+      <p1 x="1440" y="340"/>
+      <p2 x="1440" y="520"/>
+    </wire>
+    <wire>
+      <p1 x="160" y="40"/>
+      <p2 x="160" y="80"/>
+    </wire>
+    <wire>
+      <p1 x="1700" y="-300"/>
+      <p2 x="1700" y="-280"/>
+    </wire>
+    <wire>
+      <p1 x="1700" y="-340"/>
+      <p2 x="1700" y="-320"/>
+    </wire>
+    <wire>
+      <p1 x="420" y="420"/>
+      <p2 x="420" y="440"/>
+    </wire>
+    <wire>
+      <p1 x="420" y="240"/>
+      <p2 x="420" y="380"/>
+    </wire>
+    <wire>
+      <p1 x="420" y="-560"/>
+      <p2 x="420" y="-480"/>
+    </wire>
+    <wire>
+      <p1 x="420" y="-600"/>
+      <p2 x="420" y="-580"/>
+    </wire>
+    <wire>
+      <p1 x="680" y="-640"/>
+      <p2 x="680" y="-580"/>
+    </wire>
+    <wire>
+      <p1 x="680" y="-180"/>
+      <p2 x="680" y="20"/>
+    </wire>
+    <wire>
+      <p1 x="680" y="100"/>
+      <p2 x="680" y="140"/>
+    </wire>
+    <wire>
+      <p1 x="940" y="-60"/>
+      <p2 x="940" y="-40"/>
+    </wire>
+    <wire>
+      <p1 x="2220" y="-400"/>
+      <p2 x="2220" y="-360"/>
+    </wire>
+    <wire>
+      <p1 x="2220" y="-100"/>
+      <p2 x="2220" y="140"/>
+    </wire>
+    <wire>
+      <p1 x="2220" y="460"/>
+      <p2 x="2220" y="520"/>
+    </wire>
+    <wire>
+      <p1 x="1200" y="-320"/>
+      <p2 x="1200" y="-280"/>
+    </wire>
+    <wire>
+      <p1 x="1200" y="-420"/>
+      <p2 x="1200" y="-340"/>
+    </wire>
+    <wire>
+      <p1 x="-180" y="-460"/>
+      <p2 x="-180" y="-340"/>
+    </wire>
+    <wire>
+      <p1 x="-180" y="360"/>
+      <p2 x="-180" y="380"/>
+    </wire>
+    <wire>
+      <p1 x="-180" y="400"/>
+      <p2 x="-180" y="440"/>
+    </wire>
+    <wire>
+      <p1 x="1460" y="-20"/>
+      <p2 x="1460" y="540"/>
+    </wire>
+    <wire>
+      <p1 x="180" y="140"/>
+      <p2 x="180" y="180"/>
+    </wire>
+    <wire>
+      <p1 x="-440" y="-40"/>
+      <p2 x="-440" y="520"/>
+    </wire>
+    <wire>
+      <p1 x="-440" y="-140"/>
+      <p2 x="-440" y="-120"/>
+    </wire>
+    <wire>
+      <p1 x="-440" y="-200"/>
+      <p2 x="-440" y="-180"/>
+    </wire>
+    <wire>
+      <p1 x="440" y="-640"/>
+      <p2 x="440" y="-580"/>
+    </wire>
+    <wire>
+      <p1 x="440" y="-540"/>
+      <p2 x="440" y="-460"/>
+    </wire>
+    <wire>
+      <p1 x="1720" y="-480"/>
+      <p2 x="1720" y="-300"/>
+    </wire>
+    <wire>
+      <p1 x="700" y="-600"/>
+      <p2 x="700" y="-580"/>
+    </wire>
+    <wire>
+      <p1 x="960" y="20"/>
+      <p2 x="960" y="80"/>
+    </wire>
+    <wire>
+      <p1 x="960" y="120"/>
+      <p2 x="960" y="280"/>
+    </wire>
+    <wire>
+      <p1 x="2240" y="-100"/>
+      <p2 x="2240" y="-40"/>
+    </wire>
+    <wire>
       <p1 x="-200" y="-240"/>
       <p2 x="-200" y="-140"/>
     </wire>
@@ -3069,10 +3811,6 @@ therefore it can be abused as literal for BUS addr.</string>
       <p2 x="2760" y="-240"/>
     </wire>
     <wire>
-      <p1 x="2120" y="-440"/>
-      <p2 x="2120" y="-400"/>
-    </wire>
-    <wire>
       <p1 x="460" y="-600"/>
       <p2 x="460" y="-580"/>
     </wire>
@@ -3089,48 +3827,12 @@ therefore it can be abused as literal for BUS addr.</string>
       <p2 x="1740" y="-280"/>
     </wire>
     <wire>
-      <p1 x="1100" y="180"/>
-      <p2 x="1100" y="200"/>
+      <p1 x="1740" y="320"/>
+      <p2 x="1740" y="340"/>
     </wire>
     <wire>
       <p1 x="720" y="-640"/>
       <p2 x="720" y="-580"/>
-    </wire>
-    <wire>
-      <p1 x="80" y="-580"/>
-      <p2 x="80" y="-440"/>
-    </wire>
-    <wire>
-      <p1 x="1360" y="160"/>
-      <p2 x="1360" y="300"/>
-    </wire>
-    <wire>
-      <p1 x="-340" y="-480"/>
-      <p2 x="-340" y="-460"/>
-    </wire>
-    <wire>
-      <p1 x="-340" y="20"/>
-      <p2 x="-340" y="100"/>
-    </wire>
-    <wire>
-      <p1 x="-340" y="-160"/>
-      <p2 x="-340" y="-140"/>
-    </wire>
-    <wire>
-      <p1 x="340" y="-180"/>
-      <p2 x="340" y="-140"/>
-    </wire>
-    <wire>
-      <p1 x="340" y="400"/>
-      <p2 x="340" y="440"/>
-    </wire>
-    <wire>
-      <p1 x="2900" y="-320"/>
-      <p2 x="2900" y="-300"/>
-    </wire>
-    <wire>
-      <p1 x="2900" y="-260"/>
-      <p2 x="2900" y="-240"/>
     </wire>
     <wire>
       <p1 x="2260" y="-160"/>
@@ -3141,28 +3843,16 @@ therefore it can be abused as literal for BUS addr.</string>
       <p2 x="2260" y="180"/>
     </wire>
     <wire>
-      <p1 x="1880" y="-60"/>
-      <p2 x="1880" y="-40"/>
-    </wire>
-    <wire>
-      <p1 x="600" y="-640"/>
-      <p2 x="600" y="-580"/>
-    </wire>
-    <wire>
-      <p1 x="600" y="-40"/>
-      <p2 x="600" y="0"/>
-    </wire>
-    <wire>
-      <p1 x="600" y="0"/>
-      <p2 x="600" y="100"/>
-    </wire>
-    <wire>
       <p1 x="-220" y="-480"/>
       <p2 x="-220" y="-440"/>
     </wire>
     <wire>
       <p1 x="-220" y="-420"/>
       <p2 x="-220" y="-260"/>
+    </wire>
+    <wire>
+      <p1 x="-220" y="-600"/>
+      <p2 x="-220" y="-580"/>
     </wire>
     <wire>
       <p1 x="220" y="-660"/>
@@ -3185,12 +3875,12 @@ therefore it can be abused as literal for BUS addr.</string>
       <p2 x="-480" y="-140"/>
     </wire>
     <wire>
-      <p1 x="480" y="-640"/>
-      <p2 x="480" y="-580"/>
+      <p1 x="-480" y="-300"/>
+      <p2 x="-480" y="-280"/>
     </wire>
     <wire>
-      <p1 x="2400" y="-280"/>
-      <p2 x="2400" y="-160"/>
+      <p1 x="480" y="-640"/>
+      <p2 x="480" y="-580"/>
     </wire>
     <wire>
       <p1 x="2020" y="-400"/>
@@ -3205,18 +3895,6 @@ therefore it can be abused as literal for BUS addr.</string>
       <p2 x="2020" y="-120"/>
     </wire>
     <wire>
-      <p1 x="100" y="-400"/>
-      <p2 x="100" y="-360"/>
-    </wire>
-    <wire>
-      <p1 x="360" y="-80"/>
-      <p2 x="360" y="-60"/>
-    </wire>
-    <wire>
-      <p1 x="360" y="-620"/>
-      <p2 x="360" y="-600"/>
-    </wire>
-    <wire>
       <p1 x="1000" y="-80"/>
       <p2 x="1000" y="120"/>
     </wire>
@@ -3229,52 +3907,52 @@ therefore it can be abused as literal for BUS addr.</string>
       <p2 x="2280" y="-40"/>
     </wire>
     <wire>
-      <p1 x="620" y="-600"/>
-      <p2 x="620" y="-580"/>
-    </wire>
-    <wire>
-      <p1 x="620" y="-40"/>
-      <p2 x="620" y="-20"/>
-    </wire>
-    <wire>
-      <p1 x="620" y="160"/>
-      <p2 x="620" y="180"/>
-    </wire>
-    <wire>
-      <p1 x="620" y="-20"/>
-      <p2 x="620" y="60"/>
+      <p1 x="2540" y="340"/>
+      <p2 x="2540" y="500"/>
     </wire>
     <wire>
       <p1 x="-240" y="-160"/>
       <p2 x="-240" y="-140"/>
     </wire>
     <wire>
-      <p1 x="880" y="-80"/>
-      <p2 x="880" y="120"/>
-    </wire>
-    <wire>
-      <p1 x="880" y="-360"/>
-      <p2 x="880" y="-140"/>
+      <p1 x="-240" y="-600"/>
+      <p2 x="-240" y="-560"/>
     </wire>
     <wire>
       <p1 x="240" y="140"/>
       <p2 x="240" y="180"/>
     </wire>
     <wire>
+      <p1 x="1520" y="60"/>
+      <p2 x="1520" y="100"/>
+    </wire>
+    <wire>
       <p1 x="-500" y="-100"/>
       <p2 x="-500" y="540"/>
     </wire>
     <wire>
-      <p1 x="1140" y="-180"/>
-      <p2 x="1140" y="-160"/>
+      <p1 x="-500" y="-220"/>
+      <p2 x="-500" y="-160"/>
     </wire>
     <wire>
       <p1 x="500" y="-600"/>
       <p2 x="500" y="-580"/>
     </wire>
     <wire>
-      <p1 x="2420" y="-360"/>
-      <p2 x="2420" y="-200"/>
+      <p1 x="2040" y="280"/>
+      <p2 x="2040" y="340"/>
+    </wire>
+    <wire>
+      <p1 x="2040" y="-360"/>
+      <p2 x="2040" y="-320"/>
+    </wire>
+    <wire>
+      <p1 x="2040" y="340"/>
+      <p2 x="2040" y="360"/>
+    </wire>
+    <wire>
+      <p1 x="2040" y="-320"/>
+      <p2 x="2040" y="-220"/>
     </wire>
     <wire>
       <p1 x="760" y="-340"/>
@@ -3283,30 +3961,6 @@ therefore it can be abused as literal for BUS addr.</string>
     <wire>
       <p1 x="760" y="-280"/>
       <p2 x="760" y="40"/>
-    </wire>
-    <wire>
-      <p1 x="2040" y="-360"/>
-      <p2 x="2040" y="-320"/>
-    </wire>
-    <wire>
-      <p1 x="2040" y="-320"/>
-      <p2 x="2040" y="-220"/>
-    </wire>
-    <wire>
-      <p1 x="-380" y="-500"/>
-      <p2 x="-380" y="-20"/>
-    </wire>
-    <wire>
-      <p1 x="380" y="-160"/>
-      <p2 x="380" y="-140"/>
-    </wire>
-    <wire>
-      <p1 x="380" y="-540"/>
-      <p2 x="380" y="-500"/>
-    </wire>
-    <wire>
-      <p1 x="380" y="-20"/>
-      <p2 x="380" y="0"/>
     </wire>
     <wire>
       <p1 x="1020" y="-80"/>
