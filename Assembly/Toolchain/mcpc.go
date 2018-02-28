@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"os"
 
 	"./Compiler"
 	"./Interpreter"
@@ -25,13 +26,13 @@ Options:
   interpret               Runs an MCPC virtual machine and executes a specified binary file. Use the --config flag to specify bus devices.
   --library=<library>     Includes a library, specified in HJSON format, which allows higher-level instructions to be compiled down.
   --offset=<offset>       Specifies an offset that will be applied to the binary file [default: 0].
-  --enable-offset-jump    If enabled, a 'jmp' instruction will be inserted at the beginning, jumping to the offset position, if the offset is 0, this flag will be ignored.
+  --enable-offset-jump    If enabled, a 'jmp' instruction will be inserted at the beginning, jumping to the offset position. If the offset is smaller than 2, this flag will be ignored.
   --ascii                 Outputs the ascii binary format for use with the Digital circuit simulator.
   -h --help               Show this screen.
   --version               Show version.`
 
 	// Parse command line arguments
-	args, _ := docopt.ParseDoc(usage)
+	args, _ := docopt.ParseArgs(usage, os.Args[1:], "MineCraft PC Assembly Toolchain - Version 0.1")
 
 	// Choose function to call based on arguments
 	if argBool(args, "compile") {
