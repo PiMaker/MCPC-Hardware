@@ -1,0 +1,13 @@
+- NEG from.reg to.reg = NOT from 0 to, ADD to 1 to - negates a 2's complement number, also converts from and to 2's complement
+- JMP to.reg = MOV to PC - Jump unconditionally to an address in a register
+- JMP to.lit16 = SET SCR, to, MOV SCR PC - Jump unconditionally to a literal address
+- JMPNZ to.reg if.reg = MOVNZ to PC if - Jump to register to.reg if if.reg is not zero
+- JMPEZ to.reg if.reg = MOVEZ to PC if - Jump to register to.reg if if.reg is equal to zero
+- JMPGT to.reg val.reg cmpto.reg = GT val cmpto SCR, MOVNZ to PC SCR - Jump to register to.reg if val.reg is greater than cmpto.reg
+- CALL addr.reg = ADD SP -1 SP, MOV PC SP, MOV addr PC, ADD SP 1 SP - Calls a function at addr.reg
+- RET = MOV SP PC - Returns from a function
+- STOR data.reg addr.reg = SHFT addr -0x7 SCR, SHFT SCR 0x3 SCR, OR SCR 1 SCR, BUS SCR 0x1, BUS data 0x1 - Stores data in SRAM
+- LOAD data.reg addr.reg = SHFT addr -0x7 SCR, SHFT SCR 0x3 SCR, BUS SCR 0x1, HOLD, MOV BUS data - Retrieves data from SRAM
+- INC val.reg = ADD val 1 val - Increments by one
+- DEC val.reg = ADD val -1 val - Decrements by one
+- NOOP = MOV SCR SCR - does nothing for one cycle

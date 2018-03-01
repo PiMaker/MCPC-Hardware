@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"io/ioutil"
 	"os"
 
 	"./Compiler"
@@ -39,7 +40,15 @@ Options:
 
 		// Compile
 		offset := argInt(args, "--offset")
-		compiler.Compile(argString(args, "<file>"), argString(args, "<output>"), offset, make([]string, 0))
+		output := argString(args, "<output>")
+		assembly := compiler.Compile(argString(args, "<file>"), offset, argStrings(args, "--library"), argBool(args, "--enable-offset-jump"))
+
+		if argBool(args, "--ascii") {
+			fmt.Println("Converting to ASCII format...")
+			assembly = toASCIIFormat(assembly)
+		}
+
+		ioutil.WriteFile(output, assembly, 0666)
 
 	} else if argBool(args, "link") {
 
@@ -65,6 +74,15 @@ func argString(args docopt.Opts, key string) string {
 	return v
 }
 
+func argStrings(args docopt.Opts, key string) []string {
+	v, err := args[key].([]string)
+	if !err {
+		return make([]string, 0)
+	}
+
+	return v
+}
+
 func argBool(args docopt.Opts, key string) bool {
 	v, err := args.Bool(key)
 	if err != nil {
@@ -81,4 +99,24 @@ func argInt(args docopt.Opts, key string) int {
 	}
 
 	return v
+}
+
+func toASCIIFormat(data []byte) []byte {
+	header := []byte("v2.0 raw\n")
+	retval := make([]byte, len(header)+len(data)*3)
+
+	marker := len(header)
+	copy(retval, header)
+
+	for i := 0; i < len(data); i++ {
+		val := []byte(fmt.Sprintf("%x\n", data[i]))
+		retval[marker] = val[0]
+		retval[marker+1] = val[1]
+		if len(val) > 2 {
+			retval[marker+2] = val[2]
+		}
+		marker += len(val)
+	}
+
+	return retval[:marker]
 }
