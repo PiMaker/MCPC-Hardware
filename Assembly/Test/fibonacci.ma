@@ -12,7 +12,7 @@ MOV 0 count
 SET maxFibs
 0x0020 ; Set number of fibonaccis to calculate
 ; Perform fibonacci algorithm
-.fibstart ADD numA numB acc
+.fibstart ADD numA acc numB
 MOV numB numA
 MOV acc numB
 ; Output current number on hex display

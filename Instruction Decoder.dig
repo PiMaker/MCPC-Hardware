@@ -518,7 +518,7 @@
           <string>CLR</string>
         </entry>
       </elementAttributes>
-      <pos x="1360" y="420"/>
+      <pos x="1580" y="420"/>
     </visualElement>
     <visualElement>
       <elementName>D_FF</elementName>
@@ -618,6 +618,46 @@
         </entry>
       </elementAttributes>
       <pos x="500" y="840"/>
+    </visualElement>
+    <visualElement>
+      <elementName>Delay</elementName>
+      <elementAttributes>
+        <entry>
+          <string>rotation</string>
+          <rotation rotation="2"/>
+        </entry>
+      </elementAttributes>
+      <pos x="1560" y="420"/>
+    </visualElement>
+    <visualElement>
+      <elementName>Delay</elementName>
+      <elementAttributes>
+        <entry>
+          <string>rotation</string>
+          <rotation rotation="2"/>
+        </entry>
+      </elementAttributes>
+      <pos x="1500" y="420"/>
+    </visualElement>
+    <visualElement>
+      <elementName>Delay</elementName>
+      <elementAttributes>
+        <entry>
+          <string>rotation</string>
+          <rotation rotation="2"/>
+        </entry>
+      </elementAttributes>
+      <pos x="1440" y="420"/>
+    </visualElement>
+    <visualElement>
+      <elementName>Delay</elementName>
+      <elementAttributes>
+        <entry>
+          <string>rotation</string>
+          <rotation reference="../../../../visualElement[59]/elementAttributes/entry/rotation"/>
+        </entry>
+      </elementAttributes>
+      <pos x="1380" y="420"/>
     </visualElement>
   </visualElements>
   <wires>
@@ -766,8 +806,24 @@
       <p2 x="1320" y="420"/>
     </wire>
     <wire>
+      <p1 x="1380" y="420"/>
+      <p2 x="1400" y="420"/>
+    </wire>
+    <wire>
+      <p1 x="1440" y="420"/>
+      <p2 x="1460" y="420"/>
+    </wire>
+    <wire>
+      <p1 x="1500" y="420"/>
+      <p2 x="1520" y="420"/>
+    </wire>
+    <wire>
+      <p1 x="1560" y="420"/>
+      <p2 x="1580" y="420"/>
+    </wire>
+    <wire>
       <p1 x="1320" y="420"/>
-      <p2 x="1360" y="420"/>
+      <p2 x="1340" y="420"/>
     </wire>
     <wire>
       <p1 x="1340" y="680"/>

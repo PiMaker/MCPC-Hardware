@@ -116,10 +116,10 @@ func Compile(file string, offset int, libraries []string, autoJump bool) []byte 
 	log.Println("Parsing labels...")
 
 	// Parse labels
-	labelMap := make(map[string]int)
+	labelMap := make(map[string]uint16)
 	for labelAddr, token := range tokens {
 		if token.label != "" {
-			labelMap[token.label] = labelAddr
+			labelMap[token.label] = uint16(labelAddr) - uint16(1)
 		}
 	}
 
@@ -175,8 +175,8 @@ func Compile(file string, offset int, libraries []string, autoJump bool) []byte 
 		switch tkn.command {
 		case "RAW":
 			n := parseHex(tkn.raw)
-			output[i*2] = byte((n & 0xF0) >> 8)
-			output[i*2+1] = byte(n & 0xF)
+			output[i*2] = byte((n & 0xFF00) >> 8)
+			output[i*2+1] = byte(n & 0x00FF)
 		case "MOV":
 			output[i*2] = parseRegister(tkn.args[1])
 			output[i*2+1] = (parseRegister(tkn.args[0]) << 4) | 0x1
@@ -244,10 +244,10 @@ func aluCmd(output *[]byte, i int, tkn *tokenLine) {
 	}
 }
 
-// Parses a hex encoded string with leading "0x" marker to a 16 bit integer
-func parseHex(raw string) int16 {
-	p, _ := strconv.ParseInt(raw[2:], 16, 16)
-	return int16(p)
+// Parses a hex encoded string with leading "0x" marker to an unsigned 16 bit integer
+func parseHex(raw string) uint16 {
+	p, _ := strconv.ParseUint(raw[2:], 16, 16)
+	return uint16(p)
 }
 
 // Parses a string representation of a register value to a machine(=MCPC)-readable integer constant
@@ -442,7 +442,7 @@ func tokenize(reader io.Reader) []*tokenLine {
 		if err == nil {
 			// Literal found
 			tokens = append(tokens, &tokenLine{
-				raw:     strconv.Itoa(int(n)),
+				raw:     "0x" + strconv.FormatInt(n, 16),
 				label:   label,
 				command: "RAW",
 				args:    make([]string, 0),
