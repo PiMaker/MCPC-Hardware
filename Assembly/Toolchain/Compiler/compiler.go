@@ -97,7 +97,7 @@ func Compile(file string, offset int, libraries []string, autoJump bool) []byte 
 		libs[i] = loadLibrary(libPath)
 	}
 
-	readFile(file, libs)
+	readFile(file)
 
 	return []byte{0x3, 0x6, 0xff, 0xfe, 0xd3, 0x3b, 0x5, 0x3a, 0x5b, 0x33}
 }
@@ -121,7 +121,7 @@ func loadLibrary(path string) library {
 		line := scanner.Text()
 		replaceeMatch := libraryReplaceeRegex.FindStringSubmatch(line)
 		if len(replaceeMatch) == 0 {
-			log.Fatal("Could not load library, parser error on line: " + strconv.Itoa(lineNum))
+			log.Fatalln("ERROR: Could not load library, parser error on line: " + strconv.Itoa(lineNum))
 		}
 
 		// Remove first entry (full match)
@@ -165,7 +165,7 @@ func loadLibrary(path string) library {
 	}
 
 	if err := scanner.Err(); err != nil {
-		log.Fatal(err)
+		log.Fatalln(err)
 	}
 
 	return lib
@@ -175,7 +175,7 @@ func removeIndex(a []string, i int) []string {
 	return append(a[:i], a[i+1:]...)
 }
 
-func readFile(path string, libs []library) []tokenLine {
+func readFile(path string) []tokenLine {
 	file, err := os.Open(path)
 	if err != nil {
 		fmt.Println("ERROR: Can't read input file.")
@@ -183,26 +183,66 @@ func readFile(path string, libs []library) []tokenLine {
 	}
 	defer file.Close()
 
+	var tokens []tokenLine
+	nextLabel := ""
+	lineNum := 0
+
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
 		// Parse each line
-		// DEBUG, TODO: Remove immediate replacing of lib commands
-		t := scanner.Text()
+		t := strings.TrimSpace(scanner.Text())
+		// Handle comments
+		t = strings.Split(t, ";")[0]
 
-		for _, lib := range libs {
-			for _, entry := range lib {
-				if entry.capture.MatchString(t) {
-					t = entry.capture.ReplaceAllString(t, entry.replacement)
-				}
+		// Split at spaces
+		tspaced := strings.Split(t, " ")
+		// Remove empty entries
+		for i := 0; i < len(tspaced); i++ {
+			if tspaced[i] == "" {
+				tspaced = removeIndex(tspaced, i)
+				i--
 			}
 		}
 
-		fmt.Println("  " + t)
+		// Label detection
+		isLabel := strings.IndexRune(tspaced[0], '.') == 0
+		label := ""
+		if isLabel {
+			if nextLabel != "" {
+				log.Fatalln("ERROR: Two labels behind each other, line: " + strconv.Itoa(lineNum))
+			}
+
+			label = tspaced[0]
+		} else if nextLabel == "" {
+			label = nextLabel
+			nextLabel = ""
+		}
+
+		if len(tspaced) == 1 {
+			nextLabel = label
+			continue
+		}
+
+		tspaced = tspaced[1:]
+
+		// Check for raw instructions
+		n, err := strconv.ParseInt(t, 16, 16)
+		if err == nil {
+			// Literal found
+			tokens = append(tokens, tokenLine{
+				raw:     strconv.Itoa(int(n)),
+				label:   label,
+				command: "",
+				args:    make([]string, 0),
+			})
+		}
+
+		lineNum++
 	}
 
 	if err := scanner.Err(); err != nil {
-		log.Fatal(err)
+		log.Fatalln(err)
 	}
 
-	return nil
+	return tokens
 }

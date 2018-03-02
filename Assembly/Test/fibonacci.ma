@@ -16,8 +16,3 @@ INC D
 ; Loop
 JMPGT .fibstart F D
 ; End
-
-
-
-; Regex (WIP):
-; ^\s*?(\..*? )?(.*?) 
