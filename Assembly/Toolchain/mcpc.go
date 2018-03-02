@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"io/ioutil"
+	"log"
 	"os"
 
 	"./Compiler"
@@ -27,7 +28,7 @@ Options:
   interpret               Runs an MCPC virtual machine and executes a specified binary file. Use the --config flag to specify bus devices.
   --library=<library>     Includes a library, specified in HJSON format, which allows higher-level instructions to be compiled down.
   --offset=<offset>       Specifies an offset that will be applied to the binary file [default: 0].
-  --enable-offset-jump    If enabled, a 'jmp' instruction will be inserted at the beginning, jumping to the offset position. If the offset is smaller than 2, this flag will be ignored.
+  --enable-offset-jump    If enabled, a 'jmp' instruction will be inserted at the beginning, jumping to the offset position. If the offset is smaller than 3, this flag will be ignored.
   --ascii                 Outputs the ascii binary format for use with the Digital circuit simulator.
   -h --help               Show this screen.
   --version               Show version.`
@@ -44,7 +45,7 @@ Options:
 		assembly := compiler.Compile(argString(args, "<file>"), offset, argStrings(args, "--library"), argBool(args, "--enable-offset-jump"))
 
 		if argBool(args, "--ascii") {
-			fmt.Println("Converting to ASCII format...")
+			log.Println("Converting to ASCII format...")
 			assembly = toASCIIFormat(assembly)
 		}
 
@@ -53,7 +54,7 @@ Options:
 	} else if argBool(args, "link") {
 
 		// Link
-		fmt.Println("Linking OS () into ")
+		log.Println("Linking OS () into ")
 
 	} else if argBool(args, "interpret") {
 
@@ -61,7 +62,7 @@ Options:
 		interpreter.Interpret(argString(args, "<file>"), "")
 
 	} else {
-		fmt.Println("Invalid command, use -h for help")
+		log.Println("Invalid command, use -h for help")
 	}
 }
 
