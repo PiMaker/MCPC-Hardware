@@ -42,7 +42,7 @@
 			},
 			{
 				"name": "variable.object.mcpc",
-				"match": "(?i)\\b(SCR1|SCR2|BUS|1|-1|0|SP|PC)\\b"
+				"match": "(?i)\\b(SCR1|SCR2|BUS|-1|1|0|SP|PC)\\b"
 			}]
 		},
 		"labels": {
@@ -76,7 +76,7 @@
 			},
 			{
 				"name": "comment.mcpc",
-				"match": "\\-[^-]+$"
+				"match": "\\-\\s[^-]+$"
 			}]
 		}
 	},

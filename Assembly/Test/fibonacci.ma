@@ -8,17 +8,21 @@
 ; Setup variables
 MOV 1 numA
 MOV 1 numB
-MOV 0 count
-SET maxFibs
-0x0020 ; Set number of fibonaccis to calculate
+MOV -1 count
+
+SET maxFibs ; Set number of fibonaccis to calculate
+0x0014 ; 20 in dec
+
 ; Perform fibonacci algorithm
 .fibstart ADD numA acc numB
-mov numB numA
-mov acc numB
+MOV numB numA
+MOV acc numB
 ; Output current number on hex display
-mov numA output
+MOV numA output
+
 ; Loop
 INC count
 JMPGT .fibstart maxFibs count
+
 ; End
 HALT

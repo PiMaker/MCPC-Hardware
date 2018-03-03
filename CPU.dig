@@ -20,7 +20,7 @@
         </entry>
         <entry>
           <string>Data</string>
-          <data size="131072">0,d1,1,d1,3,c1,5,6,0,15,12,b,0,11,1,21,7,1,d3,3b,9,6,0,4,38,5e,8b,92</data>
+          <data size="131072">0,d1,1,d1,3,e1,5,0,0,14,12,b,0,11,1,21,7,1,d3,3b,9,6,0,4,38,5e,8b,92</data>
         </entry>
         <entry>
           <string>inverterConfig</string>
@@ -327,7 +327,7 @@
         </entry>
         <entry>
           <string>Frequency</string>
-          <int>50</int>
+          <int>100</int>
         </entry>
       </elementAttributes>
       <pos x="200" y="-640"/>
@@ -2159,6 +2159,11 @@ Counter:</string>
       </elementAttributes>
       <pos x="2580" y="-360"/>
     </visualElement>
+    <visualElement>
+      <elementName>Delay</elementName>
+      <elementAttributes/>
+      <pos x="1060" y="-380"/>
+    </visualElement>
   </visualElements>
   <wires>
     <wire>
@@ -2314,7 +2319,7 @@ Counter:</string>
       <p2 x="660" y="-400"/>
     </wire>
     <wire>
-      <p1 x="1100" y="-400"/>
+      <p1 x="1040" y="-400"/>
       <p2 x="1200" y="-400"/>
     </wire>
     <wire>
@@ -3338,16 +3343,20 @@ Counter:</string>
       <p2 x="2040" y="-380"/>
     </wire>
     <wire>
-      <p1 x="1100" y="-380"/>
-      <p2 x="1120" y="-380"/>
-    </wire>
-    <wire>
       <p1 x="1160" y="-380"/>
       <p2 x="1200" y="-380"/>
     </wire>
     <wire>
       <p1 x="2480" y="-380"/>
       <p2 x="2500" y="-380"/>
+    </wire>
+    <wire>
+      <p1 x="1100" y="-380"/>
+      <p2 x="1120" y="-380"/>
+    </wire>
+    <wire>
+      <p1 x="1040" y="-380"/>
+      <p2 x="1060" y="-380"/>
     </wire>
     <wire>
       <p1 x="1500" y="-380"/>
@@ -3444,6 +3453,10 @@ Counter:</string>
     <wire>
       <p1 x="1040" y="-300"/>
       <p2 x="1040" y="-140"/>
+    </wire>
+    <wire>
+      <p1 x="1040" y="-400"/>
+      <p2 x="1040" y="-380"/>
     </wire>
     <wire>
       <p1 x="-20" y="-460"/>
@@ -3672,10 +3685,6 @@ Counter:</string>
     <wire>
       <p1 x="1100" y="180"/>
       <p2 x="1100" y="200"/>
-    </wire>
-    <wire>
-      <p1 x="1100" y="-400"/>
-      <p2 x="1100" y="-380"/>
     </wire>
     <wire>
       <p1 x="-80" y="-540"/>
