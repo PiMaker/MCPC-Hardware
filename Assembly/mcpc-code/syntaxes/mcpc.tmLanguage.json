@@ -1,0 +1,84 @@
+{
+	"$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+	"name": "MCPC",
+	"patterns": [
+		{
+			"include": "#instructions"
+		},
+		{
+			"include": "#registers"
+		},
+		{
+			"include": "#labels"
+		},
+		{
+			"include": "#comments"
+		},
+		{
+			"include": "#literals"
+		},
+		{
+			"include": "#define"
+		},
+		{
+			"include": "#libdef"
+		}
+	],
+	"repository": {
+		"instructions": {
+			"patterns": [{
+				"name": "keyword.control.mcpc",
+				"match": "(?i)\\b(mov|movnz|movez|halt|hold|bus|set)\\b"
+			},
+			{
+				"name": "keyword.control.less.mcpc",
+				"match": "(?i)\\b(add|gt|shft|and|or|not|mul|eq)\\b"
+			}]
+		},
+		"registers": {
+			"patterns": [{
+				"name": "variable.mcpc",
+				"match": "(?i)\\b\\s(A|B|C|D|E|F|G|H)\\b"
+			},
+			{
+				"name": "variable.object.mcpc",
+				"match": "(?i)\\b(SCR1|SCR2|BUS|1|-1|0|SP|PC)\\b"
+			}]
+		},
+		"labels": {
+			"patterns": [{
+				"name": "storage.modifier.mcpc",
+				"match": "\\..+?\\b"
+			}]
+		},
+		"comments": {
+			"patterns": [{
+				"name": "comment.mcpc",
+				"match": ";.*"
+			}]
+		},
+		"literals": {
+			"patterns": [{
+				"name": "constant.numeric.mcpc",
+				"match": "\\b0x\\d+\\b"
+			}]
+		},
+		"define": {
+			"patterns": [{
+				"name": "meta.preprocessor.mcpc",
+				"match": "\\#declare"
+			}]
+		},
+		"libdef": {
+			"patterns": [{
+				"name": "meta.preprocessor.mcpc",
+				"match": "- .*? ="
+			},
+			{
+				"name": "comment.mcpc",
+				"match": "\\-[^-]+$"
+			}]
+		}
+	},
+	"scopeName": "source.mcpc"
+}

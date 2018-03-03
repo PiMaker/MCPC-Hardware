@@ -13,10 +13,10 @@ SET maxFibs
 0x0020 ; Set number of fibonaccis to calculate
 ; Perform fibonacci algorithm
 .fibstart ADD numA acc numB
-MOV numB numA
-MOV acc numB
+mov numB numA
+mov acc numB
 ; Output current number on hex display
-MOV numA output
+mov numA output
 ; Loop
 INC count
 JMPGT .fibstart maxFibs count

@@ -308,7 +308,7 @@ func loadLibrary(path string) library {
 	lineNum := 0
 	for scanner.Scan() {
 		// Parse each line
-		line := scanner.Text()
+		line := strings.TrimSpace(scanner.Text())
 		replaceeMatch := libraryReplaceeRegex.FindStringSubmatch(line)
 		if len(replaceeMatch) == 0 {
 			log.Fatalln("ERROR: Could not load library, parser error on line: " + strconv.Itoa(lineNum))
@@ -386,7 +386,7 @@ func tokenize(reader io.Reader) []*tokenLine {
 	scanner := bufio.NewScanner(reader)
 	for scanner.Scan() {
 		// Parse each line
-		t := strings.TrimSpace(scanner.Text())
+		t := strings.ToUpper(strings.TrimSpace(scanner.Text()))
 
 		// Handle comments
 		t = strings.TrimSpace(strings.Split(t, ";")[0])
@@ -407,7 +407,7 @@ func tokenize(reader io.Reader) []*tokenLine {
 		}
 
 		// Handle declarations
-		if tspaced[0] == "#declare" {
+		if tspaced[0] == "#DECLARE" {
 			if len(tspaced) != 3 {
 				log.Fatalln("ERROR: Invalid #declare: " + scanner.Text())
 			}
