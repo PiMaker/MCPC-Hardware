@@ -92,6 +92,11 @@ func Compile(file string, offset int, libraries []string, autoJump bool) []byte 
 						rawLibReplacement := r.capture.ReplaceAllString(token.raw, r.replacement)
 						replacementTokens := tokenize(strings.NewReader(rawLibReplacement))
 
+						// Handle labels
+						if token.label != "" {
+							replacementTokens[0].label = token.label
+						}
+
 						// Perform insert
 
 						// Grow the slice
@@ -120,6 +125,7 @@ func Compile(file string, offset int, libraries []string, autoJump bool) []byte 
 	for labelAddr, token := range tokens {
 		if token.label != "" {
 			labelMap[token.label] = uint16(labelAddr) - uint16(1)
+			////fmt.Println(" > Label " + token.label + " located at 0x" + strconv.FormatInt(int64(labelMap[token.label]), 16))
 		}
 	}
 
@@ -171,6 +177,7 @@ func Compile(file string, offset int, libraries []string, autoJump bool) []byte 
 	output := make([]byte, len(tokens)*2)
 
 	for i, tkn := range tokens {
+		////fmt.Println("  COMPILE > " + tkn.raw)
 		// Check which base command is used and perform according transform action
 		switch tkn.command {
 		case "RAW":
@@ -194,6 +201,8 @@ func Compile(file string, offset int, libraries []string, autoJump bool) []byte 
 		case "SET":
 			output[i*2] = parseRegister(tkn.args[0])
 			output[i*2+1] = 0x6
+		case "BRK":
+			output[i*2+1] = 0x7
 		case "AND", "OR", "NOT", "ADD", "SHFT", "MUL", "GT", "EQ":
 			aluCmd(&output, i, tkn)
 		case "HALT":
@@ -235,8 +244,8 @@ func aluCmd(output *[]byte, i int, tkn *tokenLine) {
 	if tkn.command == "SHFT" {
 		if tkn.args[2][0] == '-' {
 			// Special care for negative shiftings by manually setting highest bit to 1
-			v, _ := strconv.ParseInt(tkn.args[2][3:], 16, 16)
-			tkn.args[2] = strconv.FormatInt(v|0x8, 16)
+			v, _ := strconv.ParseInt(tkn.args[2][3:], 16, 17)
+			tkn.args[2] = "0X" + strconv.FormatInt(v|0x8, 16)
 		}
 		out[i*2] = parseRegister(tkn.args[1]) | (byte(parseHex(tkn.args[2])&0xF) << 4)
 	} else {
@@ -246,7 +255,7 @@ func aluCmd(output *[]byte, i int, tkn *tokenLine) {
 
 // Parses a hex encoded string with leading "0x" marker to an unsigned 16 bit integer
 func parseHex(raw string) uint16 {
-	p, _ := strconv.ParseUint(raw[2:], 16, 16)
+	p, _ := strconv.ParseUint(raw[2:], 16, 17)
 	return uint16(p)
 }
 
@@ -382,6 +391,7 @@ func tokenize(reader io.Reader) []*tokenLine {
 	var tokens []*tokenLine
 
 	declarationMap := make(map[string]string)
+	longestDeclaration := 0
 
 	scanner := bufio.NewScanner(reader)
 	for scanner.Scan() {
@@ -412,7 +422,14 @@ func tokenize(reader io.Reader) []*tokenLine {
 				log.Fatalln("ERROR: Invalid #declare: " + scanner.Text())
 			}
 
+			if len(tspaced[2]) < 2 {
+				log.Fatalln("ERROR: Invalid #declare (length of replacee has to be at least 2 characters): " + scanner.Text())
+			}
+
 			declarationMap[tspaced[2]] = tspaced[1]
+			if len(tspaced[2]) > longestDeclaration {
+				longestDeclaration = len(tspaced[2])
+			}
 
 			continue
 		}
@@ -438,7 +455,7 @@ func tokenize(reader io.Reader) []*tokenLine {
 		}
 
 		// Check for raw instructions
-		n, err := strconv.ParseInt(t[2:], 16, 16)
+		n, err := strconv.ParseInt(t[2:], 16, 17)
 		if err == nil {
 			// Literal found
 			tokens = append(tokens, &tokenLine{
@@ -455,8 +472,13 @@ func tokenize(reader io.Reader) []*tokenLine {
 		if len(tspaced) > 1 {
 			cmdArgs = tspaced[1:]
 			for i := 0; i < len(cmdArgs); i++ {
-				for k, v := range declarationMap {
-					cmdArgs[i] = strings.Replace(cmdArgs[i], k, v, -1)
+				// Special care on iterating the declationMap to allow more complex declarations
+				for decLength := longestDeclaration; decLength > 0; decLength-- {
+					for k, v := range declarationMap {
+						if len(k) == decLength {
+							cmdArgs[i] = strings.Replace(cmdArgs[i], k, v, -1)
+						}
+					}
 				}
 			}
 		}

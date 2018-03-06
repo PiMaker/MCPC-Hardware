@@ -1,0 +1,2 @@
+- STOR data.reg addr.reg = SHFT :addr SCR1 -0x4, OR SCR1 SCR1 1, BUS SCR1 0x1, BUS :data 0x1 - Stores data in SRAM
+- LOAD data.reg addr.reg = SHFT :addr SCR1 -0x4, BUS SCR1 0x1, MOV BUS :data - Retrieves data from SRAM

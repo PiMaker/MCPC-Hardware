@@ -634,6 +634,16 @@
       </elementAttributes>
       <pos x="3720" y="200"/>
     </visualElement>
+    <visualElement>
+      <elementName>Clock</elementName>
+      <elementAttributes>
+        <entry>
+          <string>Label</string>
+          <string>MAIN CLOCK</string>
+        </entry>
+      </elementAttributes>
+      <pos x="140" y="760"/>
+    </visualElement>
   </visualElements>
   <wires>
     <wire>

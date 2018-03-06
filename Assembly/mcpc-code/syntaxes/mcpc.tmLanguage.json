@@ -22,6 +22,9 @@
 		},
 		{
 			"include": "#libdef"
+		},
+		{
+			"include": "#brk"
 		}
 	],
 	"repository": {
@@ -60,7 +63,7 @@
 		"literals": {
 			"patterns": [{
 				"name": "constant.numeric.mcpc",
-				"match": "\\b0x\\d+\\b"
+				"match": "\\b0x[0-9a-fA-F]+\\b"
 			}]
 		},
 		"define": {
@@ -77,6 +80,12 @@
 			{
 				"name": "comment.mcpc",
 				"match": "\\-\\s[^-]+$"
+			}]
+		},
+		"brk": {
+			"patterns": [{
+				"name": "meta.preprocessor.mcpc",
+				"match": "(?i)\\b(brk)\\b"
 			}]
 		}
 	},
