@@ -52,10 +52,17 @@ type libraryEntry struct {
 var libraryReplaceeRegex = regexp.MustCompile("- (\\S+) ?(\\S*?)? ?(\\S*?)? ?(\\S*?)? ?=")
 var libraryReplacementRegex = regexp.MustCompile("=(.*?)(-\\D|$)")
 var paramTypeRegex = regexp.MustCompile("\\.(reg|lit)\\d{0,2}")
+var charLiteralRegex = regexp.MustCompile("^'.+'$")
+var spaceReplaceRegex = regexp.MustCompile("\\'(.*?)\\ (.*?)\\'")
+var spaceReplaceDoubleRegex = regexp.MustCompile("\\'\\ \\ \\'")
 
 // Compile transforms a .ma assembly file to a .mb binary
 func Compile(file string, offset int, libraries []string, autoJump bool) []byte {
 	log.Println("Compiling " + file)
+
+	// Possibly rework this:
+	longestDeclaration = 0
+	declarationMap = make(map[string]string)
 
 	// Don't allow impossible auto-jump
 	if autoJump && offset < 3 {
@@ -111,6 +118,8 @@ func Compile(file string, offset int, libraries []string, autoJump bool) []byte 
 						// Update index
 						i += len(replacementTokens) - 1
 
+						////fmt.Println("Replaced \"" + token.raw + "\" with \"" + fmt.Sprintf("%V", replacementTokens) + "\"")
+
 						replaced++
 					}
 				}
@@ -124,8 +133,8 @@ func Compile(file string, offset int, libraries []string, autoJump bool) []byte 
 	labelMap := make(map[string]uint16)
 	for labelAddr, token := range tokens {
 		if token.label != "" {
-			labelMap[token.label] = uint16(labelAddr) - uint16(1)
-			////fmt.Println(" > Label " + token.label + " located at 0x" + strconv.FormatInt(int64(labelMap[token.label]), 16))
+			labelMap[token.label] = uint16(labelAddr) // - uint16(1)
+			fmt.Println(" > Label " + token.label + " located at 0x" + strconv.FormatInt(int64(labelMap[token.label]), 16))
 		}
 	}
 
@@ -181,9 +190,20 @@ func Compile(file string, offset int, libraries []string, autoJump bool) []byte 
 		// Check which base command is used and perform according transform action
 		switch tkn.command {
 		case "RAW":
-			n := parseHex(tkn.raw)
-			output[i*2] = byte((n & 0xFF00) >> 8)
-			output[i*2+1] = byte(n & 0x00FF)
+			if charLiteralRegex.MatchString(tkn.raw) {
+				content := tkn.raw[1 : len(tkn.raw)-1]
+				content = strings.Replace(content, "\\n", "\n", -1)
+				content = strings.Replace(content, "\\s", " ", -1)
+				output[i*2+1] = byte(content[0]) & 0x00FF
+
+				if len(output) > 1 {
+					output[i*2] = byte(content[1]) & 0x00FF
+				}
+			} else {
+				n := parseHex(tkn.raw)
+				output[i*2] = byte((n & 0xFF00) >> 8)
+				output[i*2+1] = byte(n & 0x00FF)
+			}
 		case "MOV":
 			output[i*2] = parseRegister(tkn.args[1])
 			output[i*2+1] = (parseRegister(tkn.args[0]) << 4) | 0x1
@@ -387,22 +407,27 @@ func readFile(path string) []*tokenLine {
 	return tokenize(file)
 }
 
+// Defined globally, not very pretty but gets the job done
+var declarationMap map[string]string
+var longestDeclaration int
+
 func tokenize(reader io.Reader) []*tokenLine {
 	var tokens []*tokenLine
-
-	declarationMap := make(map[string]string)
-	longestDeclaration := 0
 
 	scanner := bufio.NewScanner(reader)
 	for scanner.Scan() {
 		// Parse each line
-		t := strings.ToUpper(strings.TrimSpace(scanner.Text()))
+		t := strings.TrimSpace(scanner.Text())
 
 		// Handle comments
 		t = strings.TrimSpace(strings.Split(t, ";")[0])
 		if t == "" {
 			continue
 		}
+
+		// Replace spaces in char literals with \s
+		t = spaceReplaceDoubleRegex.ReplaceAllString(t, "'\\s\\s'")
+		t = spaceReplaceRegex.ReplaceAllString(t, "'$1\\s$2'")
 
 		// Split at spaces
 		tspaced := strings.Split(t, " ")
@@ -413,6 +438,10 @@ func tokenize(reader io.Reader) []*tokenLine {
 				i--
 			} else {
 				tspaced[i] = strings.TrimSpace(tspaced[i])
+				if tspaced[i][0] != '\'' || tspaced[i][len(tspaced[i])-1] != '\'' {
+					// Not a char literal, safe to transform to uppercase
+					tspaced[i] = strings.ToUpper(tspaced[i])
+				}
 			}
 		}
 
@@ -457,9 +486,19 @@ func tokenize(reader io.Reader) []*tokenLine {
 		// Check for raw instructions
 		n, err := strconv.ParseInt(t[2:], 16, 17)
 		if err == nil {
-			// Literal found
+			// Number literal found
 			tokens = append(tokens, &tokenLine{
 				raw:     "0x" + strconv.FormatInt(n, 16),
+				label:   label,
+				command: "RAW",
+				args:    make([]string, 0),
+			})
+			continue
+		}
+		if t[0] == '\'' && t[len(t)-1] == '\'' {
+			// Char literal found
+			tokens = append(tokens, &tokenLine{
+				raw:     t,
 				label:   label,
 				command: "RAW",
 				args:    make([]string, 0),

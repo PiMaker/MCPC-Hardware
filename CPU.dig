@@ -20,7 +20,7 @@
         </entry>
         <entry>
           <string>Data</string>
-          <data size="131072">0,d1,1,d1,3,e1,5,0,0,14,12,b,0,11,1,21,7,1,d3,3b,9,6,0,4,38,5e,8b,92</data>
+          <data size="131072">0,d1,1,d1,3,e1,5,6,0,14,12,b,0,11,1,21,7,1,d3,3b,9,6,0,4,38,5e,8b,92</data>
         </entry>
         <entry>
           <string>inverterConfig</string>
@@ -30,7 +30,7 @@
         </entry>
         <entry>
           <string>lastDataFile</string>
-          <string>E:\Repos\MCPC\Assembly\Test\fibonacci.mb</string>
+          <string>C:\Users\stefa\Desktop\Repos\MCPC\Assembly\Test\fibonacci.mb</string>
         </entry>
       </elementAttributes>
       <pos x="680" y="240"/>
@@ -327,7 +327,7 @@
         </entry>
         <entry>
           <string>Frequency</string>
-          <int>100</int>
+          <int>50</int>
         </entry>
       </elementAttributes>
       <pos x="200" y="-640"/>

@@ -25,6 +25,9 @@
 		},
 		{
 			"include": "#brk"
+		},
+		{
+			"include": "#chars"
 		}
 	],
 	"repository": {
@@ -86,6 +89,24 @@
 			"patterns": [{
 				"name": "meta.preprocessor.mcpc",
 				"match": "(?i)\\b(brk)\\b"
+			}]
+		},
+		"chars": {
+			"patterns": [{
+				"name": "string.mcpc",
+				"match": "\\'.{1,2}\\'"
+			},
+			{
+				"name": "string.mcpc",
+				"match": "\\'.\\\\n\\'"
+			},
+			{
+				"name": "string.mcpc",
+				"match": "\\'\\\\n.\\'"
+			},
+			{
+				"name": "string.mcpc",
+				"match": "\\'\\\\n\\\\n\\'"
 			}]
 		}
 	},
