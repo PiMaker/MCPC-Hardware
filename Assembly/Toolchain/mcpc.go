@@ -19,6 +19,7 @@ Usage:
   mcpc compile <file> <output> [--library=<library>...] [--offset=<offset>] [--enable-offset-jump] [--ascii]
   mcpc link <main> <output> --app=<include>... [--library=<library>...] [--ascii]
   mcpc interpret <file> [--config=<config>]
+  mcpc debug <file> [--config=<config>]
   mcpc -h | --help
   mcpc --version
 
@@ -26,6 +27,7 @@ Options:
   compile                 Compiles an assembly file to binary.
   link                    Links multiple different assembly files together with an operating system (main) to create a static OS with program loading capabilities. Refer to documentation for program jump table format.
   interpret               Runs an MCPC virtual machine and executes a specified binary file. Use the --config flag to specify bus devices.
+  debug                   Uses the MCPC interpreter to run the specified binary file and shows a TUI interface for debugging purposes.
   --library=<library>     Includes a library, specified in HJSON format, which allows higher-level instructions to be compiled down.
   --offset=<offset>       Specifies an offset that will be applied to the binary file [default: 0].
   --enable-offset-jump    If enabled, a 'jmp' instruction will be inserted at the beginning, jumping to the offset position. If the offset is smaller than 3, this flag will be ignored.
@@ -56,10 +58,10 @@ Options:
 		// Link
 		log.Println("Linking OS () into ")
 
-	} else if argBool(args, "interpret") {
+	} else if argBool(args, "interpret") || argBool(args, "debug") {
 
-		// Interpret
-		interpreter.Interpret(argString(args, "<file>"), "")
+		// Interpret/Debug
+		interpreter.Interpret(argString(args, "<file>"), "", argBool(args, "debug"))
 
 	} else {
 		log.Println("Invalid command, use -h for help")

@@ -7,9 +7,9 @@
 - JMPGT to.lit val.reg cmpto.reg =  SET SCR2, :to, GT :val SCR1 :cmpto, MOVNZ SCR2 PC SCR1 - Jump to "to" if val.reg is greater than cmpto.reg
 - JMPEQ to.lit val.reg cmpto.reg =  SET SCR2, :to, EQ :val SCR1 :cmpto, MOVNZ SCR2 PC SCR1 - Jump to "to" if val.reg is equal to cmpto.reg
 - JMPNQ to.lit val.reg cmpto.reg =  SET SCR2, :to, EQ :val SCR1 :cmpto, MOVEZ SCR2 PC SCR1 - Jump to "to" if val.reg is not equal to cmpto.reg
-- CALL func.lit =                   ADD SP SP -1, SET SCR2, :func, STOR PC SP, MOV SCR2 PC, ADD SP SP 1 - Calls a function at addr.reg
-- RET =                             LOAD SCR1 SP, ADD SCR1 SCR1 0, MOV SCR1 PC - Returns from a function
 - INC val.reg =                     ADD :val :val 1 - Increments by one
 - DEC val.reg =                     ADD :val :val -1 - Decrements by one
 - NOOP =                            MOV SCR1 SCR1 - Does nothing for one cycle
 - CHAR addr.reg data.lit =          SET SCR2, :data, STOR SCR2 :addr, INC addr
+- CALL func.lit =                   ADD SP SP -1, SET SCR2, :func, STOR PC SP, MOV SCR2 PC, ADD SP SP 1 - Calls a function at addr.reg
+- RET =                             LOAD SCR1 SP, ADD SCR1 SCR1 0, BRK, MOV SCR1 PC - Returns from a function
