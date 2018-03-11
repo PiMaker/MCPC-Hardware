@@ -133,7 +133,7 @@ func Compile(file string, offset int, libraries []string, autoJump bool) []byte 
 	labelMap := make(map[string]uint16)
 	for labelAddr, token := range tokens {
 		if token.label != "" {
-			labelMap[token.label] = uint16(labelAddr) // - uint16(1)
+			labelMap[token.label] = uint16(labelAddr) - uint16(1)
 			fmt.Println(" > Label " + token.label + " located at 0x" + strconv.FormatInt(int64(labelMap[token.label]), 16))
 		}
 	}

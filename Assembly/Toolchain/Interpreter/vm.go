@@ -15,7 +15,7 @@ const (
 
 // VM represents an MCPC virtual machine state
 type VM struct {
-	Registers Registers
+	Registers *Registers
 	SRAM      []uint16
 	EEPROM    []uint16
 	Halted    bool
@@ -44,7 +44,7 @@ func NewVM(program []uint16) *VM {
 
 	sram := make([]uint16, MaxSRAMValue)
 
-	regs := Registers{
+	regs := &Registers{
 		A:      &Register{Value: 0, Address: 0x0, Writeable: true},
 		B:      &Register{Value: 0, Address: 0x1, Writeable: true},
 		C:      &Register{Value: 0, Address: 0x2, Writeable: true},
@@ -82,6 +82,10 @@ func (vm *VM) Step() (bool, string, error) {
 	brk := false
 	termout := ""
 	var err error
+
+	if int(vm.Registers.PC.Value) >= len(vm.EEPROM) {
+		return false, "", errors.New("Invalid EEPROM address, PC out of range")
+	}
 
 	ins := vm.EEPROM[vm.Registers.PC.Value]
 	instruction := ins & 0x000F

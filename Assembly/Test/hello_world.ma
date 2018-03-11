@@ -26,22 +26,28 @@ CHAR addr 'or'
 CHAR addr 'ld'
 CHAR addr '!\n'
 
+BRK
+
 MOV baseAddr addr ; Reset memory position
 SET maxAddr ; Set max memory position
 0x0017
 
 ; Output characters from memory
 #declare F tmp
-.loop CALL .print ; Call print function
+.loop BRK
+CALL .print ; Call print function
+BRK
 INC addr
 JMPNQ .loop_end addr maxAddr
 MOV baseAddr addr ; Reset memory position at end of data
 .loop_end GOTO .loop ; Loop
 
-.print LOAD data addr ; FUNCTION print
+.print BRK
+LOAD data addr ; FUNCTION print
 SHFT data tmp -0x4
 SHFT tmp tmp -0x4
 BUS tmp 0x2 ; 1st char
 AND data tmp left_only
 BUS tmp 0x2 ; 2nd char
+BRK
 RET
