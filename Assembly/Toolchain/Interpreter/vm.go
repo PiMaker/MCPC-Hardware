@@ -42,7 +42,7 @@ var sramWriteAddress uint16
 // NewVM creates a new MCPC virtual machine instance
 func NewVM(program []uint16) *VM {
 
-	sram := make([]uint16, MaxSRAMValue)
+	sram := make([]uint16, MaxSRAMValue+1)
 
 	regs := &Registers{
 		A:      &Register{Value: 0, Address: 0x0, Writeable: true},

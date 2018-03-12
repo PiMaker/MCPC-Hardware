@@ -205,21 +205,21 @@ func Compile(file string, offset int, libraries []string, autoJump bool) []byte 
 				output[i*2+1] = byte(n & 0x00FF)
 			}
 		case "MOV":
-			output[i*2] = parseRegister(tkn.args[1])
-			output[i*2+1] = (parseRegister(tkn.args[0]) << 4) | 0x1
+			output[i*2] = ParseRegister(tkn.args[1])
+			output[i*2+1] = (ParseRegister(tkn.args[0]) << 4) | 0x1
 		case "MOVNZ":
-			output[i*2] = (parseRegister(tkn.args[2]) << 4) | parseRegister(tkn.args[1])
-			output[i*2+1] = (parseRegister(tkn.args[0]) << 4) | 0x2
+			output[i*2] = (ParseRegister(tkn.args[2]) << 4) | ParseRegister(tkn.args[1])
+			output[i*2+1] = (ParseRegister(tkn.args[0]) << 4) | 0x2
 		case "MOVEZ":
-			output[i*2] = (parseRegister(tkn.args[2]) << 4) | parseRegister(tkn.args[1])
-			output[i*2+1] = (parseRegister(tkn.args[0]) << 4) | 0x3
+			output[i*2] = (ParseRegister(tkn.args[2]) << 4) | ParseRegister(tkn.args[1])
+			output[i*2+1] = (ParseRegister(tkn.args[0]) << 4) | 0x3
 		case "BUS":
 			output[i*2] = byte(parseHex(tkn.args[1]))
-			output[i*2+1] = (parseRegister(tkn.args[0]) << 4) | 0x4
+			output[i*2+1] = (ParseRegister(tkn.args[0]) << 4) | 0x4
 		case "HOLD":
 			output[i*2+1] = 0x5
 		case "SET":
-			output[i*2] = parseRegister(tkn.args[0])
+			output[i*2] = ParseRegister(tkn.args[0])
 			output[i*2+1] = 0x6
 		case "BRK":
 			output[i*2+1] = 0x7
@@ -260,16 +260,16 @@ func aluCmd(output *[]byte, i int, tkn *tokenLine) {
 		ins = 0xF
 	}
 
-	out[i*2+1] = ins | (parseRegister(tkn.args[0]) << 4)
+	out[i*2+1] = ins | (ParseRegister(tkn.args[0]) << 4)
 	if tkn.command == "SHFT" {
 		if tkn.args[2][0] == '-' {
 			// Special care for negative shiftings by manually setting highest bit to 1
 			v, _ := strconv.ParseInt(tkn.args[2][3:], 16, 17)
 			tkn.args[2] = "0X" + strconv.FormatInt(v|0x8, 16)
 		}
-		out[i*2] = parseRegister(tkn.args[1]) | (byte(parseHex(tkn.args[2])&0xF) << 4)
+		out[i*2] = ParseRegister(tkn.args[1]) | (byte(parseHex(tkn.args[2])&0xF) << 4)
 	} else {
-		out[i*2] = parseRegister(tkn.args[1]) | (parseRegister(tkn.args[2]) << 4)
+		out[i*2] = ParseRegister(tkn.args[1]) | (ParseRegister(tkn.args[2]) << 4)
 	}
 }
 
@@ -279,8 +279,8 @@ func parseHex(raw string) uint16 {
 	return uint16(p)
 }
 
-// Parses a string representation of a register value to a machine(=MCPC)-readable integer constant
-func parseRegister(reg string) byte {
+// ParseRegister parses a string representation of a register value to a machine(=MCPC)-readable integer constant
+func ParseRegister(reg string) byte {
 	switch reg {
 	case "A":
 		return 0x0

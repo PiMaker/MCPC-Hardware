@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"strconv"
 	"strings"
 
 	"github.com/jinzhu/copier"
@@ -49,7 +50,8 @@ func Interpret(file, config string, gui bool) {
 		disassemblyView.SetDynamicColors(true)
 		disassemblyView.SetRegions(true)
 		disassemblyView.SetText(toDisassembly(data16, vm))
-		disassemblyView.Highlight(fmt.Sprintf("0x%04X", vm.Registers.PC.Value))
+		virtualPC := vm.Registers.PC.Value
+		disassemblyView.Highlight(fmt.Sprintf("0x%04X", virtualPC))
 		root.AddItem(disassemblyView, 0, 0, 4, 1, 0, 0, false)
 
 		// Set up sidebar sections
@@ -70,6 +72,11 @@ func Interpret(file, config string, gui bool) {
 		sramView := tview.NewTable()
 		sramView.SetBorder(true)
 		sramView.SetTitle("SRAM")
+		sramView.SetFixed(1, 0)
+		sramView.SetSelectable(true, false)
+		sramRow := 0
+		sramView.Select(sramRow, 0)
+		setSRAMTable(vm, sramView)
 		root.AddItem(sramView, 2, 1, 1, 1, 0, 0, false)
 
 		terminalView := tview.NewTextView()
@@ -85,6 +92,63 @@ func Interpret(file, config string, gui bool) {
 		app := tview.NewApplication()
 		app.SetRoot(root, true).SetFocus(root)
 
+		// Set up scrolling
+		app.SetInputCapture(func(key *tcell.EventKey) *tcell.EventKey {
+			retval := key
+
+			if key.Modifiers() == tcell.ModShift || key.Modifiers() == tcell.ModCtrl {
+				if key.Key() == tcell.KeyUp {
+					sramRow--
+					retval = nil
+				} else if key.Key() == tcell.KeyDown {
+					sramRow++
+					retval = nil
+				} else if key.Key() == tcell.KeyPgUp {
+					sramRow = 1
+					retval = nil
+				} else if key.Key() == tcell.KeyPgDn {
+					sramRow = sramView.GetRowCount() - 1
+					retval = nil
+				}
+
+				if sramRow < 0 {
+					sramRow = 0
+				} else if sramRow >= sramView.GetRowCount() {
+					sramRow = sramView.GetRowCount() - 1
+				}
+				sramView.Select(sramRow, 0)
+				app.Draw()
+			} else if key.Modifiers() == tcell.ModNone {
+				p, _ := strconv.ParseUint(plength[2:], 16, 17)
+
+				if key.Key() == tcell.KeyUp {
+					virtualPC--
+					retval = nil
+				} else if key.Key() == tcell.KeyDown {
+					virtualPC++
+					retval = nil
+				} else if key.Key() == tcell.KeyPgUp {
+					virtualPC = 0
+					retval = nil
+				} else if key.Key() == tcell.KeyPgDn {
+					virtualPC = uint16(p) - 1
+					retval = nil
+				}
+
+				if virtualPC < 0 {
+					virtualPC = 0
+				} else if virtualPC >= uint16(p) {
+					virtualPC = uint16(p) - 1
+				}
+
+				disassemblyView.Highlight(fmt.Sprintf("0x%04X", virtualPC))
+				disassemblyView.ScrollToHighlight()
+				app.Draw()
+			}
+
+			return retval
+		})
+
 		// Set up behaviours
 		cmdField.SetDoneFunc(func(key tcell.Key) {
 			if key == tcell.KeyEscape {
@@ -96,25 +160,80 @@ func Interpret(file, config string, gui bool) {
 				if len(split) == 0 {
 					split = []string{""}
 				}
-				switch split[0] {
+				switch strings.ToLower(split[0]) {
 				case "", "step":
-					// Backup register values for comparison
+					// Backup values for comparison
 					regBck := cloneRegisters(vm.Registers)
+					sramBck := make([]uint16, len(vm.SRAM))
+					copier.Copy(sramBck, vm.SRAM)
 					// Step VM
 					_, output, err := vm.Step()
 					// Update view after step
 					disassemblyView.SetText(toDisassembly(data16, vm))
 					disassemblyView.Highlight(fmt.Sprintf("0x%04X", vm.Registers.PC.Value))
+					virtualPC = vm.Registers.PC.Value
 					disassemblyView.ScrollToHighlight()
-					stateView.SetText(fmt.Sprintf("State: Debugging/Paused\nPC: 0x%04X/%s", vm.Registers.PC.Value, plength))
+					if vm.Halted {
+						stateView.SetText(fmt.Sprintf("State: Halted\nPC: 0x%04X/%s", vm.Registers.PC.Value, plength))
+					} else {
+						stateView.SetText(fmt.Sprintf("State: Debugging/Paused\nPC: 0x%04X/%s", vm.Registers.PC.Value, plength))
+					}
 					registerView.SetText(getRegisterText(vm.Registers, regBck))
+					setSRAMTable(vm, sramView)
+					for sramI := 0; sramI < len(sramBck); sramI++ {
+						if sramBck[sramI] != vm.SRAM[sramI] {
+							sramView.Select(sramI/3+1, 0)
+							break
+						}
+					}
 					terminalText += output
 					terminalView.SetText(strings.Replace(terminalText, "\n", "\\n\n", -1))
 					terminalView.ScrollToEnd()
 					// Show error message if necessary
 					if err != nil {
-						messageBox("Error", "A VM error occured during the step: "+err.Error(), app, modal, root)
+						messageBox("VM Error", "A VM error occured during the step: "+err.Error(), app, modal, root)
 					}
+				case "run":
+					// Run until BRK or timeout
+					stateView.SetText(fmt.Sprintf("State: Running\nPC: -"))
+					app.Draw()
+
+					timeout := 0
+
+					for !vm.Halted && timeout < 1000 {
+						brk, termout, err := vm.Step()
+						if err != nil {
+							messageBox("VM Error", fmt.Sprintf("A VM error occured during step 0x%X (at PC=0x%X): %s", vm.EEPROM[vm.Registers.PC.Value-1], vm.Registers.PC.Value-1, err.Error()), app, modal, root)
+						}
+						if termout != "" {
+							terminalText += termout
+						}
+						if brk {
+							break
+						}
+						timeout++
+					}
+
+					if timeout == 1000 {
+						messageBox("Timeout", "Execution paused because a timeout was reached (1000 steps).", app, modal, root)
+					}
+
+					// Update view after steps
+					disassemblyView.SetText(toDisassembly(data16, vm))
+					disassemblyView.Highlight(fmt.Sprintf("0x%04X", vm.Registers.PC.Value))
+					virtualPC = vm.Registers.PC.Value
+					disassemblyView.ScrollToHighlight()
+					if vm.Halted {
+						stateView.SetText(fmt.Sprintf("State: Halted\nPC: 0x%04X/%s", vm.Registers.PC.Value, plength))
+					} else {
+						stateView.SetText(fmt.Sprintf("State: Debugging/Paused\nPC: 0x%04X/%s", vm.Registers.PC.Value, plength))
+					}
+					registerView.SetText(getRegisterText(vm.Registers, vm.Registers))
+					setSRAMTable(vm, sramView)
+					terminalView.SetText(strings.Replace(terminalText, "\n", "\\n\n", -1))
+					terminalView.ScrollToEnd()
+				case "exit", "quit":
+					app.Stop()
 				default:
 					messageBox("Invalid command", "Type \"help\" to see a list of available commands.", app, modal, root)
 				}
@@ -236,6 +355,8 @@ func toDisassembly(raw []uint16, vm *VM) string {
 	return retval[:len(retval)-2]
 }
 
+var sramWriteWaitingDecoder = false
+
 func decodeAssembly(c uint16, vm *VM) (cmd, params, note string, set bool) {
 	set = false
 
@@ -263,9 +384,31 @@ func decodeAssembly(c uint16, vm *VM) (cmd, params, note string, set bool) {
 			note = fmt.Sprintf("FALSE, would do: set %s to 0x%04X", decodeRegister(byte((c&0x0F00)>>8), colorNotes), getReg(vm, c, regFrom).Value)
 		}
 	case 0x4:
-		cmd = "BUS"
-		params = "send " + decodeRegister(byte((c&0x00F0)>>4), "white") + " to " + fmt.Sprintf("0x%02X", byte((c&0x0F00)>>8)) + " on bus"
-		note = fmt.Sprintf("payload=%04X", getReg(vm, c, regFrom).Value)
+		addr := byte((c & 0x0F00) >> 8)
+		payload := getReg(vm, c, regFrom).Value
+		if addr == 0x1 {
+			cmd = "SRAM"
+			if sramWriteWaitingDecoder {
+				sramWriteWaitingDecoder = false
+				params = fmt.Sprintf("write value 0x%04X", payload)
+			} else if payload&0x1 == 0 {
+				params = fmt.Sprintf("read 0x%03X into BUS", (payload>>4)&MaxSRAMValue)
+			} else {
+				params = fmt.Sprintf("write to 0x%03X", (payload>>4)&MaxSRAMValue)
+				sramWriteWaitingDecoder = true
+			}
+		} else if addr == 0x2 {
+			cmd = "TERM"
+			if payload&0x1 == 0 {
+				params = "Output '" + string(rune(byte(payload>>8))) + "'"
+			} else {
+				params = "Read from terminal (unsupported, currently)"
+			}
+		} else {
+			cmd = "BUS"
+			params = "send " + decodeRegister(byte((c&0x00F0)>>4), "white") + " to " + fmt.Sprintf("0x%02X", addr) + " on bus"
+			note = fmt.Sprintf("payload=%04X", payload)
+		}
 	case 0x5:
 		cmd = "HOLD"
 	case 0x6:
@@ -409,4 +552,50 @@ func cloneRegisters(reg *Registers) *Registers {
 	copier.Copy(retval.NegOne, reg.NegOne)
 	copier.Copy(retval.BUS, reg.BUS)
 	return retval
+}
+
+func setSRAMTable(vm *VM, tbl *tview.Table) {
+	// Header
+	tbl.SetCell(0, 0, &tview.TableCell{
+		Text:  "Addr",
+		Color: tcell.ColorRed,
+	})
+	tbl.SetCell(0, 1, &tview.TableCell{
+		Text:  "Value",
+		Color: tcell.ColorRed,
+	})
+	tbl.SetCell(0, 2, &tview.TableCell{
+		Text:  "Addr",
+		Color: tcell.ColorRed,
+	})
+	tbl.SetCell(0, 3, &tview.TableCell{
+		Text:  "Value",
+		Color: tcell.ColorRed,
+	})
+	tbl.SetCell(0, 4, &tview.TableCell{
+		Text:  "Addr",
+		Color: tcell.ColorRed,
+	})
+	tbl.SetCell(0, 5, &tview.TableCell{
+		Text:  "Value",
+		Color: tcell.ColorRed,
+	})
+
+	// Value
+	for i := uint16(0); i <= MaxSRAMValue+3; i += 3 {
+		for c := uint16(0); c < 3; c++ {
+			if int(i+c) >= len(vm.SRAM) {
+				break
+			}
+
+			tbl.SetCell(int(i)/3+1, int(c)*2, &tview.TableCell{
+				Text:  fmt.Sprintf("0x%03X", i+c),
+				Color: tcell.ColorGray,
+			})
+			tbl.SetCell(int(i)/3+1, int(c)*2+1, &tview.TableCell{
+				Text:  fmt.Sprintf("0x%04X", vm.SRAM[i+c]),
+				Color: tcell.ColorWhite,
+			})
+		}
+	}
 }
