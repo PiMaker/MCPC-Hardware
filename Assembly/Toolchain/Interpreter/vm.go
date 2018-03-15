@@ -139,7 +139,7 @@ func (vm *VM) Step() (bool, string, error) {
 			}
 		case 0x2:
 			if payload&0x1 == 0 {
-				termout = string(byte(payload >> 4))
+				termout = string(byte(payload >> 8))
 			} else {
 				err = errors.New("Reading from terminal is currently not supported")
 			}
@@ -178,7 +178,7 @@ func (vm *VM) Step() (bool, string, error) {
 			case 0xB:
 				registerTo.Value = getReg(vm, ins, regFrom).Value + getReg(vm, ins, regOp).Value
 			case 0xC:
-				shft := getReg(vm, ins, regOp).Value
+				shft := (ins & regOp) >> 12
 				if shft&0x8 == 0 {
 					registerTo.Value = getReg(vm, ins, regFrom).Value >> shft
 				} else {

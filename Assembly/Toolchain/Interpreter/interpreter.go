@@ -15,7 +15,7 @@ import (
 )
 
 // Interpret runs a .mb binary on a virtual machine
-func Interpret(file, config string, gui bool) {
+func Interpret(file, config string, gui bool, maxSteps int) {
 	data, err := ioutil.ReadFile(file)
 	if err != nil {
 		log.Fatalln("ERROR: An error occured reading the input file.")
@@ -193,14 +193,38 @@ func Interpret(file, config string, gui bool) {
 					if err != nil {
 						messageBox("VM Error", "A VM error occured during the step: "+err.Error(), app, modal, root)
 					}
-				case "run":
-					// Run until BRK or timeout
+				case "run", "runfor":
+					// Run until BRK, timeout or match
 					stateView.SetText(fmt.Sprintf("State: Running\nPC: -"))
 					app.Draw()
 
 					timeout := 0
+					maxTimeout := 10000
+					match := -1
+					if len(split) > 1 {
+						if split[0] == "run" {
+							m, cerr := strconv.ParseInt(split[1], 16, 17)
+							if cerr == nil {
+								match = int(m)
+							} else {
+								m, cerr = strconv.ParseInt(split[1][2:], 16, 17)
+								if cerr == nil {
+									match = int(m)
+								} else {
+									messageBox("Warning", "You passed a parameter to run, however it could not be parsed as a hex number. It will be ignored.", app, modal, root)
+								}
+							}
+						} else if split[0] == "runfor" {
+							m, cerr := strconv.ParseInt(split[1], 10, 32)
+							if cerr == nil {
+								maxTimeout = int(m)
+							} else {
+								messageBox("Warning", "You passed a parameter to runfor, however it could not be parsed as a number. It will be ignored.", app, modal, root)
+							}
+						}
+					}
 
-					for !vm.Halted && timeout < 1000 {
+					for !vm.Halted && timeout < maxTimeout {
 						brk, termout, err := vm.Step()
 						if err != nil {
 							messageBox("VM Error", fmt.Sprintf("A VM error occured during step 0x%X (at PC=0x%X): %s", vm.EEPROM[vm.Registers.PC.Value-1], vm.Registers.PC.Value-1, err.Error()), app, modal, root)
@@ -208,14 +232,14 @@ func Interpret(file, config string, gui bool) {
 						if termout != "" {
 							terminalText += termout
 						}
-						if brk {
+						if (match == -1 && brk && split[0] == "run") || int(vm.Registers.PC.Value) == match {
 							break
 						}
 						timeout++
 					}
 
-					if timeout == 1000 {
-						messageBox("Timeout", "Execution paused because a timeout was reached (1000 steps).", app, modal, root)
+					if timeout == 10000 && split[0] == "run" {
+						messageBox("Timeout", "Execution paused because a timeout was reached (10000 steps).", app, modal, root)
 					}
 
 					// Update view after steps
@@ -252,10 +276,15 @@ func Interpret(file, config string, gui bool) {
 
 		// GUI-less interpretation
 		log.Println("Interpreting " + file + "...")
+		if maxSteps < 0 {
+			log.Println("No maximum step count set, using default of 100000")
+			maxSteps = 100000
+		}
 
 		// Create and run VM
 		vm := NewVM(data16)
-		for !vm.Halted {
+		steps := 0
+		for !vm.Halted && steps < maxSteps {
 			// BRK is ignored
 			_, termout, err := vm.Step()
 			if err != nil {
@@ -264,8 +293,13 @@ func Interpret(file, config string, gui bool) {
 			if termout != "" {
 				fmt.Print(termout)
 			}
+			steps++
 		}
 
+		if steps == maxSteps {
+			fmt.Println()
+			log.Println("VM halted, max steps reached")
+		}
 	}
 }
 
@@ -370,7 +404,7 @@ func decodeAssembly(c uint16, vm *VM) (cmd, params, note string, set bool) {
 	case 0x2:
 		cmd = "MOVNZ"
 		params = decodeRegister(byte((c&0x00F0)>>4), "white") + " -> " + decodeRegister(byte((c&0x0F00)>>8), "white") + " if " + decodeRegister(byte((c&0xF000)>>12), "white") + " != 0"
-		if getReg(vm, c, regFrom).Value != 0 {
+		if getReg(vm, c, regIf).Value != 0 {
 			note = fmt.Sprintf("TRUE: set %s to 0x%04X", decodeRegister(byte((c&0x0F00)>>8), colorNotes), getReg(vm, c, regFrom).Value)
 		} else {
 			note = fmt.Sprintf("FALSE, would do: set %s to 0x%04X", decodeRegister(byte((c&0x0F00)>>8), colorNotes), getReg(vm, c, regFrom).Value)
@@ -378,7 +412,7 @@ func decodeAssembly(c uint16, vm *VM) (cmd, params, note string, set bool) {
 	case 0x3:
 		cmd = "MOVEZ"
 		params = decodeRegister(byte((c&0x00F0)>>4), "white") + " -> " + decodeRegister(byte((c&0x0F00)>>8), "white") + " if " + decodeRegister(byte((c&0xF000)>>12), "white") + " == 0"
-		if getReg(vm, c, regFrom).Value == 0 {
+		if getReg(vm, c, regIf).Value == 0 {
 			note = fmt.Sprintf("TRUE: set %s to 0x%04X", decodeRegister(byte((c&0x0F00)>>8), colorNotes), getReg(vm, c, regFrom).Value)
 		} else {
 			note = fmt.Sprintf("FALSE, would do: set %s to 0x%04X", decodeRegister(byte((c&0x0F00)>>8), colorNotes), getReg(vm, c, regFrom).Value)
@@ -400,7 +434,11 @@ func decodeAssembly(c uint16, vm *VM) (cmd, params, note string, set bool) {
 		} else if addr == 0x2 {
 			cmd = "TERM"
 			if payload&0x1 == 0 {
-				params = "Output '" + string(rune(byte(payload>>8))) + "'"
+				o := string(rune(byte(payload >> 8)))
+				if o == "\n" {
+					o = "\\n"
+				}
+				params = "Output '" + o + "'"
 			} else {
 				params = "Read from terminal (unsupported, currently)"
 			}
@@ -465,9 +503,9 @@ func decodeAssembly(c uint16, vm *VM) (cmd, params, note string, set bool) {
 		val1 := getReg(vm, c, regFrom).Value
 		val2 := getReg(vm, c, regOp).Value
 		if val1 == val2 {
-			note = fmt.Sprintf("%04X = %04X = 0xFFFF", val1, val2)
+			note = fmt.Sprintf("%04X == %04X = 0xFFFF", val1, val2)
 		} else {
-			note = fmt.Sprintf("%04X = %04X = 0x0", val1, val2)
+			note = fmt.Sprintf("%04X == %04X = 0x0", val1, val2)
 		}
 	}
 

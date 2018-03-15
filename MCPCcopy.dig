@@ -417,12 +417,16 @@
       <elementName>Clock</elementName>
       <elementAttributes>
         <entry>
+          <string>runRealTime</string>
+          <boolean>true</boolean>
+        </entry>
+        <entry>
           <string>Label</string>
           <string>MAIN CLOCK</string>
         </entry>
         <entry>
           <string>Frequency</string>
-          <int>100</int>
+          <int>5000</int>
         </entry>
       </elementAttributes>
       <pos x="1240" y="700"/>
@@ -1512,12 +1516,13 @@ not just on rising edge</string>
         </entry>
         <entry>
           <string>Data</string>
-          <data size="131072">a,6,1,ff,3,6,ff,0,2,6,0,10,1,21,9,6,65,48,c8,1c,d8,89,1,84,1,94,d1,1b,9,6,6c,6c,c8,
-1c,d8,89,1,84,1,94,d1,1b,9,6,2c,6f,c8,1c,d8,89,1,84,1,94,d1,1b,9,6,77,20,c8,1c,d8,
-89,1,84,1,94,d1,1b,9,6,72,6f,c8,1c,d8,89,1,84,1,94,d1,1b,9,6,64,6c,c8,1c,d8,89,1,
-84,1,94,d1,1b,9,6,a,21,c8,1c,d8,89,1,84,1,94,d1,1b,1,21,4,6,0,17,ea,ab,9,6,0,48,c8,
-ac,d8,89,1,84,1,b4,b,91,da,ab,d1,1b,8,6,0,3b,b,81,c8,1c,1,84,0,f1,c5,c,c5,5c,2,54,
-35,8,2,54,c8,ac,1,84,8,f1,c8,8b,0,7,b,81</data>
+          <data size="131072">a,6,1,ff,6,6,0,8,3,6,ff,0,2,6,0,10,7,21,9,6,65,48,c8,7c,d8,89,1,84,1,94,d7,7b,9,6,
+6c,6c,c8,7c,d8,89,1,84,1,94,d7,7b,9,6,2c,6f,c8,7c,d8,89,1,84,1,94,d7,7b,9,6,77,20,
+c8,7c,d8,89,1,84,1,94,d7,7b,9,6,72,6f,c8,7c,d8,89,1,84,1,94,d7,7b,9,6,64,6c,c8,7c,
+d8,89,1,84,1,94,d7,7b,9,6,a,21,c8,7c,d8,89,1,84,1,94,d7,7b,7,21,4,6,0,17,ea,ab,9,
+6,0,54,c8,ac,d8,89,1,84,1,b4,0,7,b,91,da,ab,d7,7b,9,6,0,51,48,7f,8b,93,7,21,d1,1b,
+9,6,0,62,68,1f,8b,92,8,6,0,3c,b,81,c8,7c,1,84,0,f1,c5,c,c5,5c,2,54,35,8,2,54,c8,ac,
+1,84,8,f1,d8,8b,d8,8b,b,81</data>
         </entry>
         <entry>
           <string>inverterConfig</string>
@@ -1527,7 +1532,7 @@ ac,d8,89,1,84,1,b4,b,91,da,ab,d1,1b,8,6,0,3b,b,81,c8,1c,1,84,0,f1,c5,c,c5,5c,2,5
         </entry>
         <entry>
           <string>lastDataFile</string>
-          <string>E:\Repos\MCPC\Assembly\Test\hello_world.mb</string>
+          <string>E:\Repos\MCPC\Assembly\Test\hello_world.hex</string>
         </entry>
       </elementAttributes>
       <pos x="-3060" y="720"/>
@@ -2421,7 +2426,7 @@ ac,d8,89,1,84,1,b4,b,91,da,ab,d1,1b,8,6,0,3b,b,81,c8,1c,1,84,0,f1,c5,c,c5,5c,2,5
       <elementAttributes>
         <entry>
           <string>Inputs</string>
-          <int>5</int>
+          <int>4</int>
         </entry>
       </elementAttributes>
       <pos x="-2380" y="780"/>
@@ -2438,7 +2443,7 @@ ac,d8,89,1,84,1,b4,b,91,da,ab,d1,1b,8,6,0,3b,b,81,c8,1c,1,84,0,f1,c5,c,c5,5c,2,5
           <string>CONT1</string>
         </entry>
       </elementAttributes>
-      <pos x="-2400" y="820"/>
+      <pos x="-2620" y="860"/>
     </visualElement>
     <visualElement>
       <elementName>Tunnel</elementName>
@@ -3559,6 +3564,23 @@ FB</string>
       <elementAttributes/>
       <pos x="-3660" y="60"/>
     </visualElement>
+    <visualElement>
+      <elementName>And</elementName>
+      <elementAttributes>
+        <entry>
+          <string>inverterConfig</string>
+          <inverterConfig>
+            <string>In_1</string>
+            <string>In_2</string>
+          </inverterConfig>
+        </entry>
+        <entry>
+          <string>Inputs</string>
+          <int>3</int>
+        </entry>
+      </elementAttributes>
+      <pos x="-2600" y="820"/>
+    </visualElement>
   </visualElements>
   <wires>
     <wire>
@@ -3696,6 +3718,10 @@ FB</string>
     <wire>
       <p1 x="1420" y="520"/>
       <p2 x="2400" y="520"/>
+    </wire>
+    <wire>
+      <p1 x="-2980" y="520"/>
+      <p2 x="-2960" y="520"/>
     </wire>
     <wire>
       <p1 x="-2720" y="520"/>
@@ -4234,12 +4260,12 @@ FB</string>
       <p2 x="-1700" y="820"/>
     </wire>
     <wire>
-      <p1 x="-2400" y="820"/>
-      <p2 x="-2380" y="820"/>
-    </wire>
-    <wire>
       <p1 x="-2320" y="820"/>
       <p2 x="-2300" y="820"/>
+    </wire>
+    <wire>
+      <p1 x="-2660" y="820"/>
+      <p2 x="-2620" y="820"/>
     </wire>
     <wire>
       <p1 x="-1700" y="820"/>
@@ -4394,12 +4420,20 @@ FB</string>
       <p2 x="1740" y="-2120"/>
     </wire>
     <wire>
-      <p1 x="-2400" y="840"/>
+      <p1 x="-3620" y="840"/>
+      <p2 x="-3600" y="840"/>
+    </wire>
+    <wire>
+      <p1 x="-2540" y="840"/>
       <p2 x="-2380" y="840"/>
     </wire>
     <wire>
-      <p1 x="-3620" y="840"/>
-      <p2 x="-3600" y="840"/>
+      <p1 x="-3200" y="840"/>
+      <p2 x="-2660" y="840"/>
+    </wire>
+    <wire>
+      <p1 x="-2640" y="840"/>
+      <p2 x="-2620" y="840"/>
     </wire>
     <wire>
       <p1 x="440" y="-2380"/>
@@ -4556,6 +4590,10 @@ FB</string>
     <wire>
       <p1 x="1580" y="-2140"/>
       <p2 x="1660" y="-2140"/>
+    </wire>
+    <wire>
+      <p1 x="-2620" y="860"/>
+      <p2 x="-2600" y="860"/>
     </wire>
     <wire>
       <p1 x="900" y="-2400"/>
@@ -5470,6 +5508,10 @@ FB</string>
       <p2 x="1260" y="700"/>
     </wire>
     <wire>
+      <p1 x="-2960" y="700"/>
+      <p2 x="-2640" y="700"/>
+    </wire>
+    <wire>
       <p1 x="1260" y="700"/>
       <p2 x="1300" y="700"/>
     </wire>
@@ -5551,7 +5593,7 @@ FB</string>
     </wire>
     <wire>
       <p1 x="-1260" y="200"/>
-      <p2 x="-1080" y="200"/>
+      <p2 x="-980" y="200"/>
     </wire>
     <wire>
       <p1 x="1860" y="-1740"/>
@@ -5675,7 +5717,7 @@ FB</string>
     </wire>
     <wire>
       <p1 x="-1100" y="220"/>
-      <p2 x="-1080" y="220"/>
+      <p2 x="-1060" y="220"/>
     </wire>
     <wire>
       <p1 x="-1460" y="220"/>
@@ -5688,10 +5730,6 @@ FB</string>
     <wire>
       <p1 x="-4140" y="220"/>
       <p2 x="-3960" y="220"/>
-    </wire>
-    <wire>
-      <p1 x="-1080" y="220"/>
-      <p2 x="-1060" y="220"/>
     </wire>
     <wire>
       <p1 x="820" y="-1760"/>
@@ -6158,10 +6196,6 @@ FB</string>
       <p2 x="-1080" y="540"/>
     </wire>
     <wire>
-      <p1 x="-1080" y="200"/>
-      <p2 x="-1080" y="220"/>
-    </wire>
-    <wire>
       <p1 x="-3640" y="-400"/>
       <p2 x="-3640" y="-20"/>
     </wire>
@@ -6234,6 +6268,10 @@ FB</string>
       <p2 x="-2640" y="680"/>
     </wire>
     <wire>
+      <p1 x="-2640" y="700"/>
+      <p2 x="-2640" y="840"/>
+    </wire>
+    <wire>
       <p1 x="2640" y="-460"/>
       <p2 x="2640" y="-300"/>
     </wire>
@@ -6300,6 +6338,10 @@ FB</string>
     <wire>
       <p1 x="1120" y="-2180"/>
       <p2 x="1120" y="-2000"/>
+    </wire>
+    <wire>
+      <p1 x="-2660" y="820"/>
+      <p2 x="-2660" y="840"/>
     </wire>
     <wire>
       <p1 x="-2660" y="500"/>
@@ -6428,6 +6470,10 @@ FB</string>
     <wire>
       <p1 x="-3200" y="440"/>
       <p2 x="-3200" y="520"/>
+    </wire>
+    <wire>
+      <p1 x="-3200" y="520"/>
+      <p2 x="-3200" y="840"/>
     </wire>
     <wire>
       <p1 x="640" y="560"/>
@@ -7222,10 +7268,6 @@ FB</string>
       <p2 x="860" y="-1960"/>
     </wire>
     <wire>
-      <p1 x="-2400" y="820"/>
-      <p2 x="-2400" y="840"/>
-    </wire>
-    <wire>
       <p1 x="2400" y="-40"/>
       <p2 x="2400" y="260"/>
     </wire>
@@ -7446,6 +7488,10 @@ FB</string>
       <p2 x="-2960" y="180"/>
     </wire>
     <wire>
+      <p1 x="-2960" y="520"/>
+      <p2 x="-2960" y="700"/>
+    </wire>
+    <wire>
       <p1 x="400" y="280"/>
       <p2 x="400" y="520"/>
     </wire>
@@ -7600,6 +7646,10 @@ FB</string>
     <wire>
       <p1 x="-3540" y="380"/>
       <p2 x="-3540" y="660"/>
+    </wire>
+    <wire>
+      <p1 x="-980" y="200"/>
+      <p2 x="-980" y="220"/>
     </wire>
     <wire>
       <p1 x="-980" y="220"/>

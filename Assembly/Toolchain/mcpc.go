@@ -18,7 +18,7 @@ func main() {
 Usage:
   mcpc compile <file> <output> [--library=<library>...] [--offset=<offset>] [--enable-offset-jump] [--ascii]
   mcpc link <main> <output> --app=<include>... [--library=<library>...] [--ascii]
-  mcpc interpret <file> [--config=<config>]
+  mcpc interpret <file> [--max-steps=<max-steps>] [--config=<config>]
   mcpc debug <file> [--config=<config>]
   mcpc -h | --help
   mcpc --version
@@ -32,6 +32,7 @@ Options:
   --offset=<offset>       Specifies an offset that will be applied to the binary file [default: 0].
   --enable-offset-jump    If enabled, a 'jmp' instruction will be inserted at the beginning, jumping to the offset position. If the offset is smaller than 3, this flag will be ignored.
   --ascii                 Outputs the ascii binary format for use with the Digital circuit simulator.
+  --max-steps=<max-steps> Sets a maximum amount of steps for interpreting a binary file [default: 100000].
   -h --help               Show this screen.
   --version               Show version.`
 
@@ -61,7 +62,7 @@ Options:
 	} else if argBool(args, "interpret") || argBool(args, "debug") {
 
 		// Interpret/Debug
-		interpreter.Interpret(argString(args, "<file>"), "", argBool(args, "debug"))
+		interpreter.Interpret(argString(args, "<file>"), "", argBool(args, "debug"), argInt(args, "--max-steps"))
 
 	} else {
 		log.Println("Invalid command, use -h for help")
@@ -98,7 +99,8 @@ func argBool(args docopt.Opts, key string) bool {
 func argInt(args docopt.Opts, key string) int {
 	v, err := args.Int(key)
 	if err != nil {
-		panic("Invalid argument \"" + key + "\"")
+		// No panic here, just trust me on this
+		return -1
 	}
 
 	return v

@@ -70,8 +70,12 @@ func Compile(file string, offset int, libraries []string, autoJump bool) []byte 
 		log.Println("WARNING: Auto-Jump was set, but offset is smaller than 3; Auto-Jump has been disabled")
 	}
 
-	if offset != 0 {
+	if offset > 0 {
 		log.Printf("Using offset: %X (Auto-Jump: %t)\n", offset, autoJump)
+	}
+
+	if offset < 0 {
+		offset = 0
 	}
 
 	// Load libraries
@@ -133,6 +137,7 @@ func Compile(file string, offset int, libraries []string, autoJump bool) []byte 
 	labelMap := make(map[string]uint16)
 	for labelAddr, token := range tokens {
 		if token.label != "" {
+			// Subtract 1 from label address to account for PC increment after jump instruction
 			labelMap[token.label] = uint16(labelAddr) - uint16(1)
 			fmt.Println(" > Label " + token.label + " located at 0x" + strconv.FormatInt(int64(labelMap[token.label]), 16))
 		}
@@ -220,6 +225,9 @@ func Compile(file string, offset int, libraries []string, autoJump bool) []byte 
 			output[i*2+1] = 0x5
 		case "SET":
 			output[i*2] = ParseRegister(tkn.args[0])
+			if output[i*2] == 0xB {
+				log.Fatalln("ERROR: Cannot SET program counter (PC/0xB)")
+			}
 			output[i*2+1] = 0x6
 		case "BRK":
 			output[i*2+1] = 0x7
