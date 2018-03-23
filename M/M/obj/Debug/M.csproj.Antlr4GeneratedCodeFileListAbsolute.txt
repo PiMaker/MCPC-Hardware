@@ -1,0 +1,6 @@
+C:\Users\stefa\Desktop\Repos\MCPC\M\M\obj\Debug\MLexer.cs
+C:\Users\stefa\Desktop\Repos\MCPC\M\M\obj\Debug\MParser.cs
+C:\Users\stefa\Desktop\Repos\MCPC\M\M\obj\Debug\MListener.cs
+C:\Users\stefa\Desktop\Repos\MCPC\M\M\obj\Debug\MBaseListener.cs
+C:\Users\stefa\Desktop\Repos\MCPC\M\M\obj\Debug\MVisitor.cs
+C:\Users\stefa\Desktop\Repos\MCPC\M\M\obj\Debug\MBaseVisitor.cs

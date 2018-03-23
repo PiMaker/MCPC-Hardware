@@ -426,7 +426,7 @@
         </entry>
         <entry>
           <string>Frequency</string>
-          <int>5000</int>
+          <int>500</int>
         </entry>
       </elementAttributes>
       <pos x="1240" y="700"/>
@@ -1532,7 +1532,7 @@ d8,89,1,84,1,94,d7,7b,9,6,a,21,c8,7c,d8,89,1,84,1,94,d7,7b,7,21,4,6,0,17,ea,ab,9
         </entry>
         <entry>
           <string>lastDataFile</string>
-          <string>E:\Repos\MCPC\Assembly\Test\hello_world.hex</string>
+          <string>C:\Users\stefa\Desktop\Repos\MCPC\Assembly\Test\hello_world.hex</string>
         </entry>
       </elementAttributes>
       <pos x="-3060" y="720"/>
