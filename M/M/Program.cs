@@ -47,7 +47,6 @@ namespace M
             // Read
             var code = File.ReadAllText(options.InputFile);
 
-            // Tokenize
             var inputStream = new AntlrInputStream(code);
             var lexer = new MLexer(inputStream);
             var commonTokenStream = new CommonTokenStream(lexer);
@@ -55,7 +54,7 @@ namespace M
 
             var visitor = new BuildASTVisitor();
             visitor.Visit(parser.compilationUnit());
-
+            
             // Wait for user input if in debug mode
             if (Debugger.IsAttached)
             {

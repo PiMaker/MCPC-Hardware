@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-// Generated from C:\Users\stefa\Desktop\Repos\MCPC\M\M\Grammar\M.g4 by ANTLR 4.6.5-SNAPSHOT
+// Generated from E:\Repos\MCPC\M\M\Grammar\M.g4 by ANTLR 4.6.5-SNAPSHOT
 
 // Unreachable code detected
 #pragma warning disable 0162
@@ -36,524 +36,43 @@ using ParserRuleContext = Antlr4.Runtime.ParserRuleContext;
 [System.CLSCompliant(false)]
 public partial class MBaseListener : IMListener {
 	/// <summary>
-	/// Enter a parse tree produced by <see cref="MParser.primaryExpression"/>.
+	/// Enter a parse tree produced by <see cref="MParser.calcExpression"/>.
 	/// <para>The default implementation does nothing.</para>
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
-	public virtual void EnterPrimaryExpression([NotNull] MParser.PrimaryExpressionContext context) { }
+	public virtual void EnterCalcExpression([NotNull] MParser.CalcExpressionContext context) { }
 	/// <summary>
-	/// Exit a parse tree produced by <see cref="MParser.primaryExpression"/>.
+	/// Exit a parse tree produced by <see cref="MParser.calcExpression"/>.
 	/// <para>The default implementation does nothing.</para>
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
-	public virtual void ExitPrimaryExpression([NotNull] MParser.PrimaryExpressionContext context) { }
+	public virtual void ExitCalcExpression([NotNull] MParser.CalcExpressionContext context) { }
 
 	/// <summary>
-	/// Enter a parse tree produced by <see cref="MParser.argumentExpressionList"/>.
+	/// Enter a parse tree produced by <see cref="MParser.calcOperator"/>.
 	/// <para>The default implementation does nothing.</para>
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
-	public virtual void EnterArgumentExpressionList([NotNull] MParser.ArgumentExpressionListContext context) { }
+	public virtual void EnterCalcOperator([NotNull] MParser.CalcOperatorContext context) { }
 	/// <summary>
-	/// Exit a parse tree produced by <see cref="MParser.argumentExpressionList"/>.
+	/// Exit a parse tree produced by <see cref="MParser.calcOperator"/>.
 	/// <para>The default implementation does nothing.</para>
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
-	public virtual void ExitArgumentExpressionList([NotNull] MParser.ArgumentExpressionListContext context) { }
+	public virtual void ExitCalcOperator([NotNull] MParser.CalcOperatorContext context) { }
 
 	/// <summary>
-	/// Enter a parse tree produced by <see cref="MParser.unaryExpression"/>.
+	/// Enter a parse tree produced by <see cref="MParser.unaryCalcOperator"/>.
 	/// <para>The default implementation does nothing.</para>
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
-	public virtual void EnterUnaryExpression([NotNull] MParser.UnaryExpressionContext context) { }
+	public virtual void EnterUnaryCalcOperator([NotNull] MParser.UnaryCalcOperatorContext context) { }
 	/// <summary>
-	/// Exit a parse tree produced by <see cref="MParser.unaryExpression"/>.
+	/// Exit a parse tree produced by <see cref="MParser.unaryCalcOperator"/>.
 	/// <para>The default implementation does nothing.</para>
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
-	public virtual void ExitUnaryExpression([NotNull] MParser.UnaryExpressionContext context) { }
-
-	/// <summary>
-	/// Enter a parse tree produced by <see cref="MParser.unaryOperator"/>.
-	/// <para>The default implementation does nothing.</para>
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	public virtual void EnterUnaryOperator([NotNull] MParser.UnaryOperatorContext context) { }
-	/// <summary>
-	/// Exit a parse tree produced by <see cref="MParser.unaryOperator"/>.
-	/// <para>The default implementation does nothing.</para>
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	public virtual void ExitUnaryOperator([NotNull] MParser.UnaryOperatorContext context) { }
-
-	/// <summary>
-	/// Enter a parse tree produced by <see cref="MParser.castExpression"/>.
-	/// <para>The default implementation does nothing.</para>
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	public virtual void EnterCastExpression([NotNull] MParser.CastExpressionContext context) { }
-	/// <summary>
-	/// Exit a parse tree produced by <see cref="MParser.castExpression"/>.
-	/// <para>The default implementation does nothing.</para>
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	public virtual void ExitCastExpression([NotNull] MParser.CastExpressionContext context) { }
-
-	/// <summary>
-	/// Enter a parse tree produced by <see cref="MParser.multiplicativeExpression"/>.
-	/// <para>The default implementation does nothing.</para>
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	public virtual void EnterMultiplicativeExpression([NotNull] MParser.MultiplicativeExpressionContext context) { }
-	/// <summary>
-	/// Exit a parse tree produced by <see cref="MParser.multiplicativeExpression"/>.
-	/// <para>The default implementation does nothing.</para>
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	public virtual void ExitMultiplicativeExpression([NotNull] MParser.MultiplicativeExpressionContext context) { }
-
-	/// <summary>
-	/// Enter a parse tree produced by <see cref="MParser.additiveExpression"/>.
-	/// <para>The default implementation does nothing.</para>
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	public virtual void EnterAdditiveExpression([NotNull] MParser.AdditiveExpressionContext context) { }
-	/// <summary>
-	/// Exit a parse tree produced by <see cref="MParser.additiveExpression"/>.
-	/// <para>The default implementation does nothing.</para>
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	public virtual void ExitAdditiveExpression([NotNull] MParser.AdditiveExpressionContext context) { }
-
-	/// <summary>
-	/// Enter a parse tree produced by <see cref="MParser.shiftExpression"/>.
-	/// <para>The default implementation does nothing.</para>
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	public virtual void EnterShiftExpression([NotNull] MParser.ShiftExpressionContext context) { }
-	/// <summary>
-	/// Exit a parse tree produced by <see cref="MParser.shiftExpression"/>.
-	/// <para>The default implementation does nothing.</para>
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	public virtual void ExitShiftExpression([NotNull] MParser.ShiftExpressionContext context) { }
-
-	/// <summary>
-	/// Enter a parse tree produced by <see cref="MParser.relationalExpression"/>.
-	/// <para>The default implementation does nothing.</para>
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	public virtual void EnterRelationalExpression([NotNull] MParser.RelationalExpressionContext context) { }
-	/// <summary>
-	/// Exit a parse tree produced by <see cref="MParser.relationalExpression"/>.
-	/// <para>The default implementation does nothing.</para>
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	public virtual void ExitRelationalExpression([NotNull] MParser.RelationalExpressionContext context) { }
-
-	/// <summary>
-	/// Enter a parse tree produced by <see cref="MParser.equalityExpression"/>.
-	/// <para>The default implementation does nothing.</para>
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	public virtual void EnterEqualityExpression([NotNull] MParser.EqualityExpressionContext context) { }
-	/// <summary>
-	/// Exit a parse tree produced by <see cref="MParser.equalityExpression"/>.
-	/// <para>The default implementation does nothing.</para>
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	public virtual void ExitEqualityExpression([NotNull] MParser.EqualityExpressionContext context) { }
-
-	/// <summary>
-	/// Enter a parse tree produced by <see cref="MParser.andExpression"/>.
-	/// <para>The default implementation does nothing.</para>
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	public virtual void EnterAndExpression([NotNull] MParser.AndExpressionContext context) { }
-	/// <summary>
-	/// Exit a parse tree produced by <see cref="MParser.andExpression"/>.
-	/// <para>The default implementation does nothing.</para>
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	public virtual void ExitAndExpression([NotNull] MParser.AndExpressionContext context) { }
-
-	/// <summary>
-	/// Enter a parse tree produced by <see cref="MParser.exclusiveOrExpression"/>.
-	/// <para>The default implementation does nothing.</para>
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	public virtual void EnterExclusiveOrExpression([NotNull] MParser.ExclusiveOrExpressionContext context) { }
-	/// <summary>
-	/// Exit a parse tree produced by <see cref="MParser.exclusiveOrExpression"/>.
-	/// <para>The default implementation does nothing.</para>
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	public virtual void ExitExclusiveOrExpression([NotNull] MParser.ExclusiveOrExpressionContext context) { }
-
-	/// <summary>
-	/// Enter a parse tree produced by <see cref="MParser.inclusiveOrExpression"/>.
-	/// <para>The default implementation does nothing.</para>
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	public virtual void EnterInclusiveOrExpression([NotNull] MParser.InclusiveOrExpressionContext context) { }
-	/// <summary>
-	/// Exit a parse tree produced by <see cref="MParser.inclusiveOrExpression"/>.
-	/// <para>The default implementation does nothing.</para>
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	public virtual void ExitInclusiveOrExpression([NotNull] MParser.InclusiveOrExpressionContext context) { }
-
-	/// <summary>
-	/// Enter a parse tree produced by <see cref="MParser.logicalAndExpression"/>.
-	/// <para>The default implementation does nothing.</para>
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	public virtual void EnterLogicalAndExpression([NotNull] MParser.LogicalAndExpressionContext context) { }
-	/// <summary>
-	/// Exit a parse tree produced by <see cref="MParser.logicalAndExpression"/>.
-	/// <para>The default implementation does nothing.</para>
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	public virtual void ExitLogicalAndExpression([NotNull] MParser.LogicalAndExpressionContext context) { }
-
-	/// <summary>
-	/// Enter a parse tree produced by <see cref="MParser.logicalOrExpression"/>.
-	/// <para>The default implementation does nothing.</para>
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	public virtual void EnterLogicalOrExpression([NotNull] MParser.LogicalOrExpressionContext context) { }
-	/// <summary>
-	/// Exit a parse tree produced by <see cref="MParser.logicalOrExpression"/>.
-	/// <para>The default implementation does nothing.</para>
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	public virtual void ExitLogicalOrExpression([NotNull] MParser.LogicalOrExpressionContext context) { }
-
-	/// <summary>
-	/// Enter a parse tree produced by <see cref="MParser.conditionalExpression"/>.
-	/// <para>The default implementation does nothing.</para>
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	public virtual void EnterConditionalExpression([NotNull] MParser.ConditionalExpressionContext context) { }
-	/// <summary>
-	/// Exit a parse tree produced by <see cref="MParser.conditionalExpression"/>.
-	/// <para>The default implementation does nothing.</para>
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	public virtual void ExitConditionalExpression([NotNull] MParser.ConditionalExpressionContext context) { }
-
-	/// <summary>
-	/// Enter a parse tree produced by <see cref="MParser.valueExpression"/>.
-	/// <para>The default implementation does nothing.</para>
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	public virtual void EnterValueExpression([NotNull] MParser.ValueExpressionContext context) { }
-	/// <summary>
-	/// Exit a parse tree produced by <see cref="MParser.valueExpression"/>.
-	/// <para>The default implementation does nothing.</para>
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	public virtual void ExitValueExpression([NotNull] MParser.ValueExpressionContext context) { }
-
-	/// <summary>
-	/// Enter a parse tree produced by <see cref="MParser.assignmentExpression"/>.
-	/// <para>The default implementation does nothing.</para>
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	public virtual void EnterAssignmentExpression([NotNull] MParser.AssignmentExpressionContext context) { }
-	/// <summary>
-	/// Exit a parse tree produced by <see cref="MParser.assignmentExpression"/>.
-	/// <para>The default implementation does nothing.</para>
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	public virtual void ExitAssignmentExpression([NotNull] MParser.AssignmentExpressionContext context) { }
-
-	/// <summary>
-	/// Enter a parse tree produced by <see cref="MParser.assignmentOperator"/>.
-	/// <para>The default implementation does nothing.</para>
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	public virtual void EnterAssignmentOperator([NotNull] MParser.AssignmentOperatorContext context) { }
-	/// <summary>
-	/// Exit a parse tree produced by <see cref="MParser.assignmentOperator"/>.
-	/// <para>The default implementation does nothing.</para>
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	public virtual void ExitAssignmentOperator([NotNull] MParser.AssignmentOperatorContext context) { }
-
-	/// <summary>
-	/// Enter a parse tree produced by <see cref="MParser.expression"/>.
-	/// <para>The default implementation does nothing.</para>
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	public virtual void EnterExpression([NotNull] MParser.ExpressionContext context) { }
-	/// <summary>
-	/// Exit a parse tree produced by <see cref="MParser.expression"/>.
-	/// <para>The default implementation does nothing.</para>
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	public virtual void ExitExpression([NotNull] MParser.ExpressionContext context) { }
-
-	/// <summary>
-	/// Enter a parse tree produced by <see cref="MParser.constantExpression"/>.
-	/// <para>The default implementation does nothing.</para>
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	public virtual void EnterConstantExpression([NotNull] MParser.ConstantExpressionContext context) { }
-	/// <summary>
-	/// Exit a parse tree produced by <see cref="MParser.constantExpression"/>.
-	/// <para>The default implementation does nothing.</para>
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	public virtual void ExitConstantExpression([NotNull] MParser.ConstantExpressionContext context) { }
-
-	/// <summary>
-	/// Enter a parse tree produced by <see cref="MParser.declaration"/>.
-	/// <para>The default implementation does nothing.</para>
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	public virtual void EnterDeclaration([NotNull] MParser.DeclarationContext context) { }
-	/// <summary>
-	/// Exit a parse tree produced by <see cref="MParser.declaration"/>.
-	/// <para>The default implementation does nothing.</para>
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	public virtual void ExitDeclaration([NotNull] MParser.DeclarationContext context) { }
-
-	/// <summary>
-	/// Enter a parse tree produced by <see cref="MParser.inlineDeclaration"/>.
-	/// <para>The default implementation does nothing.</para>
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	public virtual void EnterInlineDeclaration([NotNull] MParser.InlineDeclarationContext context) { }
-	/// <summary>
-	/// Exit a parse tree produced by <see cref="MParser.inlineDeclaration"/>.
-	/// <para>The default implementation does nothing.</para>
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	public virtual void ExitInlineDeclaration([NotNull] MParser.InlineDeclarationContext context) { }
-
-	/// <summary>
-	/// Enter a parse tree produced by <see cref="MParser.declarationSpecifiers"/>.
-	/// <para>The default implementation does nothing.</para>
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	public virtual void EnterDeclarationSpecifiers([NotNull] MParser.DeclarationSpecifiersContext context) { }
-	/// <summary>
-	/// Exit a parse tree produced by <see cref="MParser.declarationSpecifiers"/>.
-	/// <para>The default implementation does nothing.</para>
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	public virtual void ExitDeclarationSpecifiers([NotNull] MParser.DeclarationSpecifiersContext context) { }
-
-	/// <summary>
-	/// Enter a parse tree produced by <see cref="MParser.initDeclaratorList"/>.
-	/// <para>The default implementation does nothing.</para>
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	public virtual void EnterInitDeclaratorList([NotNull] MParser.InitDeclaratorListContext context) { }
-	/// <summary>
-	/// Exit a parse tree produced by <see cref="MParser.initDeclaratorList"/>.
-	/// <para>The default implementation does nothing.</para>
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	public virtual void ExitInitDeclaratorList([NotNull] MParser.InitDeclaratorListContext context) { }
-
-	/// <summary>
-	/// Enter a parse tree produced by <see cref="MParser.initDeclarator"/>.
-	/// <para>The default implementation does nothing.</para>
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	public virtual void EnterInitDeclarator([NotNull] MParser.InitDeclaratorContext context) { }
-	/// <summary>
-	/// Exit a parse tree produced by <see cref="MParser.initDeclarator"/>.
-	/// <para>The default implementation does nothing.</para>
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	public virtual void ExitInitDeclarator([NotNull] MParser.InitDeclaratorContext context) { }
-
-	/// <summary>
-	/// Enter a parse tree produced by <see cref="MParser.typeSpecifier"/>.
-	/// <para>The default implementation does nothing.</para>
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	public virtual void EnterTypeSpecifier([NotNull] MParser.TypeSpecifierContext context) { }
-	/// <summary>
-	/// Exit a parse tree produced by <see cref="MParser.typeSpecifier"/>.
-	/// <para>The default implementation does nothing.</para>
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	public virtual void ExitTypeSpecifier([NotNull] MParser.TypeSpecifierContext context) { }
-
-	/// <summary>
-	/// Enter a parse tree produced by <see cref="MParser.declarator"/>.
-	/// <para>The default implementation does nothing.</para>
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	public virtual void EnterDeclarator([NotNull] MParser.DeclaratorContext context) { }
-	/// <summary>
-	/// Exit a parse tree produced by <see cref="MParser.declarator"/>.
-	/// <para>The default implementation does nothing.</para>
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	public virtual void ExitDeclarator([NotNull] MParser.DeclaratorContext context) { }
-
-	/// <summary>
-	/// Enter a parse tree produced by <see cref="MParser.directDeclarator"/>.
-	/// <para>The default implementation does nothing.</para>
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	public virtual void EnterDirectDeclarator([NotNull] MParser.DirectDeclaratorContext context) { }
-	/// <summary>
-	/// Exit a parse tree produced by <see cref="MParser.directDeclarator"/>.
-	/// <para>The default implementation does nothing.</para>
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	public virtual void ExitDirectDeclarator([NotNull] MParser.DirectDeclaratorContext context) { }
-
-	/// <summary>
-	/// Enter a parse tree produced by <see cref="MParser.nestedParenthesesBlock"/>.
-	/// <para>The default implementation does nothing.</para>
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	public virtual void EnterNestedParenthesesBlock([NotNull] MParser.NestedParenthesesBlockContext context) { }
-	/// <summary>
-	/// Exit a parse tree produced by <see cref="MParser.nestedParenthesesBlock"/>.
-	/// <para>The default implementation does nothing.</para>
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	public virtual void ExitNestedParenthesesBlock([NotNull] MParser.NestedParenthesesBlockContext context) { }
-
-	/// <summary>
-	/// Enter a parse tree produced by <see cref="MParser.pointer"/>.
-	/// <para>The default implementation does nothing.</para>
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	public virtual void EnterPointer([NotNull] MParser.PointerContext context) { }
-	/// <summary>
-	/// Exit a parse tree produced by <see cref="MParser.pointer"/>.
-	/// <para>The default implementation does nothing.</para>
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	public virtual void ExitPointer([NotNull] MParser.PointerContext context) { }
-
-	/// <summary>
-	/// Enter a parse tree produced by <see cref="MParser.parameterTypeList"/>.
-	/// <para>The default implementation does nothing.</para>
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	public virtual void EnterParameterTypeList([NotNull] MParser.ParameterTypeListContext context) { }
-	/// <summary>
-	/// Exit a parse tree produced by <see cref="MParser.parameterTypeList"/>.
-	/// <para>The default implementation does nothing.</para>
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	public virtual void ExitParameterTypeList([NotNull] MParser.ParameterTypeListContext context) { }
-
-	/// <summary>
-	/// Enter a parse tree produced by <see cref="MParser.parameterList"/>.
-	/// <para>The default implementation does nothing.</para>
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	public virtual void EnterParameterList([NotNull] MParser.ParameterListContext context) { }
-	/// <summary>
-	/// Exit a parse tree produced by <see cref="MParser.parameterList"/>.
-	/// <para>The default implementation does nothing.</para>
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	public virtual void ExitParameterList([NotNull] MParser.ParameterListContext context) { }
-
-	/// <summary>
-	/// Enter a parse tree produced by <see cref="MParser.parameterDeclaration"/>.
-	/// <para>The default implementation does nothing.</para>
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	public virtual void EnterParameterDeclaration([NotNull] MParser.ParameterDeclarationContext context) { }
-	/// <summary>
-	/// Exit a parse tree produced by <see cref="MParser.parameterDeclaration"/>.
-	/// <para>The default implementation does nothing.</para>
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	public virtual void ExitParameterDeclaration([NotNull] MParser.ParameterDeclarationContext context) { }
-
-	/// <summary>
-	/// Enter a parse tree produced by <see cref="MParser.identifierList"/>.
-	/// <para>The default implementation does nothing.</para>
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	public virtual void EnterIdentifierList([NotNull] MParser.IdentifierListContext context) { }
-	/// <summary>
-	/// Exit a parse tree produced by <see cref="MParser.identifierList"/>.
-	/// <para>The default implementation does nothing.</para>
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	public virtual void ExitIdentifierList([NotNull] MParser.IdentifierListContext context) { }
-
-	/// <summary>
-	/// Enter a parse tree produced by <see cref="MParser.parameterCallList"/>.
-	/// <para>The default implementation does nothing.</para>
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	public virtual void EnterParameterCallList([NotNull] MParser.ParameterCallListContext context) { }
-	/// <summary>
-	/// Exit a parse tree produced by <see cref="MParser.parameterCallList"/>.
-	/// <para>The default implementation does nothing.</para>
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	public virtual void ExitParameterCallList([NotNull] MParser.ParameterCallListContext context) { }
-
-	/// <summary>
-	/// Enter a parse tree produced by <see cref="MParser.abstractDeclarator"/>.
-	/// <para>The default implementation does nothing.</para>
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	public virtual void EnterAbstractDeclarator([NotNull] MParser.AbstractDeclaratorContext context) { }
-	/// <summary>
-	/// Exit a parse tree produced by <see cref="MParser.abstractDeclarator"/>.
-	/// <para>The default implementation does nothing.</para>
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	public virtual void ExitAbstractDeclarator([NotNull] MParser.AbstractDeclaratorContext context) { }
-
-	/// <summary>
-	/// Enter a parse tree produced by <see cref="MParser.directAbstractDeclarator"/>.
-	/// <para>The default implementation does nothing.</para>
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	public virtual void EnterDirectAbstractDeclarator([NotNull] MParser.DirectAbstractDeclaratorContext context) { }
-	/// <summary>
-	/// Exit a parse tree produced by <see cref="MParser.directAbstractDeclarator"/>.
-	/// <para>The default implementation does nothing.</para>
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	public virtual void ExitDirectAbstractDeclarator([NotNull] MParser.DirectAbstractDeclaratorContext context) { }
-
-	/// <summary>
-	/// Enter a parse tree produced by <see cref="MParser.typedefName"/>.
-	/// <para>The default implementation does nothing.</para>
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	public virtual void EnterTypedefName([NotNull] MParser.TypedefNameContext context) { }
-	/// <summary>
-	/// Exit a parse tree produced by <see cref="MParser.typedefName"/>.
-	/// <para>The default implementation does nothing.</para>
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	public virtual void ExitTypedefName([NotNull] MParser.TypedefNameContext context) { }
-
-	/// <summary>
-	/// Enter a parse tree produced by <see cref="MParser.initializer"/>.
-	/// <para>The default implementation does nothing.</para>
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	public virtual void EnterInitializer([NotNull] MParser.InitializerContext context) { }
-	/// <summary>
-	/// Exit a parse tree produced by <see cref="MParser.initializer"/>.
-	/// <para>The default implementation does nothing.</para>
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	public virtual void ExitInitializer([NotNull] MParser.InitializerContext context) { }
+	public virtual void ExitUnaryCalcOperator([NotNull] MParser.UnaryCalcOperatorContext context) { }
 
 	/// <summary>
 	/// Enter a parse tree produced by <see cref="MParser.initializerList"/>.
@@ -569,43 +88,108 @@ public partial class MBaseListener : IMListener {
 	public virtual void ExitInitializerList([NotNull] MParser.InitializerListContext context) { }
 
 	/// <summary>
-	/// Enter a parse tree produced by <see cref="MParser.designation"/>.
+	/// Enter a parse tree produced by <see cref="MParser.assignmentExpression"/>.
 	/// <para>The default implementation does nothing.</para>
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
-	public virtual void EnterDesignation([NotNull] MParser.DesignationContext context) { }
+	public virtual void EnterAssignmentExpression([NotNull] MParser.AssignmentExpressionContext context) { }
 	/// <summary>
-	/// Exit a parse tree produced by <see cref="MParser.designation"/>.
+	/// Exit a parse tree produced by <see cref="MParser.assignmentExpression"/>.
 	/// <para>The default implementation does nothing.</para>
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
-	public virtual void ExitDesignation([NotNull] MParser.DesignationContext context) { }
+	public virtual void ExitAssignmentExpression([NotNull] MParser.AssignmentExpressionContext context) { }
 
 	/// <summary>
-	/// Enter a parse tree produced by <see cref="MParser.designatorList"/>.
+	/// Enter a parse tree produced by <see cref="MParser.topLevelAssignmentExpression"/>.
 	/// <para>The default implementation does nothing.</para>
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
-	public virtual void EnterDesignatorList([NotNull] MParser.DesignatorListContext context) { }
+	public virtual void EnterTopLevelAssignmentExpression([NotNull] MParser.TopLevelAssignmentExpressionContext context) { }
 	/// <summary>
-	/// Exit a parse tree produced by <see cref="MParser.designatorList"/>.
+	/// Exit a parse tree produced by <see cref="MParser.topLevelAssignmentExpression"/>.
 	/// <para>The default implementation does nothing.</para>
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
-	public virtual void ExitDesignatorList([NotNull] MParser.DesignatorListContext context) { }
+	public virtual void ExitTopLevelAssignmentExpression([NotNull] MParser.TopLevelAssignmentExpressionContext context) { }
 
 	/// <summary>
-	/// Enter a parse tree produced by <see cref="MParser.designator"/>.
+	/// Enter a parse tree produced by <see cref="MParser.typeSpecifier"/>.
 	/// <para>The default implementation does nothing.</para>
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
-	public virtual void EnterDesignator([NotNull] MParser.DesignatorContext context) { }
+	public virtual void EnterTypeSpecifier([NotNull] MParser.TypeSpecifierContext context) { }
 	/// <summary>
-	/// Exit a parse tree produced by <see cref="MParser.designator"/>.
+	/// Exit a parse tree produced by <see cref="MParser.typeSpecifier"/>.
 	/// <para>The default implementation does nothing.</para>
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
-	public virtual void ExitDesignator([NotNull] MParser.DesignatorContext context) { }
+	public virtual void ExitTypeSpecifier([NotNull] MParser.TypeSpecifierContext context) { }
+
+	/// <summary>
+	/// Enter a parse tree produced by <see cref="MParser.nestedParenthesesBlock"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void EnterNestedParenthesesBlock([NotNull] MParser.NestedParenthesesBlockContext context) { }
+	/// <summary>
+	/// Exit a parse tree produced by <see cref="MParser.nestedParenthesesBlock"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void ExitNestedParenthesesBlock([NotNull] MParser.NestedParenthesesBlockContext context) { }
+
+	/// <summary>
+	/// Enter a parse tree produced by <see cref="MParser.parameterDeclarationList"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void EnterParameterDeclarationList([NotNull] MParser.ParameterDeclarationListContext context) { }
+	/// <summary>
+	/// Exit a parse tree produced by <see cref="MParser.parameterDeclarationList"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void ExitParameterDeclarationList([NotNull] MParser.ParameterDeclarationListContext context) { }
+
+	/// <summary>
+	/// Enter a parse tree produced by <see cref="MParser.parameterDeclaration"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void EnterParameterDeclaration([NotNull] MParser.ParameterDeclarationContext context) { }
+	/// <summary>
+	/// Exit a parse tree produced by <see cref="MParser.parameterDeclaration"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void ExitParameterDeclaration([NotNull] MParser.ParameterDeclarationContext context) { }
+
+	/// <summary>
+	/// Enter a parse tree produced by <see cref="MParser.paramterPassList"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void EnterParamterPassList([NotNull] MParser.ParamterPassListContext context) { }
+	/// <summary>
+	/// Exit a parse tree produced by <see cref="MParser.paramterPassList"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void ExitParamterPassList([NotNull] MParser.ParamterPassListContext context) { }
+
+	/// <summary>
+	/// Enter a parse tree produced by <see cref="MParser.parameterCallList"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void EnterParameterCallList([NotNull] MParser.ParameterCallListContext context) { }
+	/// <summary>
+	/// Exit a parse tree produced by <see cref="MParser.parameterCallList"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void ExitParameterCallList([NotNull] MParser.ParameterCallListContext context) { }
 
 	/// <summary>
 	/// Enter a parse tree produced by <see cref="MParser.statement"/>.
@@ -619,6 +203,19 @@ public partial class MBaseListener : IMListener {
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
 	public virtual void ExitStatement([NotNull] MParser.StatementContext context) { }
+
+	/// <summary>
+	/// Enter a parse tree produced by <see cref="MParser.assignmentStatement"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void EnterAssignmentStatement([NotNull] MParser.AssignmentStatementContext context) { }
+	/// <summary>
+	/// Exit a parse tree produced by <see cref="MParser.assignmentStatement"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void ExitAssignmentStatement([NotNull] MParser.AssignmentStatementContext context) { }
 
 	/// <summary>
 	/// Enter a parse tree produced by <see cref="MParser.callStatement"/>.
@@ -660,43 +257,17 @@ public partial class MBaseListener : IMListener {
 	public virtual void ExitCompoundStatement([NotNull] MParser.CompoundStatementContext context) { }
 
 	/// <summary>
-	/// Enter a parse tree produced by <see cref="MParser.blockItemList"/>.
+	/// Enter a parse tree produced by <see cref="MParser.statementList"/>.
 	/// <para>The default implementation does nothing.</para>
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
-	public virtual void EnterBlockItemList([NotNull] MParser.BlockItemListContext context) { }
+	public virtual void EnterStatementList([NotNull] MParser.StatementListContext context) { }
 	/// <summary>
-	/// Exit a parse tree produced by <see cref="MParser.blockItemList"/>.
+	/// Exit a parse tree produced by <see cref="MParser.statementList"/>.
 	/// <para>The default implementation does nothing.</para>
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
-	public virtual void ExitBlockItemList([NotNull] MParser.BlockItemListContext context) { }
-
-	/// <summary>
-	/// Enter a parse tree produced by <see cref="MParser.blockItem"/>.
-	/// <para>The default implementation does nothing.</para>
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	public virtual void EnterBlockItem([NotNull] MParser.BlockItemContext context) { }
-	/// <summary>
-	/// Exit a parse tree produced by <see cref="MParser.blockItem"/>.
-	/// <para>The default implementation does nothing.</para>
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	public virtual void ExitBlockItem([NotNull] MParser.BlockItemContext context) { }
-
-	/// <summary>
-	/// Enter a parse tree produced by <see cref="MParser.expressionStatement"/>.
-	/// <para>The default implementation does nothing.</para>
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	public virtual void EnterExpressionStatement([NotNull] MParser.ExpressionStatementContext context) { }
-	/// <summary>
-	/// Exit a parse tree produced by <see cref="MParser.expressionStatement"/>.
-	/// <para>The default implementation does nothing.</para>
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	public virtual void ExitExpressionStatement([NotNull] MParser.ExpressionStatementContext context) { }
+	public virtual void ExitStatementList([NotNull] MParser.StatementListContext context) { }
 
 	/// <summary>
 	/// Enter a parse tree produced by <see cref="MParser.selectionStatement"/>.
@@ -738,32 +309,6 @@ public partial class MBaseListener : IMListener {
 	public virtual void ExitForCondition([NotNull] MParser.ForConditionContext context) { }
 
 	/// <summary>
-	/// Enter a parse tree produced by <see cref="MParser.forDeclaration"/>.
-	/// <para>The default implementation does nothing.</para>
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	public virtual void EnterForDeclaration([NotNull] MParser.ForDeclarationContext context) { }
-	/// <summary>
-	/// Exit a parse tree produced by <see cref="MParser.forDeclaration"/>.
-	/// <para>The default implementation does nothing.</para>
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	public virtual void ExitForDeclaration([NotNull] MParser.ForDeclarationContext context) { }
-
-	/// <summary>
-	/// Enter a parse tree produced by <see cref="MParser.forExpression"/>.
-	/// <para>The default implementation does nothing.</para>
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	public virtual void EnterForExpression([NotNull] MParser.ForExpressionContext context) { }
-	/// <summary>
-	/// Exit a parse tree produced by <see cref="MParser.forExpression"/>.
-	/// <para>The default implementation does nothing.</para>
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	public virtual void ExitForExpression([NotNull] MParser.ForExpressionContext context) { }
-
-	/// <summary>
 	/// Enter a parse tree produced by <see cref="MParser.jumpStatement"/>.
 	/// <para>The default implementation does nothing.</para>
 	/// </summary>
@@ -803,17 +348,17 @@ public partial class MBaseListener : IMListener {
 	public virtual void ExitTranslationUnit([NotNull] MParser.TranslationUnitContext context) { }
 
 	/// <summary>
-	/// Enter a parse tree produced by <see cref="MParser.externalDeclaration"/>.
+	/// Enter a parse tree produced by <see cref="MParser.topLevelDeclaration"/>.
 	/// <para>The default implementation does nothing.</para>
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
-	public virtual void EnterExternalDeclaration([NotNull] MParser.ExternalDeclarationContext context) { }
+	public virtual void EnterTopLevelDeclaration([NotNull] MParser.TopLevelDeclarationContext context) { }
 	/// <summary>
-	/// Exit a parse tree produced by <see cref="MParser.externalDeclaration"/>.
+	/// Exit a parse tree produced by <see cref="MParser.topLevelDeclaration"/>.
 	/// <para>The default implementation does nothing.</para>
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
-	public virtual void ExitExternalDeclaration([NotNull] MParser.ExternalDeclarationContext context) { }
+	public virtual void ExitTopLevelDeclaration([NotNull] MParser.TopLevelDeclarationContext context) { }
 
 	/// <summary>
 	/// Enter a parse tree produced by <see cref="MParser.functionDefinition"/>.
@@ -829,30 +374,30 @@ public partial class MBaseListener : IMListener {
 	public virtual void ExitFunctionDefinition([NotNull] MParser.FunctionDefinitionContext context) { }
 
 	/// <summary>
-	/// Enter a parse tree produced by <see cref="MParser.declarationList"/>.
+	/// Enter a parse tree produced by <see cref="MParser.asmStatement"/>.
 	/// <para>The default implementation does nothing.</para>
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
-	public virtual void EnterDeclarationList([NotNull] MParser.DeclarationListContext context) { }
+	public virtual void EnterAsmStatement([NotNull] MParser.AsmStatementContext context) { }
 	/// <summary>
-	/// Exit a parse tree produced by <see cref="MParser.declarationList"/>.
+	/// Exit a parse tree produced by <see cref="MParser.asmStatement"/>.
 	/// <para>The default implementation does nothing.</para>
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
-	public virtual void ExitDeclarationList([NotNull] MParser.DeclarationListContext context) { }
+	public virtual void ExitAsmStatement([NotNull] MParser.AsmStatementContext context) { }
 
 	/// <summary>
-	/// Enter a parse tree produced by <see cref="MParser.inlineDeclarationList"/>.
+	/// Enter a parse tree produced by <see cref="MParser.preprocessorDirective"/>.
 	/// <para>The default implementation does nothing.</para>
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
-	public virtual void EnterInlineDeclarationList([NotNull] MParser.InlineDeclarationListContext context) { }
+	public virtual void EnterPreprocessorDirective([NotNull] MParser.PreprocessorDirectiveContext context) { }
 	/// <summary>
-	/// Exit a parse tree produced by <see cref="MParser.inlineDeclarationList"/>.
+	/// Exit a parse tree produced by <see cref="MParser.preprocessorDirective"/>.
 	/// <para>The default implementation does nothing.</para>
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
-	public virtual void ExitInlineDeclarationList([NotNull] MParser.InlineDeclarationListContext context) { }
+	public virtual void ExitPreprocessorDirective([NotNull] MParser.PreprocessorDirectiveContext context) { }
 
 	/// <inheritdoc/>
 	/// <remarks>The default implementation does nothing.</remarks>

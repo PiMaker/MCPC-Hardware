@@ -1,136 +1,36 @@
 grammar M;
 
-primaryExpression
+calcExpression
     :   Identifier
-    |   Constant
-    |   StringLiteral+
+    |   StringLiteral
+	|   Constant
+	|   '{' initializerList '}'
+	|   calcExpression calcOperator calcExpression
+	|   unaryCalcOperator calcExpression
+    |   calcExpression unaryCalcOperator
+	|   '(' typeSpecifier ')' calcExpression
+	|   '(' calcExpression ')'
     ;
 
-argumentExpressionList
-    :   assignmentExpression
-    |   argumentExpressionList ',' assignmentExpression
-    ;
+calcOperator
+    :   (Less | LessEqual | Greater | GreaterEqual | LeftShift | RightShift | Plus | Minus | Star | Div | Mod | And | Or | AndAnd | OrOr | Xor)
+	;
 
-unaryExpression
-    :   '++'
-    |   '--'
-    |   unaryOperator
-    ;
+unaryCalcOperator
+    :   (PlusPlus | MinusMinus | Tilde | Not | And)
+	;
 
-unaryOperator
-    :   '&' | '*' | '+' | '-' | '~' | '!'
-    ;
-
-castExpression
-    :   '(' typeSpecifier ')' castExpression
-	|   primaryExpression
-    ;
-
-multiplicativeExpression
-    :   castExpression
-    |   multiplicativeExpression '*' castExpression
-    |   multiplicativeExpression '/' castExpression
-    |   multiplicativeExpression '%' castExpression
-    ;
-
-additiveExpression
-    :   multiplicativeExpression
-    |   additiveExpression '+' multiplicativeExpression
-    |   additiveExpression '-' multiplicativeExpression
-    ;
-
-shiftExpression
-    :   additiveExpression
-    |   shiftExpression '<<' additiveExpression
-    |   shiftExpression '>>' additiveExpression
-    ;
-
-relationalExpression
-    :   shiftExpression
-    |   relationalExpression '<' shiftExpression
-    |   relationalExpression '>' shiftExpression
-    |   relationalExpression '<=' shiftExpression
-    |   relationalExpression '>=' shiftExpression
-    ;
-
-equalityExpression
-    :   relationalExpression
-    |   equalityExpression '==' relationalExpression
-    |   equalityExpression '!=' relationalExpression
-    ;
-
-andExpression
-    :   equalityExpression
-    |   andExpression '&' equalityExpression
-    ;
-
-exclusiveOrExpression
-    :   andExpression
-    |   exclusiveOrExpression '^' andExpression
-    ;
-
-inclusiveOrExpression
-    :   exclusiveOrExpression
-    |   inclusiveOrExpression '|' exclusiveOrExpression
-    ;
-
-logicalAndExpression
-    :   inclusiveOrExpression
-    |   logicalAndExpression '&&' inclusiveOrExpression
-    ;
-
-logicalOrExpression
-    :   logicalAndExpression
-    |   logicalOrExpression '||' logicalAndExpression
-    ;
-
-conditionalExpression
-    :   logicalOrExpression ('?' expression ':' conditionalExpression)?
-    ;
-
-valueExpression
-    :   conditionalExpression
-	|   unaryExpression conditionalExpression
+initializerList
+    :   Constant
+    |   initializerList ',' Constant
     ;
 
 assignmentExpression
-    :   typeSpecifier Identifier assignmentOperator valueExpression
+    :   typeSpecifier? Identifier '=' calcExpression
     ;
 
-assignmentOperator
-    :   '=' | '*=' | '/=' | '%=' | '+=' | '-=' | '<<=' | '>>=' | '&=' | '^=' | '|='
-    ;
-
-expression
-    :   assignmentExpression
-    ;
-
-constantExpression
-    :   primaryExpression
-    ;
-
-declaration
-    :   declarationSpecifiers initDeclaratorList ';'
-	| 	declarationSpecifiers ';'
-    ;
-
-inlineDeclaration
-    :   declarationSpecifiers initDeclaratorList
-	| 	declarationSpecifiers
-    ;
-
-declarationSpecifiers
-    :   typeSpecifier+
-    ;
-
-initDeclaratorList
-    :   initDeclarator
-    |   initDeclaratorList ',' initDeclarator
-    ;
-
-initDeclarator
-    :   declarator
-    |   declarator '=' initializer
+topLevelAssignmentExpression
+    :   typeSpecifier Identifier '=' calcExpression
     ;
 
 typeSpecifier
@@ -139,168 +39,82 @@ typeSpecifier
 	|   'void')
     ;
 
-declarator
-    :   pointer? directDeclarator
-    ;
-
-directDeclarator
-    :   Identifier
-    |   '(' declarator ')'
-    |   directDeclarator '[' assignmentExpression? ']'
-    |   directDeclarator '[' '*' ']'
-    |   directDeclarator '(' parameterTypeList ')'
-    |   directDeclarator '(' identifierList? ')'
-    |   '(' typeSpecifier? pointer directDeclarator ')' // function pointer like: (__cdecl *f)
-    ;
-
 nestedParenthesesBlock
     :   (   ~('(' | ')')
         |   '(' nestedParenthesesBlock ')'
         )*
     ;
 
-pointer
-    :   '*'
-    |   '*' pointer
-    ;
-
-parameterTypeList
-    :   parameterList
-    |   parameterList ',' '...'
-    ;
-
-parameterList
+parameterDeclarationList
     :   parameterDeclaration
-    |   parameterList ',' parameterDeclaration
+    |   parameterDeclarationList ',' parameterDeclaration
     ;
 
 parameterDeclaration
-    :   declarationSpecifiers declarator
+    :   typeSpecifier Identifier
     ;
 
-identifierList
-    :   Identifier
-    |   identifierList ',' Identifier
+paramterPassList
+    :   calcExpression
+    |   paramterPassList ',' calcExpression
     ;
 
 parameterCallList
-    :   valueExpression
-    |   parameterCallList ',' valueExpression
-    ;
-
-abstractDeclarator
-    :   pointer
-    |   pointer? directAbstractDeclarator
-    ;
-
-directAbstractDeclarator
-    :   '(' abstractDeclarator ')'
-    |   '[' assignmentExpression? ']'
-    |   '[' '*' ']'
-    |   '(' parameterTypeList? ')'
-    |   directAbstractDeclarator '[' assignmentExpression? ']'
-    |   directAbstractDeclarator '[' '*' ']'
-    |   directAbstractDeclarator '(' parameterTypeList? ')'
-    ;
-
-typedefName
-    :   Identifier
-    ;
-
-initializer
-    :   assignmentExpression
-    |   '{' initializerList '}'
-    |   '{' initializerList ',' '}'
-    ;
-
-initializerList
-    :   designation? initializer
-    |   initializerList ',' designation? initializer
-    ;
-
-designation
-    :   designatorList '='
-    ;
-
-designatorList
-    :   designator
-    |   designatorList designator
-    ;
-
-designator
-    :   '[' constantExpression ']'
-    |   '.' Identifier
+    :   calcExpression
+    |   parameterCallList ',' calcExpression
     ;
 
 statement
     :   labeledStatement
     |   compoundStatement
-    |   expressionStatement
+    |   assignmentStatement
     |   selectionStatement
     |   iterationStatement
 	|   callStatement
     |   jumpStatement
+	|   asmStatement
     ;
 
+assignmentStatement
+    :   assignmentExpression ';'
+	;
+
 callStatement
-    :   Identifier '(' parameterCallList ')'
+    :   Identifier '(' parameterCallList ')' ';'
 	;
 
 labeledStatement
     :   Identifier ':' statement
-    |   'case' constantExpression ':' statement
-    |   'default' ':' statement
     ;
 
 compoundStatement
-    :   '{' blockItemList? '}'
+    :   '{' statementList? '}'
     ;
 
-blockItemList
-    :   blockItem
-    |   blockItemList blockItem
-    ;
-
-blockItem
+statementList
     :   statement
-    //|   declaration
-    ;
-
-expressionStatement
-    :   expression? ';'
+    |   statementList statement
     ;
 
 selectionStatement
-    :   'if' '(' expression ')' statement ('else' statement)?
-    |   'switch' '(' expression ')' statement
+    :   'if' '(' calcExpression ')' statement ('else' statement)?
     ;
 
 iterationStatement
-    :   While '(' expression ')' statement
-    |   Do statement While '(' expression ')' ';'
+    :   While '(' calcExpression ')' statement
+    |   Do statement While '(' calcExpression ')' ';'
     |   For '(' forCondition ')' statement
     ;
 
 forCondition
-	:   forDeclaration ';' forExpression? ';' forExpression?
-	|   expression? ';' forExpression? ';' forExpression?
+	:   assignmentExpression ';' calcExpression? ';' assignmentExpression?
 	;
-
-forDeclaration
-    :   declarationSpecifiers initDeclaratorList
-	| 	declarationSpecifiers
-    ;
-
-forExpression
-    :   assignmentExpression
-    |   forExpression ',' assignmentExpression
-    ;
 
 jumpStatement
     :   'goto' Identifier ';'
     |   'continue' ';'
     |   'break' ';'
-    |   'return' expression? ';'
+    |   'return' calcExpression? ';'
     ;
 
 compilationUnit
@@ -308,33 +122,31 @@ compilationUnit
     ;
 
 translationUnit
-    :   externalDeclaration
-    |   translationUnit externalDeclaration
+    :   topLevelDeclaration
+    |   translationUnit topLevelDeclaration
     ;
 
-externalDeclaration
+topLevelDeclaration
     :   functionDefinition
+	|   topLevelAssignmentExpression
+	|   preprocessorDirective
     ;
 
 functionDefinition
-    :   pointer? typeSpecifier Identifier '(' inlineDeclarationList? ')' compoundStatement
+    :   'inline'? typeSpecifier Identifier '(' parameterDeclarationList? ')' statement
     ;
 
-declarationList
-    :   declaration
-    |   declarationList declaration
+asmStatement
+    :   'asm' '{'* '{' ~'}'* '}'
     ;
-
-inlineDeclarationList
-    :   inlineDeclaration
-    |   inlineDeclarationList inlineDeclaration
-    ;
+	
+preprocessorDirective
+	:   '#' 'include' Filename
+	;
 
 Break : 'break';
-Case : 'case';
 Char : 'char';
 Continue : 'continue';
-Default : 'default';
 Do : 'do';
 Else : 'else';
 For : 'for';
@@ -343,7 +155,6 @@ If : 'if';
 Inline : 'inline';
 Int : 'int';
 Return : 'return';
-Switch : 'switch';
 Void : 'void';
 While : 'while';
 
@@ -373,7 +184,7 @@ And : '&';
 Or : '|';
 AndAnd : '&&';
 OrOr : '||';
-Caret : '^';
+Xor : '^';
 Not : '!';
 Tilde : '~';
 
@@ -383,23 +194,10 @@ Semi : ';';
 Comma : ',';
 
 Assign : '=';
-StarAssign : '*=';
-DivAssign : '/=';
-ModAssign : '%=';
-PlusAssign : '+=';
-MinusAssign : '-=';
-LeftShiftAssign : '<<=';
-RightShiftAssign : '>>=';
-AndAssign : '&=';
-XorAssign : '^=';
-OrAssign : '|=';
 
 Equal : '==';
 NotEqual : '!=';
-
-Arrow : '->';
 Dot : '.';
-Ellipsis : '...';
 
 Identifier
     :   IdentifierNondigit
@@ -408,11 +206,14 @@ Identifier
         )*
     ;
 
+Filename
+	:   Identifier '.m'
+	;
+
 fragment
 IdentifierNondigit
     :   Nondigit
     |   UniversalCharacterName
-    //|   // other implementation-defined characters...
     ;
 
 fragment
@@ -438,7 +239,6 @@ HexQuad
 
 Constant
     :   IntegerConstant
-    //|   EnumerationConstant
     |   CharacterConstant
     ;
 
@@ -561,15 +361,7 @@ HexadecimalEscapeSequence
     ;
 
 StringLiteral
-    :   EncodingPrefix? '"' SCharSequence? '"'
-    ;
-
-fragment
-EncodingPrefix
-    :   'u8'
-    |   'u'
-    |   'U'
-    |   'L'
+    :   '"' SCharSequence? '"'
     ;
 
 fragment
@@ -584,29 +376,6 @@ SChar
     |   '\\\n'   // Added line
     |   '\\\r\n' // Added line
     ;
-
-ComplexDefine
-    :   '#' Whitespace? 'define'  ~[#]*
-        -> skip
-    ;
-         
-// ignore the following asm blocks:
-/*
-    asm
-    {
-        mfspr x, 286;
-    }
- */
-AsmBlock
-    :   'asm' Whitespace? '{'* '{' ~'}'* '}'
-	    -> skip
-    ;
-	
-// ignore the lines generated by c preprocessor                                   
-// sample line : '#line 1 "/home/dm/files/dk1.h" 1'                           
-PreprocessorDirective
-	:   Whitespace? '#' Whitespace? .* Newline
-	;
 
 Whitespace
     :   [ \t\r\n]+

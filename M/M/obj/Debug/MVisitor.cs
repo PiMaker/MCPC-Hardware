@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-// Generated from C:\Users\stefa\Desktop\Repos\MCPC\M\M\Grammar\M.g4 by ANTLR 4.6.5-SNAPSHOT
+// Generated from E:\Repos\MCPC\M\M\Grammar\M.g4 by ANTLR 4.6.5-SNAPSHOT
 
 // Unreachable code detected
 #pragma warning disable 0162
@@ -33,284 +33,25 @@ using IToken = Antlr4.Runtime.IToken;
 [System.CLSCompliant(false)]
 public interface IMVisitor<Result> : IParseTreeVisitor<Result> {
 	/// <summary>
-	/// Visit a parse tree produced by <see cref="MParser.primaryExpression"/>.
+	/// Visit a parse tree produced by <see cref="MParser.calcExpression"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
 	/// <return>The visitor result.</return>
-	Result VisitPrimaryExpression([NotNull] MParser.PrimaryExpressionContext context);
+	Result VisitCalcExpression([NotNull] MParser.CalcExpressionContext context);
 
 	/// <summary>
-	/// Visit a parse tree produced by <see cref="MParser.argumentExpressionList"/>.
+	/// Visit a parse tree produced by <see cref="MParser.calcOperator"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
 	/// <return>The visitor result.</return>
-	Result VisitArgumentExpressionList([NotNull] MParser.ArgumentExpressionListContext context);
+	Result VisitCalcOperator([NotNull] MParser.CalcOperatorContext context);
 
 	/// <summary>
-	/// Visit a parse tree produced by <see cref="MParser.unaryExpression"/>.
+	/// Visit a parse tree produced by <see cref="MParser.unaryCalcOperator"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
 	/// <return>The visitor result.</return>
-	Result VisitUnaryExpression([NotNull] MParser.UnaryExpressionContext context);
-
-	/// <summary>
-	/// Visit a parse tree produced by <see cref="MParser.unaryOperator"/>.
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	/// <return>The visitor result.</return>
-	Result VisitUnaryOperator([NotNull] MParser.UnaryOperatorContext context);
-
-	/// <summary>
-	/// Visit a parse tree produced by <see cref="MParser.castExpression"/>.
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	/// <return>The visitor result.</return>
-	Result VisitCastExpression([NotNull] MParser.CastExpressionContext context);
-
-	/// <summary>
-	/// Visit a parse tree produced by <see cref="MParser.multiplicativeExpression"/>.
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	/// <return>The visitor result.</return>
-	Result VisitMultiplicativeExpression([NotNull] MParser.MultiplicativeExpressionContext context);
-
-	/// <summary>
-	/// Visit a parse tree produced by <see cref="MParser.additiveExpression"/>.
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	/// <return>The visitor result.</return>
-	Result VisitAdditiveExpression([NotNull] MParser.AdditiveExpressionContext context);
-
-	/// <summary>
-	/// Visit a parse tree produced by <see cref="MParser.shiftExpression"/>.
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	/// <return>The visitor result.</return>
-	Result VisitShiftExpression([NotNull] MParser.ShiftExpressionContext context);
-
-	/// <summary>
-	/// Visit a parse tree produced by <see cref="MParser.relationalExpression"/>.
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	/// <return>The visitor result.</return>
-	Result VisitRelationalExpression([NotNull] MParser.RelationalExpressionContext context);
-
-	/// <summary>
-	/// Visit a parse tree produced by <see cref="MParser.equalityExpression"/>.
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	/// <return>The visitor result.</return>
-	Result VisitEqualityExpression([NotNull] MParser.EqualityExpressionContext context);
-
-	/// <summary>
-	/// Visit a parse tree produced by <see cref="MParser.andExpression"/>.
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	/// <return>The visitor result.</return>
-	Result VisitAndExpression([NotNull] MParser.AndExpressionContext context);
-
-	/// <summary>
-	/// Visit a parse tree produced by <see cref="MParser.exclusiveOrExpression"/>.
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	/// <return>The visitor result.</return>
-	Result VisitExclusiveOrExpression([NotNull] MParser.ExclusiveOrExpressionContext context);
-
-	/// <summary>
-	/// Visit a parse tree produced by <see cref="MParser.inclusiveOrExpression"/>.
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	/// <return>The visitor result.</return>
-	Result VisitInclusiveOrExpression([NotNull] MParser.InclusiveOrExpressionContext context);
-
-	/// <summary>
-	/// Visit a parse tree produced by <see cref="MParser.logicalAndExpression"/>.
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	/// <return>The visitor result.</return>
-	Result VisitLogicalAndExpression([NotNull] MParser.LogicalAndExpressionContext context);
-
-	/// <summary>
-	/// Visit a parse tree produced by <see cref="MParser.logicalOrExpression"/>.
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	/// <return>The visitor result.</return>
-	Result VisitLogicalOrExpression([NotNull] MParser.LogicalOrExpressionContext context);
-
-	/// <summary>
-	/// Visit a parse tree produced by <see cref="MParser.conditionalExpression"/>.
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	/// <return>The visitor result.</return>
-	Result VisitConditionalExpression([NotNull] MParser.ConditionalExpressionContext context);
-
-	/// <summary>
-	/// Visit a parse tree produced by <see cref="MParser.valueExpression"/>.
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	/// <return>The visitor result.</return>
-	Result VisitValueExpression([NotNull] MParser.ValueExpressionContext context);
-
-	/// <summary>
-	/// Visit a parse tree produced by <see cref="MParser.assignmentExpression"/>.
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	/// <return>The visitor result.</return>
-	Result VisitAssignmentExpression([NotNull] MParser.AssignmentExpressionContext context);
-
-	/// <summary>
-	/// Visit a parse tree produced by <see cref="MParser.assignmentOperator"/>.
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	/// <return>The visitor result.</return>
-	Result VisitAssignmentOperator([NotNull] MParser.AssignmentOperatorContext context);
-
-	/// <summary>
-	/// Visit a parse tree produced by <see cref="MParser.expression"/>.
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	/// <return>The visitor result.</return>
-	Result VisitExpression([NotNull] MParser.ExpressionContext context);
-
-	/// <summary>
-	/// Visit a parse tree produced by <see cref="MParser.constantExpression"/>.
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	/// <return>The visitor result.</return>
-	Result VisitConstantExpression([NotNull] MParser.ConstantExpressionContext context);
-
-	/// <summary>
-	/// Visit a parse tree produced by <see cref="MParser.declaration"/>.
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	/// <return>The visitor result.</return>
-	Result VisitDeclaration([NotNull] MParser.DeclarationContext context);
-
-	/// <summary>
-	/// Visit a parse tree produced by <see cref="MParser.inlineDeclaration"/>.
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	/// <return>The visitor result.</return>
-	Result VisitInlineDeclaration([NotNull] MParser.InlineDeclarationContext context);
-
-	/// <summary>
-	/// Visit a parse tree produced by <see cref="MParser.declarationSpecifiers"/>.
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	/// <return>The visitor result.</return>
-	Result VisitDeclarationSpecifiers([NotNull] MParser.DeclarationSpecifiersContext context);
-
-	/// <summary>
-	/// Visit a parse tree produced by <see cref="MParser.initDeclaratorList"/>.
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	/// <return>The visitor result.</return>
-	Result VisitInitDeclaratorList([NotNull] MParser.InitDeclaratorListContext context);
-
-	/// <summary>
-	/// Visit a parse tree produced by <see cref="MParser.initDeclarator"/>.
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	/// <return>The visitor result.</return>
-	Result VisitInitDeclarator([NotNull] MParser.InitDeclaratorContext context);
-
-	/// <summary>
-	/// Visit a parse tree produced by <see cref="MParser.typeSpecifier"/>.
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	/// <return>The visitor result.</return>
-	Result VisitTypeSpecifier([NotNull] MParser.TypeSpecifierContext context);
-
-	/// <summary>
-	/// Visit a parse tree produced by <see cref="MParser.declarator"/>.
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	/// <return>The visitor result.</return>
-	Result VisitDeclarator([NotNull] MParser.DeclaratorContext context);
-
-	/// <summary>
-	/// Visit a parse tree produced by <see cref="MParser.directDeclarator"/>.
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	/// <return>The visitor result.</return>
-	Result VisitDirectDeclarator([NotNull] MParser.DirectDeclaratorContext context);
-
-	/// <summary>
-	/// Visit a parse tree produced by <see cref="MParser.nestedParenthesesBlock"/>.
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	/// <return>The visitor result.</return>
-	Result VisitNestedParenthesesBlock([NotNull] MParser.NestedParenthesesBlockContext context);
-
-	/// <summary>
-	/// Visit a parse tree produced by <see cref="MParser.pointer"/>.
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	/// <return>The visitor result.</return>
-	Result VisitPointer([NotNull] MParser.PointerContext context);
-
-	/// <summary>
-	/// Visit a parse tree produced by <see cref="MParser.parameterTypeList"/>.
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	/// <return>The visitor result.</return>
-	Result VisitParameterTypeList([NotNull] MParser.ParameterTypeListContext context);
-
-	/// <summary>
-	/// Visit a parse tree produced by <see cref="MParser.parameterList"/>.
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	/// <return>The visitor result.</return>
-	Result VisitParameterList([NotNull] MParser.ParameterListContext context);
-
-	/// <summary>
-	/// Visit a parse tree produced by <see cref="MParser.parameterDeclaration"/>.
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	/// <return>The visitor result.</return>
-	Result VisitParameterDeclaration([NotNull] MParser.ParameterDeclarationContext context);
-
-	/// <summary>
-	/// Visit a parse tree produced by <see cref="MParser.identifierList"/>.
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	/// <return>The visitor result.</return>
-	Result VisitIdentifierList([NotNull] MParser.IdentifierListContext context);
-
-	/// <summary>
-	/// Visit a parse tree produced by <see cref="MParser.parameterCallList"/>.
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	/// <return>The visitor result.</return>
-	Result VisitParameterCallList([NotNull] MParser.ParameterCallListContext context);
-
-	/// <summary>
-	/// Visit a parse tree produced by <see cref="MParser.abstractDeclarator"/>.
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	/// <return>The visitor result.</return>
-	Result VisitAbstractDeclarator([NotNull] MParser.AbstractDeclaratorContext context);
-
-	/// <summary>
-	/// Visit a parse tree produced by <see cref="MParser.directAbstractDeclarator"/>.
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	/// <return>The visitor result.</return>
-	Result VisitDirectAbstractDeclarator([NotNull] MParser.DirectAbstractDeclaratorContext context);
-
-	/// <summary>
-	/// Visit a parse tree produced by <see cref="MParser.typedefName"/>.
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	/// <return>The visitor result.</return>
-	Result VisitTypedefName([NotNull] MParser.TypedefNameContext context);
-
-	/// <summary>
-	/// Visit a parse tree produced by <see cref="MParser.initializer"/>.
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	/// <return>The visitor result.</return>
-	Result VisitInitializer([NotNull] MParser.InitializerContext context);
+	Result VisitUnaryCalcOperator([NotNull] MParser.UnaryCalcOperatorContext context);
 
 	/// <summary>
 	/// Visit a parse tree produced by <see cref="MParser.initializerList"/>.
@@ -320,25 +61,60 @@ public interface IMVisitor<Result> : IParseTreeVisitor<Result> {
 	Result VisitInitializerList([NotNull] MParser.InitializerListContext context);
 
 	/// <summary>
-	/// Visit a parse tree produced by <see cref="MParser.designation"/>.
+	/// Visit a parse tree produced by <see cref="MParser.assignmentExpression"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
 	/// <return>The visitor result.</return>
-	Result VisitDesignation([NotNull] MParser.DesignationContext context);
+	Result VisitAssignmentExpression([NotNull] MParser.AssignmentExpressionContext context);
 
 	/// <summary>
-	/// Visit a parse tree produced by <see cref="MParser.designatorList"/>.
+	/// Visit a parse tree produced by <see cref="MParser.topLevelAssignmentExpression"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
 	/// <return>The visitor result.</return>
-	Result VisitDesignatorList([NotNull] MParser.DesignatorListContext context);
+	Result VisitTopLevelAssignmentExpression([NotNull] MParser.TopLevelAssignmentExpressionContext context);
 
 	/// <summary>
-	/// Visit a parse tree produced by <see cref="MParser.designator"/>.
+	/// Visit a parse tree produced by <see cref="MParser.typeSpecifier"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
 	/// <return>The visitor result.</return>
-	Result VisitDesignator([NotNull] MParser.DesignatorContext context);
+	Result VisitTypeSpecifier([NotNull] MParser.TypeSpecifierContext context);
+
+	/// <summary>
+	/// Visit a parse tree produced by <see cref="MParser.nestedParenthesesBlock"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	Result VisitNestedParenthesesBlock([NotNull] MParser.NestedParenthesesBlockContext context);
+
+	/// <summary>
+	/// Visit a parse tree produced by <see cref="MParser.parameterDeclarationList"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	Result VisitParameterDeclarationList([NotNull] MParser.ParameterDeclarationListContext context);
+
+	/// <summary>
+	/// Visit a parse tree produced by <see cref="MParser.parameterDeclaration"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	Result VisitParameterDeclaration([NotNull] MParser.ParameterDeclarationContext context);
+
+	/// <summary>
+	/// Visit a parse tree produced by <see cref="MParser.paramterPassList"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	Result VisitParamterPassList([NotNull] MParser.ParamterPassListContext context);
+
+	/// <summary>
+	/// Visit a parse tree produced by <see cref="MParser.parameterCallList"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	Result VisitParameterCallList([NotNull] MParser.ParameterCallListContext context);
 
 	/// <summary>
 	/// Visit a parse tree produced by <see cref="MParser.statement"/>.
@@ -346,6 +122,13 @@ public interface IMVisitor<Result> : IParseTreeVisitor<Result> {
 	/// <param name="context">The parse tree.</param>
 	/// <return>The visitor result.</return>
 	Result VisitStatement([NotNull] MParser.StatementContext context);
+
+	/// <summary>
+	/// Visit a parse tree produced by <see cref="MParser.assignmentStatement"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	Result VisitAssignmentStatement([NotNull] MParser.AssignmentStatementContext context);
 
 	/// <summary>
 	/// Visit a parse tree produced by <see cref="MParser.callStatement"/>.
@@ -369,25 +152,11 @@ public interface IMVisitor<Result> : IParseTreeVisitor<Result> {
 	Result VisitCompoundStatement([NotNull] MParser.CompoundStatementContext context);
 
 	/// <summary>
-	/// Visit a parse tree produced by <see cref="MParser.blockItemList"/>.
+	/// Visit a parse tree produced by <see cref="MParser.statementList"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
 	/// <return>The visitor result.</return>
-	Result VisitBlockItemList([NotNull] MParser.BlockItemListContext context);
-
-	/// <summary>
-	/// Visit a parse tree produced by <see cref="MParser.blockItem"/>.
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	/// <return>The visitor result.</return>
-	Result VisitBlockItem([NotNull] MParser.BlockItemContext context);
-
-	/// <summary>
-	/// Visit a parse tree produced by <see cref="MParser.expressionStatement"/>.
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	/// <return>The visitor result.</return>
-	Result VisitExpressionStatement([NotNull] MParser.ExpressionStatementContext context);
+	Result VisitStatementList([NotNull] MParser.StatementListContext context);
 
 	/// <summary>
 	/// Visit a parse tree produced by <see cref="MParser.selectionStatement"/>.
@@ -411,20 +180,6 @@ public interface IMVisitor<Result> : IParseTreeVisitor<Result> {
 	Result VisitForCondition([NotNull] MParser.ForConditionContext context);
 
 	/// <summary>
-	/// Visit a parse tree produced by <see cref="MParser.forDeclaration"/>.
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	/// <return>The visitor result.</return>
-	Result VisitForDeclaration([NotNull] MParser.ForDeclarationContext context);
-
-	/// <summary>
-	/// Visit a parse tree produced by <see cref="MParser.forExpression"/>.
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	/// <return>The visitor result.</return>
-	Result VisitForExpression([NotNull] MParser.ForExpressionContext context);
-
-	/// <summary>
 	/// Visit a parse tree produced by <see cref="MParser.jumpStatement"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
@@ -446,11 +201,11 @@ public interface IMVisitor<Result> : IParseTreeVisitor<Result> {
 	Result VisitTranslationUnit([NotNull] MParser.TranslationUnitContext context);
 
 	/// <summary>
-	/// Visit a parse tree produced by <see cref="MParser.externalDeclaration"/>.
+	/// Visit a parse tree produced by <see cref="MParser.topLevelDeclaration"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
 	/// <return>The visitor result.</return>
-	Result VisitExternalDeclaration([NotNull] MParser.ExternalDeclarationContext context);
+	Result VisitTopLevelDeclaration([NotNull] MParser.TopLevelDeclarationContext context);
 
 	/// <summary>
 	/// Visit a parse tree produced by <see cref="MParser.functionDefinition"/>.
@@ -460,17 +215,17 @@ public interface IMVisitor<Result> : IParseTreeVisitor<Result> {
 	Result VisitFunctionDefinition([NotNull] MParser.FunctionDefinitionContext context);
 
 	/// <summary>
-	/// Visit a parse tree produced by <see cref="MParser.declarationList"/>.
+	/// Visit a parse tree produced by <see cref="MParser.asmStatement"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
 	/// <return>The visitor result.</return>
-	Result VisitDeclarationList([NotNull] MParser.DeclarationListContext context);
+	Result VisitAsmStatement([NotNull] MParser.AsmStatementContext context);
 
 	/// <summary>
-	/// Visit a parse tree produced by <see cref="MParser.inlineDeclarationList"/>.
+	/// Visit a parse tree produced by <see cref="MParser.preprocessorDirective"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
 	/// <return>The visitor result.</return>
-	Result VisitInlineDeclarationList([NotNull] MParser.InlineDeclarationListContext context);
+	Result VisitPreprocessorDirective([NotNull] MParser.PreprocessorDirectiveContext context);
 }
 } // namespace M
