@@ -1,18 +1,21 @@
 ﻿#include stdlib.m
 
-inline void printc(char c) {
-	__reg("A", c);
+/*
+  printc prints one single ascii character
+  to the terminal output
+*/
+void printc(char c) {
+    c << 8;
 	asm
 	{
-		PUSH A
-		BUS A 0x2
-		POP A
+		BUS __reg(c) 0x2
 	}
 }
 
+// Program entry point
 void main() {
     int x = 5;
 	int y = 20;
 	int z = 3*y+x;
-	printc((char)z);
+	printc(char(z));
 }

@@ -124,6 +124,13 @@ public interface IMVisitor<Result> : IParseTreeVisitor<Result> {
 	Result VisitStatement([NotNull] MParser.StatementContext context);
 
 	/// <summary>
+	/// Visit a parse tree produced by <see cref="MParser.shiftStatement"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	Result VisitShiftStatement([NotNull] MParser.ShiftStatementContext context);
+
+	/// <summary>
 	/// Visit a parse tree produced by <see cref="MParser.assignmentStatement"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>

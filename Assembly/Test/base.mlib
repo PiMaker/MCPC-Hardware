@@ -11,5 +11,8 @@
 - DEC val.reg =                     ADD :val :val -1 - Decrements by one
 - NOOP =                            MOV SCR1 SCR1 - Does nothing for one cycle
 - CHAR addr.reg data.lit =          SET SCR2, :data, STOR SCR2 :addr, INC addr
-- CALL func.lit =                   DEC SP, SET SCR2, :func, STOR PC SP, BRK, MOV SCR2 PC, ADD SP SP 1 - Calls a function at addr.reg
+- CALL func.lit =                   DEC SP, SET SCR2, :func, STOR PC SP, MOV SCR2 PC, ADD SP SP 1 - Calls a function at addr.reg
 - RET =                             LOAD SCR1 SP, INC SCR1, INC SCR1, MOV SCR1 PC - Returns from a function
+- RETH =                            ADD H SCR1 1, INC SCR1, MOV SCR1 PC - Returns from a function with register H containing the return address
+- PUSH val.reg =                    DEC SP, STOR :val SP - Stack push
+- POP val.reg =                     LOAD :val SP, INC SP - Stack pop

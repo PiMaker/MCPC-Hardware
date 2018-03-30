@@ -10,10 +10,11 @@ calcExpression
     |   calcExpression unaryCalcOperator
 	|   '(' typeSpecifier ')' calcExpression
 	|   '(' calcExpression ')'
+	|   typeSpecifier '(' calcExpression ')'
     ;
 
 calcOperator
-    :   (Less | LessEqual | Greater | GreaterEqual | LeftShift | RightShift | Plus | Minus | Star | Div | Mod | And | Or | AndAnd | OrOr | Xor)
+    :   (Less | LessEqual | Greater | GreaterEqual | Plus | Minus | Star | Div | Mod | And | Or | AndAnd | OrOr | Xor)
 	;
 
 unaryCalcOperator
@@ -26,7 +27,7 @@ initializerList
     ;
 
 assignmentExpression
-    :   typeSpecifier? Identifier '=' calcExpression
+    :   typeSpecifier? Identifier ('=' calcExpression)?
     ;
 
 topLevelAssignmentExpression
@@ -73,7 +74,12 @@ statement
 	|   callStatement
     |   jumpStatement
 	|   asmStatement
+	|   shiftStatement
     ;
+	
+shiftStatement
+    :   Identifier (LeftShift | RightShift) Constant ';'
+	;
 
 assignmentStatement
     :   assignmentExpression ';'

@@ -52,7 +52,7 @@ namespace M
             var commonTokenStream = new CommonTokenStream(lexer);
             var parser = new MParser(commonTokenStream);
 
-            var visitor = new BuildASTVisitor();
+            var visitor = new AsmVisitor();
             visitor.Visit(parser.compilationUnit());
             
             // Wait for user input if in debug mode

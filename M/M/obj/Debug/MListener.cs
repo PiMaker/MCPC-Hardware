@@ -175,6 +175,17 @@ public interface IMListener : IParseTreeListener {
 	void ExitStatement([NotNull] MParser.StatementContext context);
 
 	/// <summary>
+	/// Enter a parse tree produced by <see cref="MParser.shiftStatement"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void EnterShiftStatement([NotNull] MParser.ShiftStatementContext context);
+	/// <summary>
+	/// Exit a parse tree produced by <see cref="MParser.shiftStatement"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void ExitShiftStatement([NotNull] MParser.ShiftStatementContext context);
+
+	/// <summary>
 	/// Enter a parse tree produced by <see cref="MParser.assignmentStatement"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>

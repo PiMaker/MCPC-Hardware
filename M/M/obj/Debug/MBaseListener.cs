@@ -205,6 +205,19 @@ public partial class MBaseListener : IMListener {
 	public virtual void ExitStatement([NotNull] MParser.StatementContext context) { }
 
 	/// <summary>
+	/// Enter a parse tree produced by <see cref="MParser.shiftStatement"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void EnterShiftStatement([NotNull] MParser.ShiftStatementContext context) { }
+	/// <summary>
+	/// Exit a parse tree produced by <see cref="MParser.shiftStatement"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void ExitShiftStatement([NotNull] MParser.ShiftStatementContext context) { }
+
+	/// <summary>
 	/// Enter a parse tree produced by <see cref="MParser.assignmentStatement"/>.
 	/// <para>The default implementation does nothing.</para>
 	/// </summary>
