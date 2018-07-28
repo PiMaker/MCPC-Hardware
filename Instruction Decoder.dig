@@ -247,7 +247,7 @@
         </entry>
         <entry>
           <string>Label</string>
-          <string>HOLD</string>
+          <string>LROM</string>
         </entry>
       </elementAttributes>
       <pos x="820" y="1580"/>
