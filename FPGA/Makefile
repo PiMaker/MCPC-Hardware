@@ -23,7 +23,7 @@ help:
 #
 #TOOL INPUT
 SOURCEDIR = src/
-SRC = $(shell find src/ -type f \( -name '*.v' ! -name 'testbench.v' \))
+SRC = $(shell find src/ -type f -regex '.*\.s?v$$')
 TESTBENCH = src/testbench.v
 TBOUTPUT = waves.lxt	#THIS NEEDS TO MATCH THE OUTPUT FILE
 			#FROM YOUR TESTBENCH
@@ -83,7 +83,7 @@ BOARDFILE = DE10Pins
 
 ###################################################################
 # Setup your sources here
-SRCS = $(shell find src/ -type f \( -name '*.v' ! -name 'testbench.v' \))
+SRCS = $(shell find src/ -type f -regex '.*\.s?v$$')
 ###################################################################
 # Main Targets
 #

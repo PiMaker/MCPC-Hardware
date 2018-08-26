@@ -1,0 +1,10 @@
+S:\Repos\MCPC\FPGA\font\hexer\hexer\bin\Debug\hexer.exe.config
+S:\Repos\MCPC\FPGA\font\hexer\hexer\bin\Debug\hexer.exe
+S:\Repos\MCPC\FPGA\font\hexer\hexer\bin\Debug\hexer.pdb
+S:\Repos\MCPC\FPGA\font\hexer\hexer\bin\Debug\IntelHexParser.dll
+S:\Repos\MCPC\FPGA\font\hexer\hexer\bin\Debug\IntelHexParser.xml
+S:\Repos\MCPC\FPGA\font\hexer\hexer\obj\Debug\hexer.csprojAssemblyReference.cache
+S:\Repos\MCPC\FPGA\font\hexer\hexer\obj\Debug\hexer.csproj.CoreCompileInputs.cache
+S:\Repos\MCPC\FPGA\font\hexer\hexer\obj\Debug\hexer.csproj.CopyComplete
+S:\Repos\MCPC\FPGA\font\hexer\hexer\obj\Debug\hexer.exe
+S:\Repos\MCPC\FPGA\font\hexer\hexer\obj\Debug\hexer.pdb
