@@ -1,0 +1,5 @@
+MOV -1 H
+SET H
+0xa1b8
+MOV 0 H
+MOVEZ 0 PC H

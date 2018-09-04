@@ -1,11 +1,13 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
 
+	"./Assembler"
 	"./Compiler"
 	"./Interpreter"
 
@@ -13,51 +15,61 @@ import (
 )
 
 func main() {
-	usage := `MCPC Toolchain (Compiler/Linker/VM).
+	usage := `MCPC Toolchain (Compiler/Assembler/Linker/VM).
 
 Usage:
-  mcpc compile <file> <output> [--library=<library>...] [--offset=<offset>] [--enable-offset-jump] [--ascii]
-  mcpc link <main> <output> --app=<include>... [--library=<library>...] [--ascii]
+  mcpc assemble <file> <output> [--library=<library>...] [--offset=<offset>] [--enable-offset-jump] [--ascii] [--hex]
+  mcpc compile <file> <output>
   mcpc interpret <file> [--max-steps=<max-steps>] [--config=<config>]
   mcpc debug <file> [--config=<config>]
   mcpc -h | --help
   mcpc --version
 
 Options:
-  compile                 Compiles an assembly file to binary.
-  link                    Links multiple different assembly files together with an operating system (main) to create a static OS with program loading capabilities. Refer to documentation for program jump table format.
+  assemble                Assembles an assembler file to assembly.
+  compile                 Compile an MCPC *.go file to MCPC assembler.
   interpret               Runs an MCPC virtual machine and executes a specified binary file. Use the --config flag to specify bus devices.
   debug                   Uses the MCPC interpreter to run the specified binary file and shows a TUI interface for debugging purposes.
   --library=<library>     Includes a library, specified in HJSON format, which allows higher-level instructions to be compiled down.
   --offset=<offset>       Specifies an offset that will be applied to the binary file [default: 0].
   --enable-offset-jump    If enabled, a 'jmp' instruction will be inserted at the beginning, jumping to the offset position. If the offset is smaller than 3, this flag will be ignored.
   --ascii                 Outputs the ascii binary format for use with the Digital circuit simulator.
+  --hex                   Outputs raw binary in Verilog HEX format.
   --max-steps=<max-steps> Sets a maximum amount of steps for interpreting a binary file [default: 100000].
   -h --help               Show this screen.
   --version               Show version.`
 
 	// Parse command line arguments
-	args, _ := docopt.ParseArgs(usage, os.Args[1:], "MineCraft PC Assembly Toolchain - Version 0.1")
+	args, _ := docopt.ParseArgs(usage, os.Args[1:], "MCPC Assembly Toolchain - Version 0.1")
 
 	// Choose function to call based on arguments
-	if argBool(args, "compile") {
+	if argBool(args, "assemble") {
+
+		if argBool(args, "--ascii") && argBool(args, "--hex") {
+			panic("Can only specify one alternate output format (ASCII/HEX)")
+		}
 
 		// Compile
 		offset := argInt(args, "--offset")
 		output := argString(args, "<output>")
-		assembly := compiler.Compile(argString(args, "<file>"), offset, argStrings(args, "--library"), argBool(args, "--enable-offset-jump"))
+		assembly := assembler.Compile(argString(args, "<file>"), offset, argStrings(args, "--library"), argBool(args, "--enable-offset-jump"))
 
 		if argBool(args, "--ascii") {
 			log.Println("Converting to ASCII format...")
 			assembly = toASCIIFormat(assembly)
+		} else if argBool(args, "--hex") {
+			assembly = toHEXFormat(assembly)
 		}
 
 		ioutil.WriteFile(output, assembly, 0666)
 
-	} else if argBool(args, "link") {
+	} else if argBool(args, "compile") {
 
-		// Link
-		log.Println("Linking OS () into ")
+		// Compile
+		input := argString(args, "<file>")
+		output := argString(args, "<output>")
+		result := compiler.Compile(input)
+		ioutil.WriteFile(output, []byte(result), 0666)
 
 	} else if argBool(args, "interpret") || argBool(args, "debug") {
 
@@ -124,4 +136,19 @@ func toASCIIFormat(data []byte) []byte {
 	}
 
 	return retval[:marker]
+}
+
+func toHEXFormat(data []byte) []byte {
+	var retval bytes.Buffer
+
+	// Theoretically shouldn't happen, but better safe than sorry
+	if len(data)%2 != 0 {
+		data = append(data, 0)
+	}
+
+	for i := 0; i < len(data); i += 2 {
+		retval.WriteString(fmt.Sprintf("@%d %02x%02x\n", i/2, data[i], data[i+1]))
+	}
+
+	return retval.Bytes()
 }

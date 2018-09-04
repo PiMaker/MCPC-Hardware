@@ -24,7 +24,7 @@ Status output:
 
 
 
-Assembly language instruction set (deprecated doc)
+Assembly language instruction set
 =================================
 
 Memory locations:
@@ -96,35 +96,3 @@ INC D
 ; Loop
 JMPGT E F D
 ; End
-
-
-
-
-
-FUNCTION BOARDS
-===============
-
-> Bus controller
-- Power input
-- Bus cabling connections
-- Direct interface Bus <> Arduino (provides Clock too!)
-
-> Memory
-- Original MCPC Memory Protocol (Modified)
-- Bus interface
-- MemRefresh? No, SRAM!
--- IDT6116SA
-
-> Input
-- Keypad
-- Buffer?
-
-> ASCII Output
-- PAL/NTSC Arduino Library Thingy?
-- Retro look?
-
-> Power board
-- Power switch
-- Volt-Meter (Retro/Analog)
-- Ampere-Meter (Retro/Analog)
-- Step-Down converter (high-efficiency)

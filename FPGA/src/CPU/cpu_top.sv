@@ -116,22 +116,22 @@ module cpu(
 	wire
 		reg_we,
 		bus_fromin,
-		if_en = 0;
+		reg_if_en;
 
 	reg
 		pc_inc;
 	
 	
 	// CORE COMPONENTS
-	wire [3:0] reg_addr_write_wire;
-	assign reg_addr_write_wire = if_en ? reg_addr_if : reg_addr_write;
+	wire [3:0] reg_addr_read_wire;
+	assign reg_addr_read_wire = reg_if_en ? reg_addr_if : reg_addr_read;
 
 	core_registers  u_core_registers (
 		.clk                     ( clk            ),
 		.rst                     ( rst            ),
-		.addr_read               ( reg_addr_read      ),
-		.addr_write              ( reg_addr_write_wire     ),
-		.data_write              ( reg_data_read     ),
+		.addr_read               ( reg_addr_read_wire      ),
+		.addr_write              ( reg_addr_write     ),
+		.data_write              ( reg_data_write     ),
 		.write_enable            ( reg_we   ),
 		.bus_datain              ( bus_datain     ),
 		.bus_fromin              ( bus_fromin     ),
@@ -140,6 +140,16 @@ module cpu(
 		.data_read               ( reg_data_read      ),
 		.pc_out                  ( pc_out         ),
 		.reg_h_out               ( reg_h_out      )
+	);
+
+	reg [16:0] reg_data_write_inputs [0:15];
+	RegisterDataArbitrator  u_RegisterDataArbitrator (
+		.clk                     ( clk             ),
+		.rst                     ( rst             ),
+		.inputs                  ( reg_data_write_inputs ),
+		.default_input           ( reg_data_read ),
+
+		.out                     ( reg_data_write  )
 	);
 
 
@@ -162,11 +172,7 @@ module cpu(
 
 
 	initial begin
-		// Dummy program
-		bootloader_rom[0] <= 16'h07E1;
-		bootloader_rom[1] <= 16'h05D1;
-		bootloader_rom[2] <= 16'h0751;
-		bootloader_rom[3] <= 16'h0BC1;
+		$readmemh("bootloader.hex", bootloader_rom);
 	end
 
 
@@ -178,9 +184,10 @@ module cpu(
 			continue_execution_register <= 16'h0;
 			write_enable_register <= 16'h0;
 			reg_we_approved <= 0;
-			halted <= 0;
 			instruction_buffer <= 16'h0;
 			pc_inc <= 0;
+
+			reset_instruction_tasks();
 
 		end else begin
 
@@ -196,6 +203,7 @@ module cpu(
 					if (continue_execution) begin
 						cpu_state <= `CPU_STATE_COMMIT;
 						continue_execution_register <= 16'h0;
+						pc_inc <= 1'b0; // A bit messy but avoids triple increments during SET
 					end else begin
 
 						// Decompose instruction into different register busses
@@ -208,6 +216,9 @@ module cpu(
 
 							`INS_HALT: task_halt();
 							`INS_MOV: task_mov();
+							`INS_MOVNZ: task_movnz();
+							`INS_MOVEZ: task_movez();
+							`INS_SET: task_set();
 							default: task_halt();
 
 						endcase
@@ -225,6 +236,9 @@ module cpu(
 					reg_we_approved <= 1'b0;
 					write_enable_register <= 16'h0;
 					cpu_state <= `CPU_STATE_INS_LOAD;
+					
+					reset_instruction_tasks();
+
 					end
 
 				default: cpu_state <= `CPU_STATE_INS_LOAD;
@@ -237,6 +251,8 @@ module cpu(
 
 
 	// INSTRUCTION LOGIC
+
+	// HALT
 	reg halted;
 	task task_halt;
 	begin
@@ -245,11 +261,131 @@ module cpu(
 	end
 	endtask
 
+	// MOV
 	task task_mov;
 	begin
 		// move data
 		write_enable_register[`INS_MOV] <= 1'b1;
 		continue_execution_register[`INS_MOV] <= 1'b1;
+	end
+	endtask
+
+	// MOVNZ
+	reg task_movnz_state;
+	task task_movnz;
+	begin
+		if (task_movnz_state == 0) begin
+			reg_if_en <= 1'b1;
+			task_movnz_state <= 1'b1;
+		end else begin
+			if (|reg_data_read) begin
+				write_enable_register[`INS_MOVNZ] <= 1'b1;
+			end
+
+			reg_if_en <= 1'b0;
+			task_movnz_state <= 1'b0;
+			continue_execution_register[`INS_MOVNZ] <= 1'b1;
+		end
+	end
+	endtask
+
+	// MOVEZ
+	reg task_movez_state;
+	task task_movez;
+	begin
+		if (task_movez_state == 0) begin
+			reg_if_en <= 1'b1;
+			task_movez_state <= 1'b1;
+		end else begin
+			if (&(~reg_data_read)) begin
+				write_enable_register[`INS_MOVEZ] <= 1'b1;
+			end
+
+			reg_if_en <= 1'b0;
+			task_movez_state <= 1'b0;
+			continue_execution_register[`INS_MOVEZ] <= 1'b1;
+		end
+	end
+	endtask
+
+	// SET
+	reg task_set_state;
+	reg [15:0] task_set_buffer;
+	task task_set;
+	begin
+		case (task_set_state)
+			1'h0: begin
+				task_set_state <= 1'h1;
+				task_set_buffer <= bootloader_rom[pc_out + 1];
+			end
+			1'h1: begin
+				task_set_state <= 1'h0;
+
+				reg_data_write_inputs[`INS_SET] <= {task_set_buffer, 1'b1};
+				write_enable_register[`INS_SET] <= 1'b1;
+
+				pc_inc <= 1; // Skip data value
+				continue_execution_register[`INS_SET] <= 1'b1;
+			end
+		endcase
+	end
+	endtask
+
+	// ALU
+	reg task_alu_state;
+	reg [15:0] task_alu_input_buffer;
+	reg [15:0] task_alu_temp_buffer;
+	task task_alu;
+	begin
+		case (task_alu_state)
+			1'h0: begin
+				task_alu_state <= 1'h1;
+				task_alu_input_buffer <= reg_data_read;
+				reg_if_en <= 1'b1;
+			end
+			1'h1: begin
+				task_alu_state <= 1'h0;
+				continue_execution_register[`INS_ALU_AND] <= 1'b1; // Use any, it's all the same
+				write_enable_register[`INS_ALU_AND] <= 1'b1;
+
+				case (bootloader_rom[pc_out])
+					`INS_ALU_AND: task_alu_temp_buffer = task_alu_input_buffer & reg_data_read;
+					`INS_ALU_OR: task_alu_temp_buffer = task_alu_input_buffer | reg_data_read;
+					`INS_ALU_ADD: task_alu_temp_buffer = task_alu_input_buffer + reg_data_read;
+					`INS_ALU_NOT: task_alu_temp_buffer = ~task_alu_input_buffer;
+					`INS_ALU_MUL: task_alu_temp_buffer = task_alu_input_buffer * reg_data_read;
+					`INS_ALU_EQ: task_alu_temp_buffer = (task_alu_input_buffer == reg_data_read ? 16'hFFFF : 16'h0);
+					`INS_ALU_GT: task_alu_temp_buffer = (task_alu_input_buffer > reg_data_read ? 16'hFFFF : 16'h0);
+					`INS_ALU_SHFT: begin
+						if (reg_addr_if & 4'h8) begin
+							task_alu_temp_buffer = task_alu_input_buffer << (reg_addr_if & 4'b0111);
+						end else begin
+							task_alu_temp_buffer = task_alu_input_buffer >> reg_addr_if;
+						end
+					end
+				endcase
+
+				reg_data_write_inputs[`INS_ALU_AND] <= {task_alu_temp_buffer, 1'b1};
+			end
+		endcase
+	end
+	endtask
+
+
+	// CALLED AFTER EACH INSTRUCTION AND ON RST
+	integer ix;
+	task reset_instruction_tasks;
+	begin
+		halted <= 0;
+
+		task_movnz_state <= 0;
+		task_movez_state <= 0;
+
+		task_set_state <= 0;
+
+		for (ix = 0; ix < 16; ix = ix + 1) begin
+		  reg_data_write_inputs[ix] <= 0;
+		end
 	end
 	endtask
 
