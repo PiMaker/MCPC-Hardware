@@ -9,7 +9,7 @@ module vsync(line_clk, vsync_out, blank_out);
 
 	always @(posedge line_clk)
 	if (count < 666)
-		count <= count + 1;
+		count <= count + 11'h1;
 	else
 		count <= 0;
 
@@ -46,7 +46,7 @@ module hsync(clk50, hsync_out, blank_out, newline_out);
 	always @(posedge clk50)
 	begin
 		if (count < 1040)
-			count  <= count + 1;
+			count  <= count + 11'h1;
 		else
 			count  <= 0;
 	end

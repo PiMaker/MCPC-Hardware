@@ -5,22 +5,22 @@
 `define CPU_STATE_PC_INC 8'h03
 
 // Instructions
-`define INS_HALT 4'h0
-`define INS_MOV 4'h1
-`define INS_MOVNZ 4'h2
-`define INS_MOVEZ 4'h3
-`define INS_BUS 4'h4
-`define INS_RES1 4'h5
-`define INS_SET 4'h6
-`define INS_RES2 4'h7
-`define INS_ALU_AND 4'h8
-`define INS_ALU_OR 4'h9
-`define INS_ALU_NOT 4'hA
-`define INS_ALU_ADD 4'hB
-`define INS_ALU_SHFT 4'hC
-`define INS_ALU_MUL 4'hD
-`define INS_ALU_GT 4'hE
-`define INS_ALU_EQ 4'hF
+`define INS_HALT 4'h0 // done
+`define INS_MOV 4'h1 // done
+`define INS_MOVNZ 4'h2 // done
+`define INS_MOVEZ 4'h3 // done
+`define INS_BUS 4'h4 // not implemented
+`define INS_MEMR 4'h5
+`define INS_SET 4'h6 // done
+`define INS_MEMW 4'h7
+`define INS_ALU_AND 4'h8 // done
+`define INS_ALU_OR 4'h9 // done
+`define INS_ALU_NOT 4'hA // done
+`define INS_ALU_ADD 4'hB // done
+`define INS_ALU_SHFT 4'hC // done
+`define INS_ALU_MUL 4'hD // done
+`define INS_ALU_GT 4'hE // done
+`define INS_ALU_EQ 4'hF // done
 
 // Instruction decomposition
 `define INSDECOMP_INS(ins) ins[0+:4]
@@ -49,6 +49,13 @@ module cpu(
 	output		          		DRAM_UDQM,
 	output		          		DRAM_WE_N,
 	
+
+    //////////// VGA ////////////
+    output reg [7:0] fb_data,
+    output reg [11:0] fb_addr,
+    output reg fb_we,
+
+
 	//////////// MISC ////////////
 	output			[15:0]		DEBUG_BUS,
 	output			[9:0]		LEDR,
@@ -56,48 +63,52 @@ module cpu(
 );
 
 
-	//////////// SDRAM ////////////
-	wire  [15:0]  writedata;
-	wire  [15:0]  readdata;
-	wire          write;
-	wire          read;
-	wire  [24:0]  writeaddr;
-	wire  [24:0]  readaddr;
+    // SDRAM new
+    wire ram_clk;
+    assign DRAM_CLK = ram_clk;
+    sdram_pll0 ram_pll_instance (
+        .areset(rst),
+        .inclk0(clk50),
+        .c0(ram_clk)
+    );
 
-	// Initialize SDRAM controller
-	Sdram_Control ram_controller_instance (
-		.REF_CLK(clk50),
-		.RESET_N(rst),
-		// FIFO Write Side 
-		.WR_DATA(writedata),
-		.WR(write),
-		.WR_ADDR(writeaddr),
-		.WR_MAX_ADDR(25'h1ffffff),
-		.WR_LENGTH(9'h80),
-		.WR_LOAD(),
-		.WR_CLK(clk),
-		// FIFO Read Side 
-		.RD_DATA(readdata),
-		.RD(read),
-		.RD_ADDR(readaddr),
-		.RD_MAX_ADDR(25'h1ffffff),
-		.RD_LENGTH(9'h80),
-		.RD_LOAD(),
-		.RD_CLK(clk),
-		// SDRAM Side
-		.SA(DRAM_ADDR),
-		.BA(DRAM_BA),
-		.CS_N(DRAM_CS_N),
-		.CKE(DRAM_CKE),
-		.RAS_N(DRAM_RAS_N),
-		.CAS_N(DRAM_CAS_N),
-		.WE_N(DRAM_WE_N),
-		.DQ(DRAM_DQ),
-		.DQM({DRAM_UDQM,DRAM_LDQM}),
-		.SDR_CLK(DRAM_CLK)
-	);
-		
-		
+    sdram_controller ram_controller_instance (
+        .wr_addr(mem_writeaddr),
+        .wr_data(mem_writedata),
+        .wr_enable(mem_write),
+
+        .rd_addr(mem_readaddr),
+        .rd_data(mem_readdata),
+        .rd_enable(mem_read),
+        .rd_ready(mem_read_ready),
+
+        .busy(mem_busy),
+
+        .rst_n(!rst),
+        .clk(ram_clk),
+
+        .addr(DRAM_ADDR),
+        .bank_addr(DRAM_BA),
+        .data(DRAM_DQ),
+        .clock_enable(DRAM_CKE),
+        .cs_n(DRAM_CS_N),
+        .ras_n(DRAM_RAS_N),
+        .cas_n(DRAM_CAS_N),
+        .we_n(DRAM_WE_N),
+        .data_mask_low(DRAM_LDQM),
+        .data_mask_high(DRAM_UDQM)
+    );
+
+	// SDRAM Vars
+	wire  [15:0] mem_writedata;
+	wire  [15:0] mem_readdata;
+	reg          mem_write;
+	reg          mem_read;
+    reg          mem_read_ready;
+	reg  [24:0]  mem_writeaddr;
+	reg  [24:0]  mem_readaddr;
+    reg          mem_busy;
+
 	// CORE BUSSES
 	wire [15:0]
 		reg_data_read,
@@ -156,7 +167,7 @@ module cpu(
 	// CORE LOGIC
 	reg [7:0] cpu_state;
 	reg [15:0] instruction_buffer;
-	reg [15:0] bootloader_rom [0:2048];
+	reg [15:0] bootloader_rom [0:2047];
 
 	reg [15:0] continue_execution_register;
 	reg [15:0] write_enable_register;
@@ -196,7 +207,12 @@ module cpu(
 
 				`CPU_STATE_INS_LOAD: begin
 					cpu_state <= `CPU_STATE_WAITING;
-					instruction_buffer <= bootloader_rom[pc_out];
+					instruction_buffer = bootloader_rom[pc_out];
+
+					// Decompose instruction into different register busses
+					reg_addr_write <= `INSDECOMP_TO(instruction_buffer);
+					reg_addr_read <= `INSDECOMP_FROM(instruction_buffer);
+					reg_addr_if <= `INSDECOMP_IF(instruction_buffer);
 					end
 
 				`CPU_STATE_WAITING: begin
@@ -206,11 +222,6 @@ module cpu(
 						pc_inc <= 1'b0; // A bit messy but avoids triple increments during SET
 					end else begin
 
-						// Decompose instruction into different register busses
-						reg_addr_write <= `INSDECOMP_TO(instruction_buffer);
-						reg_addr_read <= `INSDECOMP_FROM(instruction_buffer);
-						reg_addr_if <= `INSDECOMP_IF(instruction_buffer);
-
 						// Instruction decoding
 						case (`INSDECOMP_INS(instruction_buffer))
 
@@ -219,7 +230,10 @@ module cpu(
 							`INS_MOVNZ: task_movnz();
 							`INS_MOVEZ: task_movez();
 							`INS_SET: task_set();
-							default: task_halt();
+							`INS_MEMR: task_memr();
+							`INS_MEMW: task_memw();
+							`INS_BUS: task_halt();
+							default: task_alu(); // ALU here, regular instructions exhausted
 
 						endcase
 					end
@@ -340,22 +354,22 @@ module cpu(
 		case (task_alu_state)
 			1'h0: begin
 				task_alu_state <= 1'h1;
-				task_alu_input_buffer <= reg_data_read;
+				task_alu_input_buffer = reg_data_read;
 				reg_if_en <= 1'b1;
 			end
 			1'h1: begin
 				task_alu_state <= 1'h0;
-				continue_execution_register[`INS_ALU_AND] <= 1'b1; // Use any, it's all the same
+				continue_execution_register[`INS_ALU_AND] <= 1'b1; // Use any ALU instruction, it's all the same
 				write_enable_register[`INS_ALU_AND] <= 1'b1;
 
-				case (bootloader_rom[pc_out])
-					`INS_ALU_AND: task_alu_temp_buffer = task_alu_input_buffer & reg_data_read;
-					`INS_ALU_OR: task_alu_temp_buffer = task_alu_input_buffer | reg_data_read;
-					`INS_ALU_ADD: task_alu_temp_buffer = task_alu_input_buffer + reg_data_read;
-					`INS_ALU_NOT: task_alu_temp_buffer = ~task_alu_input_buffer;
-					`INS_ALU_MUL: task_alu_temp_buffer = task_alu_input_buffer * reg_data_read;
-					`INS_ALU_EQ: task_alu_temp_buffer = (task_alu_input_buffer == reg_data_read ? 16'hFFFF : 16'h0);
-					`INS_ALU_GT: task_alu_temp_buffer = (task_alu_input_buffer > reg_data_read ? 16'hFFFF : 16'h0);
+				case (`INSDECOMP_INS(instruction_buffer))
+					`INS_ALU_AND: task_alu_temp_buffer =  task_alu_input_buffer & reg_data_read;
+					`INS_ALU_OR: task_alu_temp_buffer  =  task_alu_input_buffer | reg_data_read;
+					`INS_ALU_ADD: task_alu_temp_buffer =  task_alu_input_buffer + reg_data_read;
+					`INS_ALU_NOT: task_alu_temp_buffer =  ~task_alu_input_buffer;
+					`INS_ALU_MUL: task_alu_temp_buffer =  task_alu_input_buffer * reg_data_read;
+					`INS_ALU_EQ: task_alu_temp_buffer  =  (task_alu_input_buffer ==  reg_data_read ? 16'hFFFF : 16'h0);
+					`INS_ALU_GT: task_alu_temp_buffer  =  (task_alu_input_buffer > reg_data_read ? 16'hFFFF : 16'h0);
 					`INS_ALU_SHFT: begin
 						if (reg_addr_if & 4'h8) begin
 							task_alu_temp_buffer = task_alu_input_buffer << (reg_addr_if & 4'b0111);
@@ -372,16 +386,109 @@ module cpu(
 	endtask
 
 
+	// MEM(R|W)
+    reg mem_read_ready_stor = 0;
+    reg mem_read_ready_stor_reset = 0;
+    always @(*) begin
+        if (mem_read_ready) begin
+            mem_read_ready_stor <= 1'b1;
+        end else if (mem_read_ready_stor_reset) begin
+            mem_read_ready_stor <= 0;
+        end
+    end
+
+    reg [16:0] task_memr_state;
+	task task_memr;
+	begin
+		case (task_memr_state)
+			2'h0: begin
+				mem_readaddr = {9'h0,reg_data_read};
+				mem_read = 1'h1;
+				task_memr_state <= (mem_busy || mem_read_ready_stor) ? 2'h1 : 2'h0;
+                //task_memr_state <= 2'h1;
+			end
+            2'h1: begin
+                if (mem_read_ready_stor) begin
+                    mem_read_ready_stor_reset <= 1'b1;
+                    task_memr_state <= 0;
+                    reg_data_write_inputs[`INS_MEMR] = {mem_readdata, 1'b1};
+                    write_enable_register[`INS_MEMR] <= 1'h1;
+                    continue_execution_register[`INS_MEMR] <= 1'h1;
+                    task_memr_state <= 0;
+                end
+                mem_read <= 1'h0;
+            end
+		endcase
+	end
+	endtask
+
+	reg [16:0] task_memw_state;
+	reg [15:0] task_memw_addr_buffer;
+    reg task_memw_is_cfg;
+	task task_memw;
+	begin
+        if (reg_data_read[15] || task_memw_is_cfg) begin
+            task_memw_is_cfg <= 1'b1;
+        end
+
+        case (task_memw_state)
+            2'h0: begin
+                task_memw_addr_buffer <= reg_data_read;
+                reg_if_en <= 1'b1;
+                task_memw_state <= 2'h1;
+            end
+            2'h1: begin
+                if (task_memw_is_cfg) begin
+                    if (task_memw_addr_buffer >= 16'hE000 && task_memw_addr_buffer <= 16'hF2BF) begin
+                        fb_addr = task_memw_addr_buffer - 16'hE000;
+                        fb_data = reg_data_read[0 +: 8];
+                        fb_we = 1'b1;
+                    end
+
+                    task_memw_state <= 2'h2;
+                end else begin
+                    mem_writeaddr = {9'h0,task_memw_addr_buffer};
+                    mem_writedata = reg_data_read;
+                    mem_write = 1'h1;
+
+                    task_memw_state <= 2'h2;
+                end
+            end
+            2'h2: begin
+                mem_write <= 1'b0;
+                fb_we <= 1'b0;
+                continue_execution_register[`INS_MEMW] <= 1'h1;
+                task_memw_state <= 2'h0;
+            end
+        endcase
+	end
+	endtask
+
+
 	// CALLED AFTER EACH INSTRUCTION AND ON RST
 	integer ix;
 	task reset_instruction_tasks;
 	begin
 		halted <= 0;
 
+		reg_if_en <= 0;
+
 		task_movnz_state <= 0;
 		task_movez_state <= 0;
 
 		task_set_state <= 0;
+
+		task_memr_state <= 0;
+		task_memw_state <= 0;
+		task_memw_addr_buffer <= 0;
+        task_memw_is_cfg <= 0;
+        mem_read_ready_stor_reset <= 0;
+
+		mem_read <= 0;
+		mem_readaddr <= 0;
+		mem_write <= 0;
+		mem_writeaddr <= 0;
+		mem_writedata <= 0;
 
 		for (ix = 0; ix < 16; ix = ix + 1) begin
 		  reg_data_write_inputs[ix] <= 0;
@@ -391,11 +498,14 @@ module cpu(
 
 
 	// DEBUG OUTPUT LOGIC
-	assign DEBUG_BUS = SW[9] ? reg_h_out : (SW[8] ? pc_out : (SW[7] ? instruction_buffer : 16'hDEAD));
+	assign DEBUG_BUS = SW[9] ? reg_h_out : (SW[8] ? pc_out : (SW[7] ? instruction_buffer : (SW[6] ? mem_readdata : 16'hDEAD)));
 
 	assign LEDR[0] = halted;
 	assign LEDR[1] = reg_we;
 	assign LEDR[2] = continue_execution;
+	assign LEDR[3] = rst;
+	assign LEDR[4] = clk;
+	assign LEDR[5] = reg_if_en;
 	assign LEDR[6] = cpu_state == `CPU_STATE_INS_LOAD;
 	assign LEDR[7] = cpu_state == `CPU_STATE_WAITING;
 	assign LEDR[8] = cpu_state == `CPU_STATE_COMMIT;

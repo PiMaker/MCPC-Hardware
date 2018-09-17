@@ -137,8 +137,8 @@ func Compile(file string, offset int, libraries []string, autoJump bool) []byte 
 	labelMap := make(map[string]uint16)
 	for labelAddr, token := range tokens {
 		if token.label != "" {
-			// Subtract 1 from label address to account for PC increment after jump instruction
-			labelMap[token.label] = uint16(labelAddr) - uint16(1)
+			// DEPRECATED; Subtract 1 from label address to account for PC increment after jump instruction
+			labelMap[token.label] = uint16(labelAddr)
 			fmt.Println(" > Label " + token.label + " located at 0x" + strconv.FormatInt(int64(labelMap[token.label]), 16))
 		}
 	}
@@ -209,6 +209,7 @@ func Compile(file string, offset int, libraries []string, autoJump bool) []byte 
 				output[i*2] = byte((n & 0xFF00) >> 8)
 				output[i*2+1] = byte(n & 0x00FF)
 			}
+
 		case "MOV":
 			output[i*2] = ParseRegister(tkn.args[1])
 			output[i*2+1] = (ParseRegister(tkn.args[0]) << 4) | 0x1
@@ -218,6 +219,7 @@ func Compile(file string, offset int, libraries []string, autoJump bool) []byte 
 		case "MOVEZ":
 			output[i*2] = (ParseRegister(tkn.args[2]) << 4) | ParseRegister(tkn.args[1])
 			output[i*2+1] = (ParseRegister(tkn.args[0]) << 4) | 0x3
+
 		case "BUS":
 			output[i*2] = byte(parseHex(tkn.args[1]))
 			output[i*2+1] = (ParseRegister(tkn.args[0]) << 4) | 0x4
@@ -229,13 +231,20 @@ func Compile(file string, offset int, libraries []string, autoJump bool) []byte 
 				log.Fatalln("ERROR: Cannot SET program counter (PC/0xB)")
 			}
 			output[i*2+1] = 0x6
-		case "BRK":
-			output[i*2+1] = 0x7
+
+		case "MEMR":
+			output[i*2+1] = (ParseRegister(tkn.args[0]) << 4) | 0x5
+			output[i*2] = ParseRegister(tkn.args[1])
+		case "MEMW":
+			output[i*2+1] = (ParseRegister(tkn.args[0]) << 4) | 0x7
+			output[i*2] = ParseRegister(tkn.args[1]) << 4
+
 		case "AND", "OR", "NOT", "ADD", "SHFT", "MUL", "GT", "EQ":
 			aluCmd(&output, i, tkn)
+
 		case "HALT":
 		default:
-			log.Println("WARNING: Invalid instruction encountered: \"" + tkn.command + "\" (in \"" + tkn.raw + "\"); Output will be 0x0 (HALT)")
+			log.Println("WARNING: Invalid instruction or HALT encountered: \"" + tkn.command + "\" (in \"" + tkn.raw + "\"); Output will be 0x0 (HALT)")
 		}
 	}
 

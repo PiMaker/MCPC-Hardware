@@ -34,7 +34,7 @@
 		"instructions": {
 			"patterns": [{
 				"name": "keyword.control.mcpc",
-				"match": "(?i)\\b(mov|movnz|movez|halt|hold|bus|set)\\b"
+				"match": "(?i)\\b(mov|movnz|movez|halt|bus|set|memr|memw)\\b"
 			},
 			{
 				"name": "keyword.control.less.mcpc",

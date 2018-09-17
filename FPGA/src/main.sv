@@ -60,17 +60,17 @@ module main (
 
 
 // Reset on Power up
-reg [2:0] PWR_RST;
+reg [32:0] PWR_RST = 0;
 always @(posedge MAX10_CLK1_50) begin
-	if (PWR_RST[0] || PWR_RST[1]) begin
-		PWR_RST <= PWR_RST + 1;
+	if (!PWR_RST[24]) begin
+		PWR_RST <= PWR_RST + 1'b1;
 	end
 end
 
 
 // "Global" nets
 wire RST;
-assign RST = !KEY[0] | PWR_RST[1];
+assign RST = (~PWR_RST[24]) | (~KEY[0]);
 
 
 // Blank HEX display
@@ -100,9 +100,9 @@ hex_bus_display hex_bus_display_instance_3 (
 
 
 // FB vars
-reg [7:0] fb_data_bus;
-reg [11:0] fb_addr_bus;
-reg fb_we;
+wire [7:0] fb_data_bus;
+wire [11:0] fb_addr_bus;
+wire fb_we;
 
 
 // VGA controller
@@ -134,7 +134,7 @@ counter counter_instance_debug_clock (
 	.out(debug_clock)
 );
 
-wire core_clock = SW[0] ? (SW[1] ? MAX10_CLK1_50 : debug_clock[21]) : manual_clock;
+wire core_clock = SW[0] ? (SW[1] ? debug_clock[1] : debug_clock[21]) : manual_clock;
 
 
 // Main CPU instance
@@ -159,7 +159,11 @@ cpu cpu_instance (
 	
 	.DEBUG_BUS(debug_bus),
 	.LEDR(LEDR),
-	.SW(SW)
+	.SW(SW),
+
+    .fb_data(fb_data_bus),
+    .fb_addr(fb_addr_bus),
+    .fb_we(fb_we)
 );
 
 	

@@ -41,7 +41,7 @@ module core_registers(
 			end
 		end else if (write_enable) begin
 		  	if (addr_write < 11) begin
-	 			gp_reg[addr_write] = data_write;
+	 			gp_reg[addr_write] <= data_write;
  			end
 		end
 	 	

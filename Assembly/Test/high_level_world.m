@@ -53,7 +53,7 @@ int displayY = 0;
 
 void setupDisplay()
 {
-    int memoryLayoutPointer = 0x8000 /* Base pointer */ + 1; // 0x8001 is the start address of the ascii framebuffer
+    int memoryLayoutPointer = 0x8000 /* Base pointer */ + 0x65; // 0x8065 is the start address of the ascii framebuffer
     displayPointer = memoryLayoutPointer;
 }
 

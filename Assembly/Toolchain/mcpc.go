@@ -18,7 +18,7 @@ func main() {
 	usage := `MCPC Toolchain (Compiler/Assembler/Linker/VM).
 
 Usage:
-  mcpc assemble <file> <output> [--library=<library>...] [--offset=<offset>] [--enable-offset-jump] [--ascii] [--hex]
+  mcpc assemble <file> <output> [--library=<library>...] [--offset=<offset>] [--enable-offset-jump] [--ascii] [--hex] [--length=<length>]
   mcpc compile <file> <output>
   mcpc interpret <file> [--max-steps=<max-steps>] [--config=<config>]
   mcpc debug <file> [--config=<config>]
@@ -35,6 +35,7 @@ Options:
   --enable-offset-jump    If enabled, a 'jmp' instruction will be inserted at the beginning, jumping to the offset position. If the offset is smaller than 3, this flag will be ignored.
   --ascii                 Outputs the ascii binary format for use with the Digital circuit simulator.
   --hex                   Outputs raw binary in Verilog HEX format.
+  --length=<length>       Length of hex output in bytes (one instruction is 2 bytes!) [default: 4096].
   --max-steps=<max-steps> Sets a maximum amount of steps for interpreting a binary file [default: 100000].
   -h --help               Show this screen.
   --version               Show version.`
@@ -58,7 +59,7 @@ Options:
 			log.Println("Converting to ASCII format...")
 			assembly = toASCIIFormat(assembly)
 		} else if argBool(args, "--hex") {
-			assembly = toHEXFormat(assembly)
+			assembly = toHEXFormat(assembly, argInt(args, "--length"))
 		}
 
 		ioutil.WriteFile(output, assembly, 0666)
@@ -72,6 +73,9 @@ Options:
 		ioutil.WriteFile(output, []byte(result), 0666)
 
 	} else if argBool(args, "interpret") || argBool(args, "debug") {
+
+		// DEPRECATED FOR NOW!
+		log.Println("WARNING: Interpretation uses old assembly format, new programs probably won't work correctly!")
 
 		// Interpret/Debug
 		interpreter.Interpret(argString(args, "<file>"), "", argBool(args, "debug"), argInt(args, "--max-steps"))
@@ -138,16 +142,21 @@ func toASCIIFormat(data []byte) []byte {
 	return retval[:marker]
 }
 
-func toHEXFormat(data []byte) []byte {
+func toHEXFormat(data []byte, length int) []byte {
 	var retval bytes.Buffer
 
+	log.Printf("Converting to Verilog hex, padding to: %d\n", length)
+
+	buf := make([]byte, length)
+	copy(buf, data)
+
 	// Theoretically shouldn't happen, but better safe than sorry
-	if len(data)%2 != 0 {
-		data = append(data, 0)
+	if len(buf)%2 != 0 {
+		buf = append(buf, 0)
 	}
 
-	for i := 0; i < len(data); i += 2 {
-		retval.WriteString(fmt.Sprintf("@%d %02x%02x\n", i/2, data[i], data[i+1]))
+	for i := 0; i < len(buf); i += 2 {
+		retval.WriteString(fmt.Sprintf("%02x%02x\n", buf[i], buf[i+1]))
 	}
 
 	return retval.Bytes()
