@@ -8,7 +8,6 @@ import (
 	"os"
 
 	"./Assembler"
-	"./Compiler"
 	"./Interpreter"
 
 	"github.com/docopt/docopt-go"
@@ -19,7 +18,6 @@ func main() {
 
 Usage:
   mcpc assemble <file> <output> [--library=<library>...] [--offset=<offset>] [--enable-offset-jump] [--ascii] [--hex] [--length=<length>]
-  mcpc compile <file> <output>
   mcpc interpret <file> [--max-steps=<max-steps>] [--config=<config>]
   mcpc debug <file> [--config=<config>]
   mcpc -h | --help
@@ -27,7 +25,6 @@ Usage:
 
 Options:
   assemble                Assembles an assembler file to assembly.
-  compile                 Compile an MCPC *.go file to MCPC assembler.
   interpret               Runs an MCPC virtual machine and executes a specified binary file. Use the --config flag to specify bus devices.
   debug                   Uses the MCPC interpreter to run the specified binary file and shows a TUI interface for debugging purposes.
   --library=<library>     Includes a library, specified in HJSON format, which allows higher-level instructions to be compiled down.
@@ -63,14 +60,6 @@ Options:
 		}
 
 		ioutil.WriteFile(output, assembly, 0666)
-
-	} else if argBool(args, "compile") {
-
-		// Compile
-		input := argString(args, "<file>")
-		output := argString(args, "<output>")
-		result := compiler.Compile(input)
-		ioutil.WriteFile(output, []byte(result), 0666)
 
 	} else if argBool(args, "interpret") || argBool(args, "debug") {
 

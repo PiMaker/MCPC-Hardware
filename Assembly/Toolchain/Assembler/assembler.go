@@ -227,9 +227,9 @@ func Compile(file string, offset int, libraries []string, autoJump bool) []byte 
 			output[i*2+1] = 0x5
 		case "SET":
 			output[i*2] = ParseRegister(tkn.args[0])
-			if output[i*2] == 0xB {
-				log.Fatalln("ERROR: Cannot SET program counter (PC/0xB)")
-			}
+			//if output[i*2] == 0xB {
+			//	log.Fatalln("ERROR: Cannot SET program counter (PC/0xB)")
+			//}
 			output[i*2+1] = 0x6
 
 		case "MEMR":
@@ -239,12 +239,14 @@ func Compile(file string, offset int, libraries []string, autoJump bool) []byte 
 			output[i*2+1] = (ParseRegister(tkn.args[0]) << 4) | 0x7
 			output[i*2] = ParseRegister(tkn.args[1]) << 4
 
-		case "AND", "OR", "NOT", "ADD", "SHFT", "MUL", "GT", "EQ":
+		case "AND", "OR", "XOR", "ADD", "SHFT", "MUL", "GT", "EQ":
 			aluCmd(&output, i, tkn)
 
 		case "HALT":
+			break
+
 		default:
-			log.Println("WARNING: Invalid instruction or HALT encountered: \"" + tkn.command + "\" (in \"" + tkn.raw + "\"); Output will be 0x0 (HALT)")
+			log.Println("WARNING: Invalid instruction encountered: \"" + tkn.command + "\" (in \"" + tkn.raw + "\"); Output will be 0x0 (HALT)")
 		}
 	}
 
@@ -263,7 +265,7 @@ func aluCmd(output *[]byte, i int, tkn *tokenLine) {
 		ins = 0x8
 	case "OR":
 		ins = 0x9
-	case "NOT":
+	case "XOR":
 		ins = 0xA
 	case "ADD":
 		ins = 0xB
@@ -373,10 +375,10 @@ func loadLibrary(path string) library {
 
 		// Generate replacee map
 		replaceeMap := make(map[string]string)
-		captureString := replaceeMatch[0]
+		captureString := "(?:\\s|^)" + replaceeMatch[0] // Regex at the beginning takes care that no labels will be replaced
 
 		for i, v := range replaceeMatch[1:] {
-			captureString += " (\\S+)"
+			captureString += "\\s+(\\S+)"
 			replaceeMap[":"+paramTypeRegex.ReplaceAllString(v, "")] = "$" + strconv.Itoa(i+1)
 		}
 
@@ -431,6 +433,8 @@ var longestDeclaration int
 func tokenize(reader io.Reader) []*tokenLine {
 	var tokens []*tokenLine
 
+	var nextLabel *string
+
 	scanner := bufio.NewScanner(reader)
 	for scanner.Scan() {
 		// Parse each line
@@ -483,8 +487,13 @@ func tokenize(reader io.Reader) []*tokenLine {
 		// Label detection
 		isLabel := tspaced[0][0] == '.'
 		label := ""
+
 		if isLabel {
 			label = tspaced[0]
+
+			if nextLabel != nil {
+				log.Fatalln("ERROR: Cannot set two labels for one command (__LABEL_SET)") // TODO: Make work
+			}
 
 			if len(tspaced) == 1 {
 				// Label only, treat as command
@@ -495,9 +504,15 @@ func tokenize(reader io.Reader) []*tokenLine {
 					args:    make([]string, 0),
 				})
 				continue
+			} else if tspaced[1] == "__LABEL_SET" {
+				nextLabel = &label
+				continue
 			}
 
 			tspaced = tspaced[1:]
+		} else if nextLabel != nil {
+			label = *nextLabel
+			nextLabel = nil
 		}
 
 		// Check for raw instructions
@@ -535,6 +550,11 @@ func tokenize(reader io.Reader) []*tokenLine {
 							cmdArgs[i] = strings.Replace(cmdArgs[i], k, v, -1)
 						}
 					}
+				}
+
+				if cmdArgs[i][0] == '.' {
+					// Append space to allow label handling in library replacing (very hacky haha lmao sorry)
+					cmdArgs[i] = cmdArgs[i] + " "
 				}
 			}
 		}

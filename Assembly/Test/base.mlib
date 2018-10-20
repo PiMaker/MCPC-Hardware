@@ -1,4 +1,8 @@
-- NEG from.reg to.reg =             NOT :from :to 0, ADD :to :to 1 - negates a 2's complement number, also converts from and to 2's complement
+- NOT from.reg to.reg =             XOR :from :to -1 - bitwise negate
+- COM from.reg to.reg =             NOT :from :to - Alias for NOT
+- SETREG to.reg val.lit =           SET :to, :val - Sets a register to a value in a single line of assembler code
+- NEG from.reg to.reg =             NOT :from :to, ADD :to :to 1 - negates a 2's complement number, also converts from and to 2's complement
+- SUB val.reg out.reg minus.reg =   NEG :minus SCR1, ADD :val :out SCR1 - Subtracts minus.reg from value.reg and stores result in out.reg (2's complement arithmetic)
 - JMPR to.reg =                     MOV :to PC - Jump unconditionally to an address in a register
 - JMP to.lit =                      SET SCR1, :to, MOV SCR1 PC - Jump unconditionally to a literal address
 - GOTO to.lit =                     JMP :to - Alias for JMP
@@ -10,9 +14,9 @@
 - INC val.reg =                     ADD :val :val 1 - Increments by one
 - DEC val.reg =                     ADD :val :val -1 - Decrements by one
 - NOOP =                            MOV SCR1 SCR1 - Does nothing for one cycle
-- CHAR addr.reg data.lit =          SET SCR2, :data, STOR SCR2 :addr, INC addr
+- CHAR addr.reg data.lit =          SET SCR2, :data, STOR SCR2 :addr, INC addr - Special char syntax support for creating strings manually in text form
 - CALL func.lit =                   DEC SP, SET SCR2, :func, STOR PC SP, MOV SCR2 PC, ADD SP SP 1 - Calls a function at addr.reg
 - RET =                             LOAD SCR1 SP, INC SCR1, INC SCR1, MOV SCR1 PC - Returns from a function
-- RETH =                            ADD H SCR1 1, INC SCR1, MOV SCR1 PC - Returns from a function with register H containing the return address
 - PUSH val.reg =                    DEC SP, STOR :val SP - Stack push
 - POP val.reg =                     LOAD :val SP, INC SP - Stack pop
+- FAULT num.lit =                   SETREG SCR1 0xFA00, SETREG H :num, OR H H SCR1, HALT - Faults and halts the CPU displaying an error code on the hex display (H)

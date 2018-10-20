@@ -60,13 +60,13 @@ module core_registers(
 	 end
 	 
 	 // Bus logic
-	 always @(posedge clk) begin
+	 /*always @(posedge clk) begin
 	 	
 	 	if (bus_fromin) begin
 	 		bus_reg <= bus_datain;
 	 	end 
 	 	
-	 end
+	 end*/
 	 
 							
 endmodule

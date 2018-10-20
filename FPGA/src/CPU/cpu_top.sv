@@ -10,12 +10,12 @@
 `define INS_MOVNZ 4'h2 // done
 `define INS_MOVEZ 4'h3 // done
 `define INS_BUS 4'h4 // not implemented
-`define INS_MEMR 4'h5
+`define INS_MEMR 4'h5 // done
 `define INS_SET 4'h6 // done
-`define INS_MEMW 4'h7
+`define INS_MEMW 4'h7 // done
 `define INS_ALU_AND 4'h8 // done
 `define INS_ALU_OR 4'h9 // done
-`define INS_ALU_NOT 4'hA // done
+`define INS_ALU_XOR 4'hA // done
 `define INS_ALU_ADD 4'hB // done
 `define INS_ALU_SHFT 4'hC // done
 `define INS_ALU_MUL 4'hD // done
@@ -27,6 +27,9 @@
 `define INSDECOMP_FROM(ins) ins[4+:4]
 `define INSDECOMP_TO(ins) ins[8+:4]
 `define INSDECOMP_IF(ins) ins[12+:4]
+
+// General defines
+`define BOOTLOADER_ROM_SIZE 2047
 
 
 module cpu(
@@ -167,7 +170,7 @@ module cpu(
 	// CORE LOGIC
 	reg [7:0] cpu_state;
 	reg [15:0] instruction_buffer;
-	reg [15:0] bootloader_rom [0:2047];
+	reg [15:0] bootloader_rom [0:`BOOTLOADER_ROM_SIZE];
 
 	reg [15:0] continue_execution_register;
 	reg [15:0] write_enable_register;
@@ -366,7 +369,7 @@ module cpu(
 					`INS_ALU_AND: task_alu_temp_buffer =  task_alu_input_buffer & reg_data_read;
 					`INS_ALU_OR: task_alu_temp_buffer  =  task_alu_input_buffer | reg_data_read;
 					`INS_ALU_ADD: task_alu_temp_buffer =  task_alu_input_buffer + reg_data_read;
-					`INS_ALU_NOT: task_alu_temp_buffer =  ~task_alu_input_buffer;
+					`INS_ALU_XOR: task_alu_temp_buffer =  task_alu_input_buffer ^ reg_data_read;
 					`INS_ALU_MUL: task_alu_temp_buffer =  task_alu_input_buffer * reg_data_read;
 					`INS_ALU_EQ: task_alu_temp_buffer  =  (task_alu_input_buffer ==  reg_data_read ? 16'hFFFF : 16'h0);
 					`INS_ALU_GT: task_alu_temp_buffer  =  (task_alu_input_buffer > reg_data_read ? 16'hFFFF : 16'h0);
@@ -398,24 +401,40 @@ module cpu(
     end
 
     reg [16:0] task_memr_state;
+    reg task_memr_is_cfg;
 	task task_memr;
 	begin
+		if (reg_data_read[15] || task_memr_is_cfg) begin
+            task_memr_is_cfg <= 1'b1;
+        end
+
 		case (task_memr_state)
 			2'h0: begin
 				mem_readaddr = {9'h0,reg_data_read};
-				mem_read = 1'h1;
-				task_memr_state <= (mem_busy || mem_read_ready_stor) ? 2'h1 : 2'h0;
+				mem_read = task_memr_is_cfg ? 1'h0 : 1'h1;
+				task_memr_state <= (mem_busy || mem_read_ready_stor || task_memr_is_cfg) ? 2'h1 : 2'h0;
                 //task_memr_state <= 2'h1;
 			end
             2'h1: begin
-                if (mem_read_ready_stor) begin
+				if (task_memr_is_cfg) begin
+					// CFG register read
+
+					// Bootloader ROM read
+					if (reg_data_read >= 16'hD000 && reg_data_read < (16'hD000 + `BOOTLOADER_ROM_SIZE)) begin
+						reg_data_write_inputs[`INS_MEMR] = {bootloader_rom[reg_data_read - 16'hD000], 1'b1};
+					end
+
+                    write_enable_register[`INS_MEMR] <= 1'h1;
+                    continue_execution_register[`INS_MEMR] <= 1'h1;
+
+				end else if (mem_read_ready_stor) begin
+					// Direct RAM read
                     mem_read_ready_stor_reset <= 1'b1;
-                    task_memr_state <= 0;
                     reg_data_write_inputs[`INS_MEMR] = {mem_readdata, 1'b1};
                     write_enable_register[`INS_MEMR] <= 1'h1;
                     continue_execution_register[`INS_MEMR] <= 1'h1;
-                    task_memr_state <= 0;
                 end
+
                 mem_read <= 1'h0;
             end
 		endcase
@@ -479,6 +498,7 @@ module cpu(
 		task_set_state <= 0;
 
 		task_memr_state <= 0;
+		task_memr_is_cfg <= 0;
 		task_memw_state <= 0;
 		task_memw_addr_buffer <= 0;
         task_memw_is_cfg <= 0;

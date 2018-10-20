@@ -38,7 +38,7 @@
 			},
 			{
 				"name": "keyword.control.less.mcpc",
-				"match": "(?i)\\b(add|gt|shft|and|or|not|mul|eq)\\b"
+				"match": "(?i)\\b(add|gt|shft|and|or|xor|mul|eq)\\b"
 			}]
 		},
 		"registers": {
