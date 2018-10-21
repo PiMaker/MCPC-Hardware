@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"os"
+	"regexp"
 	"strconv"
 	"strings"
 
@@ -14,11 +16,39 @@ import (
 	"github.com/rivo/tview"
 )
 
+var symbolMap map[int16]string
+
 // Interpret runs a .mb binary on a virtual machine
 func Interpret(file, config string, gui bool, maxSteps int) {
 	data, err := ioutil.ReadFile(file)
 	if err != nil {
-		log.Fatalln("ERROR: An error occured reading the input file.")
+		log.Fatalln("ERROR: An error occured reading the input file: " + err.Error())
+	}
+
+	// Try to read symbol file
+	symbolsFound := false
+	symbolMap = make(map[int16]string)
+	if _, err = os.Stat(file + ".msym"); err == nil {
+		symData, err := ioutil.ReadFile(file + ".msym")
+		if err != nil {
+			log.Fatalln("ERROR: Symbol file found, but an error occured reading it: " + err.Error())
+		}
+
+		// Parse msym format
+		symSplit := strings.Split(string(symData), ";")
+		for _, symEntry := range symSplit {
+			if symEntry != "" {
+				symEntrySplit := strings.Split(symEntry, "=")
+				if len(symEntrySplit) == 2 {
+					parsedAddr, err := strconv.ParseInt(symEntrySplit[0], 16, 16)
+					if err == nil {
+						symbolMap[int16(parsedAddr)] = symEntrySplit[1]
+					}
+				}
+			}
+		}
+
+		symbolsFound = true
 	}
 
 	// Parse data into instruction-bounded array
@@ -49,16 +79,13 @@ func Interpret(file, config string, gui bool, maxSteps int) {
 		disassemblyView.SetTitle("Disassembly")
 		disassemblyView.SetDynamicColors(true)
 		disassemblyView.SetRegions(true)
-		disassemblyView.SetText(toDisassembly(data16, vm))
-		virtualPC := vm.Registers.PC.Value
-		disassemblyView.Highlight(fmt.Sprintf("0x%04X", virtualPC))
 		root.AddItem(disassemblyView, 0, 0, 4, 1, 0, 0, false)
 
 		// Set up sidebar sections
 		stateView := tview.NewTextView()
 		stateView.SetBorder(true)
 		stateView.SetTitle("VM State")
-		stateView.SetText("State: Not started\nPC: 0x0000/" + plength)
+		stateView.SetText(fmt.Sprintf("State: Not started%s\nPC: 0x0000/%s", conditional.String(symbolsFound, " (msym loaded!)", ""), plength))
 		root.AddItem(stateView, 0, 1, 1, 1, 0, 0, false)
 
 		registerView := tview.NewTextView()
@@ -77,15 +104,19 @@ func Interpret(file, config string, gui bool, maxSteps int) {
 		sramRow := 0
 		sramView.Select(sramRow, 0)
 		setSRAMTable(vm, sramView)
-		root.AddItem(sramView, 2, 1, 1, 1, 0, 0, false)
+		root.AddItem(sramView, 3, 1, 2, 1, 0, 0, false)
 
 		terminalView := tview.NewTextView()
 		terminalView.SetBorder(true)
-		terminalView.SetTitle("Terminal output")
+		terminalView.SetTitle("Top of Stack")
 		terminalView.SetScrollable(true)
-		terminalText := ""
+		terminalView.SetDynamicColors(true)
+		root.AddItem(terminalView, 2, 1, 1, 1, 0, 0, false)
+
+		terminalText := getStackText(terminalView, vm)
 		terminalView.SetText(terminalText)
-		root.AddItem(terminalView, 3, 1, 2, 1, 0, 0, false)
+
+		virtualPC := vm.Registers.PC.Value
 
 		// Create application
 		var modal *tview.Modal
@@ -133,6 +164,9 @@ func Interpret(file, config string, gui bool, maxSteps int) {
 				} else if key.Key() == tcell.KeyPgDn {
 					virtualPC = uint16(p) - 1
 					retval = nil
+				} else if key.Key() == tcell.KeyHome {
+					virtualPC = vm.Registers.PC.Value
+					retval = nil
 				}
 
 				if virtualPC < 0 {
@@ -161,6 +195,8 @@ func Interpret(file, config string, gui bool, maxSteps int) {
 					split = []string{""}
 				}
 				switch strings.ToLower(split[0]) {
+				case "help":
+					messageBox("MCPC Debugger Help", "Arrow keys to move around in disassembly, press HOME to return to current instruction; Available commands: step = Executes a single instruction step (default, use <ENTER> to call with no command in input) :: run <to> = Executes instructions until HALT, BRK or specified PC address <to> is encountered :: runfor <num> = Executes <num> instructions :: exit, quit = Quits the MCPC debugger", app, modal, root)
 				case "", "step":
 					// Backup values for comparison
 					regBck := cloneRegisters(vm.Registers)
@@ -169,7 +205,7 @@ func Interpret(file, config string, gui bool, maxSteps int) {
 					// Step VM
 					_, output, err := vm.Step()
 					// Update view after step
-					disassemblyView.SetText(toDisassembly(data16, vm))
+					disassemblyView.SetText(toDisassembly(data16, vm, disassemblyView))
 					disassemblyView.Highlight(fmt.Sprintf("0x%04X", vm.Registers.PC.Value))
 					virtualPC = vm.Registers.PC.Value
 					disassemblyView.ScrollToHighlight()
@@ -187,8 +223,7 @@ func Interpret(file, config string, gui bool, maxSteps int) {
 						}
 					}
 					terminalText += output
-					terminalView.SetText(strings.Replace(terminalText, "\n", "\\n\n", -1))
-					terminalView.ScrollToEnd()
+					terminalView.SetText(getStackText(terminalView, vm))
 					// Show error message if necessary
 					if err != nil {
 						messageBox("VM Error", "A VM error occured during the step: "+err.Error(), app, modal, root)
@@ -243,7 +278,7 @@ func Interpret(file, config string, gui bool, maxSteps int) {
 					}
 
 					// Update view after steps
-					disassemblyView.SetText(toDisassembly(data16, vm))
+					disassemblyView.SetText(toDisassembly(data16, vm, disassemblyView))
 					disassemblyView.Highlight(fmt.Sprintf("0x%04X", vm.Registers.PC.Value))
 					virtualPC = vm.Registers.PC.Value
 					disassemblyView.ScrollToHighlight()
@@ -254,8 +289,7 @@ func Interpret(file, config string, gui bool, maxSteps int) {
 					}
 					registerView.SetText(getRegisterText(vm.Registers, vm.Registers))
 					setSRAMTable(vm, sramView)
-					terminalView.SetText(strings.Replace(terminalText, "\n", "\\n\n", -1))
-					terminalView.ScrollToEnd()
+					terminalView.SetText(getStackText(terminalView, vm))
 				case "exit", "quit":
 					app.Stop()
 				default:
@@ -266,6 +300,11 @@ func Interpret(file, config string, gui bool, maxSteps int) {
 			}
 		})
 
+		// Set disassembly text last to avoid width glitching for label offsets
+		// Nevermind, doesn't work either way
+		disassemblyView.SetText(toDisassembly(data16, vm, disassemblyView))
+		disassemblyView.Highlight(fmt.Sprintf("0x%04X", virtualPC))
+
 		// Run GUI app
 
 		if err := app.Run(); err != nil {
@@ -275,7 +314,10 @@ func Interpret(file, config string, gui bool, maxSteps int) {
 	} else {
 
 		// GUI-less interpretation
-		log.Println("Interpreting " + file + "...")
+		// Deprecated
+		log.Fatalln("ERROR: <interpret> is deprecated in favor of <debug>!")
+
+		/*log.Println("Interpreting " + file + "...")
 		if maxSteps < 0 {
 			log.Println("No maximum step count set, using default of 100000")
 			maxSteps = 100000
@@ -299,7 +341,7 @@ func Interpret(file, config string, gui bool, maxSteps int) {
 		if steps == maxSteps {
 			fmt.Println()
 			log.Println("VM halted, max steps reached")
-		}
+		}*/
 	}
 }
 
@@ -347,7 +389,9 @@ const colorRawIns = "lightgray"
 const colorCmd = "lightgreen"
 const colorRegister = "yellow"
 
-func toDisassembly(raw []uint16, vm *VM) string {
+var formatRemoverRegex = regexp.MustCompile(`\[.*?\]`)
+
+func toDisassembly(raw []uint16, vm *VM, view *tview.TextView) string {
 	retval := ""
 	skip := false
 
@@ -378,9 +422,29 @@ func toDisassembly(raw []uint16, vm *VM) string {
 
 		if note != "" {
 			if params != "" {
-				retval += "\t"
+				retval += " :: "
 			}
 			retval += fmt.Sprintf("[%s](%s)[white]", colorNotes, note)
+		}
+
+		label, ok := symbolMap[int16(i)]
+		if ok {
+			// Symbol found, append right justified
+			_, _, width, _ := view.GetRect()
+
+			// Get length of current string
+			formatRemovedLines := strings.Split(formatRemoverRegex.ReplaceAllString(retval, ""), "\n")
+			curWidth := len(formatRemovedLines[len(formatRemovedLines)-1])
+
+			// Calculate offset
+			offset := width - curWidth - len(label)
+
+			// Print label with prepending format spaces for right justification
+			for k := 0; k < offset-3; k++ {
+				retval += " "
+			}
+
+			retval += "[blue]" + label + "[white]"
 		}
 
 		retval += "[\"\"]\n"
@@ -398,63 +462,105 @@ func decodeAssembly(c uint16, vm *VM) (cmd, params, note string, set bool) {
 	case 0x0:
 		cmd = "HALT"
 	case 0x1:
+		valueToMove := getReg(vm, c, regFrom).Value
+
+		if getReg(vm, c, regTo) == vm.Registers.PC {
+			cmd = "JMP"
+			params = fmt.Sprintf("to 0x%04x", valueToMove)
+
+			label, ok := symbolMap[int16(valueToMove)]
+			if ok {
+				note = fmt.Sprintf("label: [blue]%s[%s]", label, colorNotes)
+			}
+
+			break
+		}
+
 		cmd = "MOV"
 		params = decodeRegister(byte((c&0x00F0)>>4), "white") + " -> " + decodeRegister(byte((c&0x0F00)>>8), "white")
-		note = fmt.Sprintf("set %s to 0x%04X", decodeRegister(byte((c&0x0F00)>>8), colorNotes), getReg(vm, c, regFrom).Value)
+		note = fmt.Sprintf("set %s to 0x%04X", decodeRegister(byte((c&0x0F00)>>8), colorNotes), valueToMove)
 	case 0x2:
 		cmd = "MOVNZ"
+		valueToMove := getReg(vm, c, regFrom).Value
+
+		if getReg(vm, c, regTo) == vm.Registers.PC {
+			cmd = "JMPNZ"
+		}
+
 		params = decodeRegister(byte((c&0x00F0)>>4), "white") + " -> " + decodeRegister(byte((c&0x0F00)>>8), "white") + " if " + decodeRegister(byte((c&0xF000)>>12), "white") + " != 0"
 		if getReg(vm, c, regIf).Value != 0 {
-			note = fmt.Sprintf("TRUE: set %s to 0x%04X", decodeRegister(byte((c&0x0F00)>>8), colorNotes), getReg(vm, c, regFrom).Value)
+			note = fmt.Sprintf("TRUE: set %s to 0x%04X", decodeRegister(byte((c&0x0F00)>>8), colorNotes), valueToMove)
 		} else {
-			note = fmt.Sprintf("FALSE, would do: set %s to 0x%04X", decodeRegister(byte((c&0x0F00)>>8), colorNotes), getReg(vm, c, regFrom).Value)
+			note = fmt.Sprintf("FALSE, would do: set %s to 0x%04X", decodeRegister(byte((c&0x0F00)>>8), colorNotes), valueToMove)
+		}
+
+		label, ok := symbolMap[int16(valueToMove)]
+		if ok {
+			note += fmt.Sprintf("; label: [blue]%s[%s]", label, colorNotes)
 		}
 	case 0x3:
 		cmd = "MOVEZ"
+		valueToMove := getReg(vm, c, regFrom).Value
+
+		if getReg(vm, c, regTo) == vm.Registers.PC {
+			cmd = "JMPEZ"
+		}
+
 		params = decodeRegister(byte((c&0x00F0)>>4), "white") + " -> " + decodeRegister(byte((c&0x0F00)>>8), "white") + " if " + decodeRegister(byte((c&0xF000)>>12), "white") + " == 0"
 		if getReg(vm, c, regIf).Value == 0 {
-			note = fmt.Sprintf("TRUE: set %s to 0x%04X", decodeRegister(byte((c&0x0F00)>>8), colorNotes), getReg(vm, c, regFrom).Value)
+			note = fmt.Sprintf("TRUE: set %s to 0x%04X", decodeRegister(byte((c&0x0F00)>>8), colorNotes), valueToMove)
 		} else {
-			note = fmt.Sprintf("FALSE, would do: set %s to 0x%04X", decodeRegister(byte((c&0x0F00)>>8), colorNotes), getReg(vm, c, regFrom).Value)
+			note = fmt.Sprintf("FALSE, would do: set %s to 0x%04X", decodeRegister(byte((c&0x0F00)>>8), colorNotes), valueToMove)
+		}
+
+		label, ok := symbolMap[int16(valueToMove)]
+		if ok {
+			note += fmt.Sprintf("; label: [blue]%s[%s]", label, colorNotes)
 		}
 	case 0x4:
-		addr := byte((c & 0x0F00) >> 8)
-		payload := getReg(vm, c, regFrom).Value
-		if addr == 0x1 {
-			cmd = "SRAM"
-			if sramWriteWaitingDecoder {
-				sramWriteWaitingDecoder = false
-				params = fmt.Sprintf("write value 0x%04X", payload)
-			} else if payload&0x1 == 0 {
-				params = fmt.Sprintf("read 0x%03X into BUS", (payload>>4)&MaxSRAMValue)
-			} else {
-				params = fmt.Sprintf("write to 0x%03X", (payload>>4)&MaxSRAMValue)
-				sramWriteWaitingDecoder = true
-			}
-		} else if addr == 0x2 {
-			cmd = "TERM"
-			if payload&0x1 == 0 {
-				o := string(rune(byte(payload >> 8)))
-				if o == "\n" {
-					o = "\\n"
-				}
-				params = "Output '" + o + "'"
-			} else {
-				params = "Read from terminal (unsupported, currently)"
-			}
-		} else {
-			cmd = "BUS"
-			params = "send " + decodeRegister(byte((c&0x00F0)>>4), "white") + " to " + fmt.Sprintf("0x%02X", addr) + " on bus"
-			note = fmt.Sprintf("payload=%04X", payload)
-		}
+		cmd = "BUS"
+		params = ""
+		note = "Deprecated!"
 	case 0x5:
-		cmd = "HOLD"
+		cmd = "MEMR"
+
+		if getReg(vm, c, regFrom) == vm.Registers.SP {
+			cmd = "POP"
+		}
+
+		params = decodeRegister(byte((c&0x0F00)>>8), "white") + " <- @" + decodeRegister(byte((c&0x00F0)>>4), "white")
+		addr := getReg(vm, c, regFrom).Value
+
+		if (addr & 0x8000) == 0 {
+			note = fmt.Sprintf("Read data @%04x (=%04x) into register %s", addr, vm.SRAM[addr], decodeRegister(byte((c&0x0F00)>>8), colorNotes))
+		} else if addr == 0x8000 {
+			note = fmt.Sprintf("Read data @%04x (MCPC version = 0x8001 [VM]) into register %s", addr, decodeRegister(byte((c&0x0F00)>>8), colorNotes))
+		} else if addr == 0x8065 {
+			note = fmt.Sprintf("Read data @%04x (Framebuffer start = 0xE000) into register %s", addr, decodeRegister(byte((c&0x0F00)>>8), colorNotes))
+		} else if addr >= 0xD000 && addr < 0xD800 {
+			note = fmt.Sprintf("Read ROM-data @%04x (ROM @%04x) (=%04x) into register %s", addr, addr-0xD000, vm.EEPROM[addr-0xD000], decodeRegister(byte((c&0x0F00)>>8), colorNotes))
+		} else {
+			note = "STUB: Read from unknown CFG"
+		}
 	case 0x6:
 		cmd = "SET"
 		params = decodeRegister(byte((c&0x0F00)>>8), "white") + " to "
 		set = true
 	case 0x7:
-		cmd = "BRK"
+		cmd = "MEMW"
+
+		if getReg(vm, c, regFrom) == vm.Registers.SP {
+			cmd = "PUSH"
+		}
+
+		params = decodeRegister(byte((c&0xF000)>>12), "white") + " -> @" + decodeRegister(byte((c&0x00F0)>>4), "white")
+		addr := getReg(vm, c, regFrom).Value
+
+		if (addr & 0x8000) == 0 {
+			note = fmt.Sprintf("Write data from register %s (=%04x) into RAM @%04x", decodeRegister(byte((c&0x0F00)>>8), colorNotes), getReg(vm, c, regIf).Value, addr)
+		} else {
+			note = "STUB: Write to unknown CFG"
+		}
 	case 0x8:
 		cmd = "AND"
 		params = decodeRegister(byte((c&0x0F00)>>8), "white") + " = " + decodeRegister(byte((c&0x00F0)>>4), "white") + " & " + decodeRegister(byte((c&0xF000)>>12), "white")
@@ -464,9 +570,12 @@ func decodeAssembly(c uint16, vm *VM) (cmd, params, note string, set bool) {
 		params = decodeRegister(byte((c&0x0F00)>>8), "white") + " = " + decodeRegister(byte((c&0x00F0)>>4), "white") + " | " + decodeRegister(byte((c&0xF000)>>12), "white")
 		note = fmt.Sprintf("%04X | %04X = %04X", getReg(vm, c, regFrom).Value, getReg(vm, c, regOp).Value, (getReg(vm, c, regFrom).Value | getReg(vm, c, regOp).Value))
 	case 0xA:
-		cmd = "NOT"
-		params = decodeRegister(byte((c&0x0F00)>>8), "white") + " = !" + decodeRegister(byte((c&0x00F0)>>4), "white")
-		note = fmt.Sprintf("!%04X = %04X", getReg(vm, c, regFrom).Value, ^getReg(vm, c, regFrom).Value)
+		cmd = "XOR"
+		params = decodeRegister(byte((c&0x0F00)>>8), "white") + " = " + decodeRegister(byte((c&0x00F0)>>4), "white") + " ^ " + decodeRegister(byte((c&0xF000)>>12), "white")
+		note = fmt.Sprintf("%04X ^ %04X = %04X", getReg(vm, c, regFrom).Value, getReg(vm, c, regOp).Value, (getReg(vm, c, regFrom).Value ^ getReg(vm, c, regOp).Value))
+		if getReg(vm, c, regFrom).Value == 0xFFFF || getReg(vm, c, regOp).Value == 0xFFFF {
+			note += " (COM)"
+		}
 	case 0xB:
 		cmd = "ADD"
 		params = decodeRegister(byte((c&0x0F00)>>8), "white") + " = " + decodeRegister(byte((c&0x00F0)>>4), "white") + " + " + decodeRegister(byte((c&0xF000)>>12), "white")
@@ -627,7 +736,7 @@ func setSRAMTable(vm *VM, tbl *tview.Table) {
 			}
 
 			tbl.SetCell(int(i)/3+1, int(c)*2, &tview.TableCell{
-				Text:  fmt.Sprintf("0x%03X", i+c),
+				Text:  fmt.Sprintf("0x%04X", i+c),
 				Color: tcell.ColorGray,
 			})
 			tbl.SetCell(int(i)/3+1, int(c)*2+1, &tview.TableCell{
@@ -636,4 +745,27 @@ func setSRAMTable(vm *VM, tbl *tview.Table) {
 			})
 		}
 	}
+}
+
+func getStackText(view *tview.TextView, vm *VM) string {
+	_, _, _, lines := view.GetInnerRect()
+	addr := vm.Registers.SP.Value
+	retval := ""
+
+	if addr > 0 && addr < 0x7FFF {
+		for i := 0; i < lines; i++ {
+			if addr == 0x7FFF {
+				break
+			}
+
+			retval = fmt.Sprintf("%s[gray]0x%04x[white] 0x%04x%s\n", retval, addr, vm.SRAM[addr], conditional.String(i == 0, " @SP", ""))
+			addr++
+		}
+	} else if addr == 0x7FFF {
+		return "Stack empty"
+	} else {
+		return fmt.Sprintf("SP invalid: 0x%04x", addr)
+	}
+
+	return retval
 }

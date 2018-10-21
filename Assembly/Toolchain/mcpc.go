@@ -17,7 +17,7 @@ func main() {
 	usage := `MCPC Toolchain (Compiler/Assembler/Linker/VM).
 
 Usage:
-  mcpc assemble <file> <output> [--library=<library>...] [--offset=<offset>] [--enable-offset-jump] [--ascii] [--hex] [--length=<length>]
+  mcpc assemble <file> <output> [--library=<library>...] [--debug-symbols] [--offset=<offset>] [--enable-offset-jump] [--ascii] [--hex] [--length=<length>]
   mcpc interpret <file> [--max-steps=<max-steps>] [--config=<config>]
   mcpc debug <file> [--config=<config>]
   mcpc -h | --help
@@ -28,6 +28,7 @@ Options:
   interpret               Runs an MCPC virtual machine and executes a specified binary file. Use the --config flag to specify bus devices.
   debug                   Uses the MCPC interpreter to run the specified binary file and shows a TUI interface for debugging purposes.
   --library=<library>     Includes a library, specified in HJSON format, which allows higher-level instructions to be compiled down.
+  --debug-symbols         Writes a symbol file to use with the MCPC debugger next to the output file (will overwrite existing symbol files!)
   --offset=<offset>       Specifies an offset that will be applied to the binary file [default: 0].
   --enable-offset-jump    If enabled, a 'jmp' instruction will be inserted at the beginning, jumping to the offset position. If the offset is smaller than 3, this flag will be ignored.
   --ascii                 Outputs the ascii binary format for use with the Digital circuit simulator.
@@ -50,7 +51,7 @@ Options:
 		// Compile
 		offset := argInt(args, "--offset")
 		output := argString(args, "<output>")
-		assembly := assembler.Compile(argString(args, "<file>"), offset, argStrings(args, "--library"), argBool(args, "--enable-offset-jump"))
+		assembly, debugSymbols := assembler.Compile(argString(args, "<file>"), offset, argStrings(args, "--library"), argBool(args, "--enable-offset-jump"))
 
 		if argBool(args, "--ascii") {
 			log.Println("Converting to ASCII format...")
@@ -59,12 +60,14 @@ Options:
 			assembly = toHEXFormat(assembly, argInt(args, "--length"))
 		}
 
-		ioutil.WriteFile(output, assembly, 0666)
+		ioutil.WriteFile(output, assembly, 0664)
+
+		if argBool(args, "--debug-symbols") {
+			symbolFile := output + ".msym"
+			ioutil.WriteFile(symbolFile, debugSymbols, 0664)
+		}
 
 	} else if argBool(args, "interpret") || argBool(args, "debug") {
-
-		// DEPRECATED FOR NOW!
-		log.Println("WARNING: Interpretation uses old assembly format, new programs probably won't work correctly!")
 
 		// Interpret/Debug
 		interpreter.Interpret(argString(args, "<file>"), "", argBool(args, "debug"), argInt(args, "--max-steps"))

@@ -105,6 +105,9 @@ Memory access and layout
 * [0x8004] rw(k) ... Kernel memory bits (see [0x8005] below)
 * [0x8005] rw(k) ... Memory high bits (RAM uses 25 bit addressing, lower 15 bit are set by MEMR/MEMW directly, the next 5 bits are loaded from the lower bits of this CFG register, the missing 5 bits are the lower kernel memory bits)
 
+= Bootloader ROM =
+* [0xD000-0xD800] r ... Bootloader ROM read-only access
+
 = VGA subsystem =
 * [0x8065] r ... start address of ASCII framebuffer (VGA) = 0xE000
 * [0xE000-0xF2BF] w ... ASCII buffer (80x60 display, one ascii characted per data word, high bits unused)

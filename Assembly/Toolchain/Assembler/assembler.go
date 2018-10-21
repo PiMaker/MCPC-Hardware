@@ -57,8 +57,10 @@ var spaceReplaceRegex = regexp.MustCompile("\\'(.*?)\\ (.*?)\\'")
 var spaceReplaceDoubleRegex = regexp.MustCompile("\\'\\ \\ \\'")
 
 // Compile transforms a .ma assembly file to a .mb binary
-func Compile(file string, offset int, libraries []string, autoJump bool) []byte {
+func Compile(file string, offset int, libraries []string, autoJump bool) ([]byte, []byte) {
 	log.Println("Compiling " + file)
+
+	sym := make([]byte, 0)
 
 	// Possibly rework this:
 	longestDeclaration = 0
@@ -137,16 +139,20 @@ func Compile(file string, offset int, libraries []string, autoJump bool) []byte 
 	labelMap := make(map[string]uint16)
 	for labelAddr, token := range tokens {
 		if token.label != "" {
-			// DEPRECATED; Subtract 1 from label address to account for PC increment after jump instruction
 			labelMap[token.label] = uint16(labelAddr)
 			fmt.Println(" > Label " + token.label + " located at 0x" + strconv.FormatInt(int64(labelMap[token.label]), 16))
+			sym = append(sym, []byte(fmt.Sprintf("%04x=%s;", labelMap[token.label], token.label))...)
 		}
 	}
 
 	// Replace labels
 	for _, token := range tokens {
 		if token.command == "RAW" && token.raw[0] == '.' {
-			token.raw = fmt.Sprintf("0x%x", labelMap[token.raw])
+			addr, ok := labelMap[token.raw]
+			if !ok {
+				log.Fatalln("ERROR: Undefined label referenced: " + token.raw)
+			}
+			token.raw = fmt.Sprintf("0x%x", addr)
 		}
 	}
 
@@ -252,7 +258,7 @@ func Compile(file string, offset int, libraries []string, autoJump bool) []byte 
 
 	log.Println("Compilation complete, " + strconv.Itoa(len(output)) + " bytes generated!")
 
-	return output
+	return output, sym[:len(sym)-1]
 }
 
 // Transforms an ALU command token to assembly

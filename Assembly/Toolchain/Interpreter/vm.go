@@ -34,7 +34,7 @@ type Register struct {
 }
 
 // MaxSRAMValue is the maximum address the SRAM can be accessed at
-const MaxSRAMValue uint16 = 0x01FF
+const MaxSRAMValue uint16 = 0x7FFF
 
 var sramWriteWaiting = false
 var sramWriteAddress uint16
@@ -97,6 +97,10 @@ func (vm *VM) Step() (bool, string, error) {
 		reg := getReg(vm, ins, regTo)
 		if reg.Writeable {
 			reg.Value = getReg(vm, ins, regFrom).Value
+
+			if reg == vm.Registers.PC {
+				vm.Registers.PC.Value--
+			}
 		} else {
 			err = fmt.Errorf("Write to non-writable register %X", reg.Address)
 		}
@@ -105,6 +109,10 @@ func (vm *VM) Step() (bool, string, error) {
 			reg := getReg(vm, ins, regTo)
 			if reg.Writeable {
 				reg.Value = getReg(vm, ins, regFrom).Value
+
+				if reg == vm.Registers.PC {
+					vm.Registers.PC.Value--
+				}
 			} else {
 				err = fmt.Errorf("Write to non-writable register %X", reg.Address)
 			}
@@ -114,46 +122,45 @@ func (vm *VM) Step() (bool, string, error) {
 			reg := getReg(vm, ins, regTo)
 			if reg.Writeable {
 				reg.Value = getReg(vm, ins, regFrom).Value
+
+				if reg == vm.Registers.PC {
+					vm.Registers.PC.Value--
+				}
 			} else {
 				err = fmt.Errorf("Write to non-writable register %X", reg.Address)
 			}
 		}
+
 	case 0x4:
-		// TODO: Make dynamic
-		device := (ins & 0x0F00) >> 8
-		payload := getReg(vm, ins, regData).Value
-		switch device {
-		case 0x1:
-			if sramWriteWaiting {
-				sramWriteWaiting = false
-				vm.SRAM[sramWriteAddress] = payload
-			} else {
-				cmd := payload & 0x000F
-				addr := (payload >> 4) & MaxSRAMValue
-				if cmd == 0 {
-					vm.Registers.BUS.Value = vm.SRAM[addr]
-				} else if cmd == 1 {
-					sramWriteAddress = addr
-					sramWriteWaiting = true
-				}
-			}
-		case 0x2:
-			if payload&0x1 == 0 {
-				termout = string(byte(payload >> 8))
-			} else {
-				err = errors.New("Reading from terminal is currently not supported")
-			}
-		default:
-			// Unknown device
-			err = errors.New("Currently only SRAM and Terminal are supported on the BUS")
-		}
+		// BUS is deprecated, use as break in VM
+		brk = true
+
 	case 0x5:
-		// HOLD is ignored for now; BUS actions are instant
+		addrReg := getReg(vm, ins, regFrom)
+		writeToReg := getReg(vm, ins, regTo)
+
+		if writeToReg.Writeable {
+			if (addrReg.Value & 0x8000) == 0 {
+				writeToReg.Value = vm.SRAM[addrReg.Value]
+			} else if addrReg.Value == 0x8000 {
+				writeToReg.Value = 0x8001
+			} else if addrReg.Value == 0x8065 {
+				writeToReg.Value = 0xE000
+			} else if addrReg.Value >= 0xD000 && addrReg.Value < 0xD800 {
+				writeToReg.Value = vm.EEPROM[addrReg.Value-0xD000]
+			} else {
+				// other CFGs return 0 (not implemented)
+				writeToReg.Value = 0
+			}
+		} else {
+			err = fmt.Errorf("Write to non-writable register %X", writeToReg.Address)
+		}
+
 	case 0x6:
 		vm.Registers.PC.Value++
 		reg := getReg(vm, ins, regTo)
 		if reg == vm.Registers.PC {
-			err = errors.New("SET was called on PC, this is not allowed")
+			err = errors.New("SET was called on PC, this is not allowed in VM")
 		} else {
 			if reg.Writeable {
 				reg.Value = vm.EEPROM[vm.Registers.PC.Value]
@@ -161,9 +168,17 @@ func (vm *VM) Step() (bool, string, error) {
 				err = fmt.Errorf("Write to non-writable register %X", reg.Address)
 			}
 		}
+
 	case 0x7:
-		// Debug break
-		brk = true
+		addrReg := getReg(vm, ins, regFrom)
+		dataReg := getReg(vm, ins, regIf)
+
+		if (addrReg.Value & 0x8000) == 0 {
+			vm.SRAM[addrReg.Value] = dataReg.Value
+		} else {
+			// ignore CFG writes for now
+		}
+
 	case 0x8, 0x9, 0xA, 0xB, 0xC, 0xD, 0xE, 0xF:
 		registerTo := getReg(vm, ins, regTo)
 		if registerTo.Writeable {
@@ -174,7 +189,7 @@ func (vm *VM) Step() (bool, string, error) {
 			case 0x9:
 				registerTo.Value = getReg(vm, ins, regFrom).Value | getReg(vm, ins, regOp).Value
 			case 0xA:
-				registerTo.Value = ^getReg(vm, ins, regFrom).Value
+				registerTo.Value = getReg(vm, ins, regFrom).Value ^ getReg(vm, ins, regOp).Value
 			case 0xB:
 				registerTo.Value = getReg(vm, ins, regFrom).Value + getReg(vm, ins, regOp).Value
 			case 0xC:
