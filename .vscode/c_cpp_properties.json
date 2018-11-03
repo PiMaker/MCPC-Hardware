@@ -1,0 +1,31 @@
+{
+    "configurations": [
+        {
+            "name": "Linux",
+            "includePath": [
+                "/usr/share/arduino/hardware/archlinux-arduino/avr/cores/arduino",
+                "/usr/share/arduino/hardware/archlinux-arduino/avr/libraries",
+                "/usr/share/arduino/hardware/archlinux-arduino/avr/variants/mega",
+                "/usr/avr/include",
+                "~/Arduino/libraries"
+            ],
+            "defines": [],
+            "intelliSenseMode": "clang-x64",
+            "browse": {
+                "path": [
+                    "/usr/share/arduino/hardware/archlinux-arduino/avr/cores/arduino",
+                    "/usr/share/arduino/hardware/archlinux-arduino/avr/libraries",
+                    "/usr/share/arduino/hardware/archlinux-arduino/avr/variants/mega",
+                    "/usr/avr/include",
+                    "~/Arduino/libraries"
+                ],
+                "limitSymbolsToIncludedHeaders": true,
+                "databaseFilename": ""
+            },
+            "compilerPath": "/usr/bin/clang",
+            "cStandard": "c11",
+            "cppStandard": "c++17"
+        }
+    ],
+    "version": 4
+}

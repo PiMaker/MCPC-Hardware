@@ -9,7 +9,7 @@
 #declare G vgaBase
 
 .main SET SP
-0x1ff
+0x7fff
 SET vgaBase
 0xE000
 SET line

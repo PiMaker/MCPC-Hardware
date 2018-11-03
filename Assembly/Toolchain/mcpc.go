@@ -18,23 +18,23 @@ func main() {
 
 Usage:
   mcpc assemble <file> <output> [--library=<library>...] [--debug-symbols] [--offset=<offset>] [--enable-offset-jump] [--ascii] [--hex] [--length=<length>]
-  mcpc interpret <file> [--max-steps=<max-steps>] [--config=<config>]
-  mcpc debug <file> [--config=<config>]
+  mcpc debug <file> [--symbols=<msym>]
+  mcpc attach <port> [--symbols=<msym>]
   mcpc -h | --help
   mcpc --version
 
 Options:
   assemble                Assembles an assembler file to assembly.
-  interpret               Runs an MCPC virtual machine and executes a specified binary file. Use the --config flag to specify bus devices.
   debug                   Uses the MCPC interpreter to run the specified binary file and shows a TUI interface for debugging purposes.
+  attach                  Attaches to a physical MCPC device at <port> (e.g. /dev/ttyUSB0) and launches the hardware debugger.
   --library=<library>     Includes a library, specified in HJSON format, which allows higher-level instructions to be compiled down.
   --debug-symbols         Writes a symbol file to use with the MCPC debugger next to the output file (will overwrite existing symbol files!)
+  --symbols=<msym>        Path to .msym debug symbol file. "debug" mode has <file>.msym as default, attach mode requires manual specification if symbols are wanted.
   --offset=<offset>       Specifies an offset that will be applied to the binary file [default: 0].
   --enable-offset-jump    If enabled, a 'jmp' instruction will be inserted at the beginning, jumping to the offset position. If the offset is smaller than 3, this flag will be ignored.
   --ascii                 Outputs the ascii binary format for use with the Digital circuit simulator.
   --hex                   Outputs raw binary in Verilog HEX format.
-  --length=<length>       Length of hex output in bytes (one instruction is 2 bytes!) [default: 4096].
-  --max-steps=<max-steps> Sets a maximum amount of steps for interpreting a binary file [default: 100000].
+  --length=<length>       Length of hex output in bytes (one instruction word is 2 bytes!) [default: 4096].
   -h --help               Show this screen.
   --version               Show version.`
 
@@ -67,10 +67,10 @@ Options:
 			ioutil.WriteFile(symbolFile, debugSymbols, 0664)
 		}
 
-	} else if argBool(args, "interpret") || argBool(args, "debug") {
+	} else if argBool(args, "debug") || argBool(args, "attach") {
 
 		// Interpret/Debug
-		interpreter.Interpret(argString(args, "<file>"), "", argBool(args, "debug"), argInt(args, "--max-steps"))
+		interpreter.Interpret(argStringWithDefault(args, "<file>", argStringWithDefault(args, "<port>", "")), argBool(args, "attach"), argInt(args, "--max-steps"), argStringWithDefault(args, "--symbols", ""))
 
 	} else {
 		log.Println("Invalid command, use -h for help")
@@ -81,6 +81,15 @@ func argString(args docopt.Opts, key string) string {
 	v, err := args.String(key)
 	if err != nil {
 		panic("Invalid argument \"" + key + "\"")
+	}
+
+	return v
+}
+
+func argStringWithDefault(args docopt.Opts, key, def string) string {
+	v, err := args.String(key)
+	if err != nil {
+		return def
 	}
 
 	return v

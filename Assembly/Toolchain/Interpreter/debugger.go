@@ -8,6 +8,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/jinzhu/copier"
 
@@ -18,37 +19,169 @@ import (
 
 var symbolMap map[int16]string
 
-// Interpret runs a .mb binary on a virtual machine
-func Interpret(file, config string, gui bool, maxSteps int) {
-	data, err := ioutil.ReadFile(file)
+func handleError(err error) {
 	if err != nil {
-		log.Fatalln("ERROR: An error occured reading the input file: " + err.Error())
+		log.Fatalln("ERROR (UART, auto-handled): " + err.Error())
+	}
+}
+
+// Interpret runs the MCPC debugger
+func Interpret(file string, attach bool, maxSteps int, symbolOverride string) {
+	var dev *Device
+
+	if attach {
+		// Enable hardware debugging mode
+		log.Println("attach specified, hardware debugging enabled")
+
+		log.Println("Connecting to device...")
+		var err error
+		dev, err = establishSerialConnection(file)
+		handleError(err)
+
+		log.Println("Enabling debug mode and requesting reset")
+		err = dev.setRegister(0, (1<<0)|(1<<2))
+		handleError(err)
+
+		log.Println("Waiting for reset...")
+		time.Sleep(time.Millisecond * 100)
+
+		log.Println("Sanity checking")
+
+		regVal, err := dev.getMCPCReg(0xE)
+		handleError(err)
+		log.Printf("Value read 1: 0x%04x\n", regVal)
+
+		if regVal != 0xFFFF {
+			dev.closeConnection()
+			log.Fatalln("ERROR: Sanity check 1 failed, is the device connected correctly?")
+		}
+
+		regVal, err = dev.getMCPCReg(0xD)
+		handleError(err)
+		log.Printf("Value read 2: 0x%04x\n", regVal)
+
+		if regVal != 0x0001 {
+			dev.closeConnection()
+			log.Fatalln("ERROR: Sanity check 2 failed, is the device connected correctly?")
+		}
+
+		log.Println("Debugger connection successful!")
+	}
+
+	// Read assembly data
+	var data []byte
+
+	if attach {
+		log.Println("Reading assembly from device (ROM dump)...")
+
+		// Store received data
+		for {
+			// Read assembly from device
+			handleError(dev.triggerROMDump())
+
+			data = make([]byte, 4096)
+			checksumLocal := byte(0)
+			for insIndex := 0; insIndex < len(data); insIndex += 2 {
+
+				val := make([]byte, 2)
+				n, err := dev.port.Read(val)
+				handleError(err)
+
+				if n != 2 {
+					log.Fatalln("ERROR: Unexpected amount of bytes read")
+				}
+
+				data[insIndex] = val[1]
+				data[insIndex+1] = val[0]
+
+				checksumLocal ^= val[1]
+				checksumLocal ^= val[0]
+
+				fmt.Printf("\r => Read: %d/2048", (insIndex/2)+1)
+			}
+
+			// Receive and check checksum
+			checksumRemote := make([]byte, 1)
+			n, err := dev.port.Read(checksumRemote)
+			handleError(err)
+
+			if n != 1 {
+				log.Fatalln("ERROR: Unexpected amount of bytes read")
+			}
+
+			if checksumLocal != checksumRemote[0] {
+				fmt.Printf("\r\n => WARN: Checksum fail, retrying (local: %d != remote: %d)\n", checksumLocal, checksumRemote[0])
+				continue
+			}
+
+			// Checksum ok, break loop
+			break
+		}
+
+		// Disable all debugging flags except debug enable
+		err := dev.setRegister(0, 1)
+		handleError(err)
+
+		fmt.Println("\r\n => ROM dump complete!")
+
+		// Check if device debugger still in sane condition after ROM read
+		log.Println("Sanity checking")
+
+		regVal, err := dev.getMCPCReg(0xE)
+		handleError(err)
+		log.Printf("Value read: 0x%04x\n", regVal)
+
+		if regVal != 0xFFFF {
+			dev.closeConnection()
+			log.Fatalln("ERROR: Sanity check failed, is the device connected correctly?")
+		}
+
+		// Remove trailing 0x0 (HALT) instructions
+		log.Println("Trimming HALT trailer")
+		for data[len(data)-1] == 0 && data[len(data)-2] == 0 {
+			data = data[:len(data)-2]
+		}
+
+		if len(data) < 2048 {
+			data = append(data, []byte{0, 0}...) // Append single HALT for clarity (if any where trimmed)
+		}
+
+	} else {
+		log.Println("Reading assembly from file...")
+		var err error
+		data, err = ioutil.ReadFile(file)
+		if err != nil {
+			log.Fatalln("ERROR: An error occured reading the input file: " + err.Error())
+		}
 	}
 
 	// Try to read symbol file
 	symbolsFound := false
-	symbolMap = make(map[int16]string)
-	if _, err = os.Stat(file + ".msym"); err == nil {
-		symData, err := ioutil.ReadFile(file + ".msym")
-		if err != nil {
-			log.Fatalln("ERROR: Symbol file found, but an error occured reading it: " + err.Error())
-		}
+	if symbolOverride != "" || !attach {
+		symbolPath := conditional.String(symbolOverride == "", file+".msym", symbolOverride)
+		symbolMap = make(map[int16]string)
+		if _, err := os.Stat(symbolPath); err == nil {
+			symData, err := ioutil.ReadFile(symbolPath)
+			if err != nil {
+				log.Fatalln("ERROR: Symbol file found, but an error occured reading it: " + err.Error())
+			}
 
-		// Parse msym format
-		symSplit := strings.Split(string(symData), ";")
-		for _, symEntry := range symSplit {
-			if symEntry != "" {
-				symEntrySplit := strings.Split(symEntry, "=")
-				if len(symEntrySplit) == 2 {
-					parsedAddr, err := strconv.ParseInt(symEntrySplit[0], 16, 16)
-					if err == nil {
-						symbolMap[int16(parsedAddr)] = symEntrySplit[1]
+			// Parse msym format
+			symSplit := strings.Split(string(symData), ";")
+			for _, symEntry := range symSplit {
+				if symEntry != "" {
+					symEntrySplit := strings.Split(symEntry, "=")
+					if len(symEntrySplit) == 2 {
+						parsedAddr, err := strconv.ParseInt(symEntrySplit[0], 16, 16)
+						if err == nil {
+							symbolMap[int16(parsedAddr)] = symEntrySplit[1]
+						}
 					}
 				}
 			}
-		}
 
-		symbolsFound = true
+			symbolsFound = true
+		}
 	}
 
 	// Parse data into instruction-bounded array
@@ -57,291 +190,260 @@ func Interpret(file, config string, gui bool, maxSteps int) {
 		data16[i] = uint16(data[i*2])<<8 | uint16(data[i*2+1])
 	}
 
-	if gui {
+	// Run with GUI
+	vm := NewVM(data16)
 
-		// Run with GUI
-		vm := NewVM(data16)
+	plength := fmt.Sprintf("0x%04X", len(data16))
 
-		plength := fmt.Sprintf("0x%04X", len(data16))
+	// Set up GUI elements
+	root := tview.NewGrid()
+	root.SetTitle("MCPC debugger (" + file + ")")
+	root.SetRows(4, 18, -3, -1, 2).SetColumns(0, 50)
+	root.SetBorder(true)
 
-		// Set up GUI elements
-		root := tview.NewGrid()
-		root.SetTitle("MCPC debugger (" + file + ")")
-		root.SetRows(4, 18, -3, -1, 2).SetColumns(0, 50)
-		root.SetBorder(true)
+	cmdField := tview.NewInputField().SetFieldWidth(0).SetLabel("Command: ")
+	root.AddItem(cmdField, 4, 0, 1, 1, 0, 0, true)
 
-		cmdField := tview.NewInputField().SetFieldWidth(0).SetLabel("Command: ")
-		root.AddItem(cmdField, 4, 0, 1, 1, 0, 0, true)
+	disassemblyView := tview.NewTextView()
+	disassemblyView.SetBorder(true)
+	disassemblyView.SetScrollable(true)
+	disassemblyView.SetTitle("Disassembly")
+	disassemblyView.SetDynamicColors(true)
+	disassemblyView.SetRegions(true)
+	root.AddItem(disassemblyView, 0, 0, 4, 1, 0, 0, false)
 
-		disassemblyView := tview.NewTextView()
-		disassemblyView.SetBorder(true)
-		disassemblyView.SetScrollable(true)
-		disassemblyView.SetTitle("Disassembly")
-		disassemblyView.SetDynamicColors(true)
-		disassemblyView.SetRegions(true)
-		root.AddItem(disassemblyView, 0, 0, 4, 1, 0, 0, false)
+	// Set up sidebar sections
+	stateView := tview.NewTextView()
+	stateView.SetBorder(true)
+	stateView.SetTitle("VM State")
+	stateView.SetText(fmt.Sprintf("State: Not started%s\nPC: 0x0000/%s", conditional.String(symbolsFound, " (msym loaded!)", ""), plength))
+	root.AddItem(stateView, 0, 1, 1, 1, 0, 0, false)
 
-		// Set up sidebar sections
-		stateView := tview.NewTextView()
-		stateView.SetBorder(true)
-		stateView.SetTitle("VM State")
-		stateView.SetText(fmt.Sprintf("State: Not started%s\nPC: 0x0000/%s", conditional.String(symbolsFound, " (msym loaded!)", ""), plength))
-		root.AddItem(stateView, 0, 1, 1, 1, 0, 0, false)
+	registerView := tview.NewTextView()
+	registerView.SetBorder(true)
+	registerView.SetTitle("Registers")
+	registerView.SetDynamicColors(true)
+	registerView.SetRegions(true)
+	registerView.SetText(getRegisterText(vm.Registers, vm.Registers))
+	root.AddItem(registerView, 1, 1, 1, 1, 0, 0, false)
 
-		registerView := tview.NewTextView()
-		registerView.SetBorder(true)
-		registerView.SetTitle("Registers")
-		registerView.SetDynamicColors(true)
-		registerView.SetRegions(true)
-		registerView.SetText(getRegisterText(vm.Registers, vm.Registers))
-		root.AddItem(registerView, 1, 1, 1, 1, 0, 0, false)
+	sramView := tview.NewTable()
+	sramView.SetBorder(true)
+	sramView.SetTitle("SRAM")
+	sramView.SetFixed(1, 0)
+	sramView.SetSelectable(true, false)
+	sramRow := 0
+	sramView.Select(sramRow, 0)
+	setSRAMTable(vm, sramView)
+	root.AddItem(sramView, 3, 1, 2, 1, 0, 0, false)
 
-		sramView := tview.NewTable()
-		sramView.SetBorder(true)
-		sramView.SetTitle("SRAM")
-		sramView.SetFixed(1, 0)
-		sramView.SetSelectable(true, false)
-		sramRow := 0
-		sramView.Select(sramRow, 0)
-		setSRAMTable(vm, sramView)
-		root.AddItem(sramView, 3, 1, 2, 1, 0, 0, false)
+	terminalView := tview.NewTextView()
+	terminalView.SetBorder(true)
+	terminalView.SetTitle("Top of Stack")
+	terminalView.SetScrollable(true)
+	terminalView.SetDynamicColors(true)
+	root.AddItem(terminalView, 2, 1, 1, 1, 0, 0, false)
 
-		terminalView := tview.NewTextView()
-		terminalView.SetBorder(true)
-		terminalView.SetTitle("Top of Stack")
-		terminalView.SetScrollable(true)
-		terminalView.SetDynamicColors(true)
-		root.AddItem(terminalView, 2, 1, 1, 1, 0, 0, false)
+	terminalText := getStackText(terminalView, vm)
+	terminalView.SetText(terminalText)
 
-		terminalText := getStackText(terminalView, vm)
-		terminalView.SetText(terminalText)
+	virtualPC := vm.Registers.PC.Value
 
-		virtualPC := vm.Registers.PC.Value
+	// Create application
+	var modal *tview.Modal
+	app := tview.NewApplication()
+	app.SetRoot(root, true).SetFocus(root)
 
-		// Create application
-		var modal *tview.Modal
-		app := tview.NewApplication()
-		app.SetRoot(root, true).SetFocus(root)
+	// Set up scrolling
+	app.SetInputCapture(func(key *tcell.EventKey) *tcell.EventKey {
+		retval := key
 
-		// Set up scrolling
-		app.SetInputCapture(func(key *tcell.EventKey) *tcell.EventKey {
-			retval := key
-
-			if key.Modifiers() == tcell.ModShift || key.Modifiers() == tcell.ModCtrl {
-				if key.Key() == tcell.KeyUp {
-					sramRow--
-					retval = nil
-				} else if key.Key() == tcell.KeyDown {
-					sramRow++
-					retval = nil
-				} else if key.Key() == tcell.KeyPgUp {
-					sramRow = 1
-					retval = nil
-				} else if key.Key() == tcell.KeyPgDn {
-					sramRow = sramView.GetRowCount() - 1
-					retval = nil
-				}
-
-				if sramRow < 0 {
-					sramRow = 0
-				} else if sramRow >= sramView.GetRowCount() {
-					sramRow = sramView.GetRowCount() - 1
-				}
-				sramView.Select(sramRow, 0)
-				app.Draw()
-			} else if key.Modifiers() == tcell.ModNone {
-				p, _ := strconv.ParseUint(plength[2:], 16, 17)
-
-				if key.Key() == tcell.KeyUp {
-					virtualPC--
-					retval = nil
-				} else if key.Key() == tcell.KeyDown {
-					virtualPC++
-					retval = nil
-				} else if key.Key() == tcell.KeyPgUp {
-					virtualPC = 0
-					retval = nil
-				} else if key.Key() == tcell.KeyPgDn {
-					virtualPC = uint16(p) - 1
-					retval = nil
-				} else if key.Key() == tcell.KeyHome {
-					virtualPC = vm.Registers.PC.Value
-					retval = nil
-				}
-
-				if virtualPC < 0 {
-					virtualPC = 0
-				} else if virtualPC >= uint16(p) {
-					virtualPC = uint16(p) - 1
-				}
-
-				disassemblyView.Highlight(fmt.Sprintf("0x%04X", virtualPC))
-				disassemblyView.ScrollToHighlight()
-				app.Draw()
+		if key.Modifiers() == tcell.ModShift || key.Modifiers() == tcell.ModCtrl {
+			if key.Key() == tcell.KeyUp {
+				sramRow--
+				retval = nil
+			} else if key.Key() == tcell.KeyDown {
+				sramRow++
+				retval = nil
+			} else if key.Key() == tcell.KeyPgUp {
+				sramRow = 1
+				retval = nil
+			} else if key.Key() == tcell.KeyPgDn {
+				sramRow = sramView.GetRowCount() - 1
+				retval = nil
 			}
 
-			return retval
-		})
+			if sramRow < 0 {
+				sramRow = 0
+			} else if sramRow >= sramView.GetRowCount() {
+				sramRow = sramView.GetRowCount() - 1
+			}
+			sramView.Select(sramRow, 0)
+			app.Draw()
+		} else if key.Modifiers() == tcell.ModNone {
+			p, _ := strconv.ParseUint(plength[2:], 16, 17)
 
-		// Set up behaviours
-		cmdField.SetDoneFunc(func(key tcell.Key) {
-			if key == tcell.KeyEscape {
-				cmdField.SetText("")
-			} else if key == tcell.KeyEnter {
-				// Execute debugger command
-				trimmed := strings.TrimSpace(cmdField.GetText())
-				split := strings.Split(trimmed, " ")
-				if len(split) == 0 {
-					split = []string{""}
+			if key.Key() == tcell.KeyUp {
+				virtualPC--
+				retval = nil
+			} else if key.Key() == tcell.KeyDown {
+				virtualPC++
+				retval = nil
+			} else if key.Key() == tcell.KeyPgUp {
+				virtualPC = 0
+				retval = nil
+			} else if key.Key() == tcell.KeyPgDn {
+				virtualPC = uint16(p) - 1
+				retval = nil
+			} else if key.Key() == tcell.KeyHome {
+				virtualPC = vm.Registers.PC.Value
+				retval = nil
+			}
+
+			if virtualPC < 0 {
+				virtualPC = 0
+			} else if virtualPC >= uint16(p) {
+				virtualPC = uint16(p) - 1
+			}
+
+			disassemblyView.Highlight(fmt.Sprintf("0x%04X", virtualPC))
+			disassemblyView.ScrollToHighlight()
+			app.Draw()
+		}
+
+		return retval
+	})
+
+	// Set up behaviours
+	cmdField.SetDoneFunc(func(key tcell.Key) {
+		if key == tcell.KeyEscape {
+			cmdField.SetText("")
+		} else if key == tcell.KeyEnter {
+			// Execute debugger command
+			trimmed := strings.TrimSpace(cmdField.GetText())
+			split := strings.Split(trimmed, " ")
+			if len(split) == 0 {
+				split = []string{""}
+			}
+			switch strings.ToLower(split[0]) {
+			case "help":
+				messageBox("MCPC Debugger Help", "Arrow keys to move around in disassembly, press HOME to return to current instruction; Available commands: step = Executes a single instruction step (default, use <ENTER> to call with no command in input) :: run <to> = Executes instructions until HALT, BRK or specified PC address <to> is encountered :: runfor <num> = Executes <num> instructions :: exit, quit = Quits the MCPC debugger", app, modal, root)
+			case "", "step":
+				// Backup values for comparison
+				regBck := cloneRegisters(vm.Registers)
+				sramBck := make([]uint16, len(vm.SRAM))
+				copier.Copy(sramBck, vm.SRAM)
+				// Step VM
+				_, output, err := vm.Step()
+				// Update view after step
+				disassemblyView.SetText(toDisassembly(data16, vm, disassemblyView))
+				disassemblyView.Highlight(fmt.Sprintf("0x%04X", vm.Registers.PC.Value))
+				virtualPC = vm.Registers.PC.Value
+				disassemblyView.ScrollToHighlight()
+				if vm.Halted {
+					stateView.SetText(fmt.Sprintf("State: Halted\nPC: 0x%04X/%s", vm.Registers.PC.Value, plength))
+				} else {
+					stateView.SetText(fmt.Sprintf("State: Debugging/Paused\nPC: 0x%04X/%s", vm.Registers.PC.Value, plength))
 				}
-				switch strings.ToLower(split[0]) {
-				case "help":
-					messageBox("MCPC Debugger Help", "Arrow keys to move around in disassembly, press HOME to return to current instruction; Available commands: step = Executes a single instruction step (default, use <ENTER> to call with no command in input) :: run <to> = Executes instructions until HALT, BRK or specified PC address <to> is encountered :: runfor <num> = Executes <num> instructions :: exit, quit = Quits the MCPC debugger", app, modal, root)
-				case "", "step":
-					// Backup values for comparison
-					regBck := cloneRegisters(vm.Registers)
-					sramBck := make([]uint16, len(vm.SRAM))
-					copier.Copy(sramBck, vm.SRAM)
-					// Step VM
-					_, output, err := vm.Step()
-					// Update view after step
-					disassemblyView.SetText(toDisassembly(data16, vm, disassemblyView))
-					disassemblyView.Highlight(fmt.Sprintf("0x%04X", vm.Registers.PC.Value))
-					virtualPC = vm.Registers.PC.Value
-					disassemblyView.ScrollToHighlight()
-					if vm.Halted {
-						stateView.SetText(fmt.Sprintf("State: Halted\nPC: 0x%04X/%s", vm.Registers.PC.Value, plength))
-					} else {
-						stateView.SetText(fmt.Sprintf("State: Debugging/Paused\nPC: 0x%04X/%s", vm.Registers.PC.Value, plength))
+				registerView.SetText(getRegisterText(vm.Registers, regBck))
+				setSRAMTable(vm, sramView)
+				for sramI := 0; sramI < len(sramBck); sramI++ {
+					if sramBck[sramI] != vm.SRAM[sramI] {
+						sramView.Select(sramI/3+1, 0)
+						break
 					}
-					registerView.SetText(getRegisterText(vm.Registers, regBck))
-					setSRAMTable(vm, sramView)
-					for sramI := 0; sramI < len(sramBck); sramI++ {
-						if sramBck[sramI] != vm.SRAM[sramI] {
-							sramView.Select(sramI/3+1, 0)
-							break
-						}
-					}
-					terminalText += output
-					terminalView.SetText(getStackText(terminalView, vm))
-					// Show error message if necessary
-					if err != nil {
-						messageBox("VM Error", "A VM error occured during the step: "+err.Error(), app, modal, root)
-					}
-				case "run", "runfor":
-					// Run until BRK, timeout or match
-					stateView.SetText(fmt.Sprintf("State: Running\nPC: -"))
-					app.Draw()
+				}
+				terminalText += output
+				terminalView.SetText(getStackText(terminalView, vm))
+				// Show error message if necessary
+				if err != nil {
+					messageBox("VM Error", "A VM error occured during the step: "+err.Error(), app, modal, root)
+				}
+			case "run", "runfor":
+				// Run until BRK, timeout or match
+				stateView.SetText(fmt.Sprintf("State: Running\nPC: -"))
+				app.Draw()
 
-					timeout := 0
-					maxTimeout := 10000
-					match := -1
-					if len(split) > 1 {
-						if split[0] == "run" {
-							m, cerr := strconv.ParseInt(split[1], 16, 17)
+				timeout := 0
+				maxTimeout := 10000
+				match := -1
+				if len(split) > 1 {
+					if split[0] == "run" {
+						m, cerr := strconv.ParseInt(split[1], 16, 17)
+						if cerr == nil {
+							match = int(m)
+						} else {
+							m, cerr = strconv.ParseInt(split[1][2:], 16, 17)
 							if cerr == nil {
 								match = int(m)
 							} else {
-								m, cerr = strconv.ParseInt(split[1][2:], 16, 17)
-								if cerr == nil {
-									match = int(m)
-								} else {
-									messageBox("Warning", "You passed a parameter to run, however it could not be parsed as a hex number. It will be ignored.", app, modal, root)
-								}
-							}
-						} else if split[0] == "runfor" {
-							m, cerr := strconv.ParseInt(split[1], 10, 32)
-							if cerr == nil {
-								maxTimeout = int(m)
-							} else {
-								messageBox("Warning", "You passed a parameter to runfor, however it could not be parsed as a number. It will be ignored.", app, modal, root)
+								messageBox("Warning", "You passed a parameter to run, however it could not be parsed as a hex number. It will be ignored.", app, modal, root)
 							}
 						}
-					}
-
-					for !vm.Halted && timeout < maxTimeout {
-						brk, termout, err := vm.Step()
-						if err != nil {
-							messageBox("VM Error", fmt.Sprintf("A VM error occured during step 0x%X (at PC=0x%X): %s", vm.EEPROM[vm.Registers.PC.Value-1], vm.Registers.PC.Value-1, err.Error()), app, modal, root)
+					} else if split[0] == "runfor" {
+						m, cerr := strconv.ParseInt(split[1], 10, 32)
+						if cerr == nil {
+							maxTimeout = int(m)
+						} else {
+							messageBox("Warning", "You passed a parameter to runfor, however it could not be parsed as a number. It will be ignored.", app, modal, root)
 						}
-						if termout != "" {
-							terminalText += termout
-						}
-						if (match == -1 && brk && split[0] == "run") || int(vm.Registers.PC.Value) == match {
-							break
-						}
-						timeout++
 					}
-
-					if timeout == 10000 && split[0] == "run" {
-						messageBox("Timeout", "Execution paused because a timeout was reached (10000 steps).", app, modal, root)
-					}
-
-					// Update view after steps
-					disassemblyView.SetText(toDisassembly(data16, vm, disassemblyView))
-					disassemblyView.Highlight(fmt.Sprintf("0x%04X", vm.Registers.PC.Value))
-					virtualPC = vm.Registers.PC.Value
-					disassemblyView.ScrollToHighlight()
-					if vm.Halted {
-						stateView.SetText(fmt.Sprintf("State: Halted\nPC: 0x%04X/%s", vm.Registers.PC.Value, plength))
-					} else {
-						stateView.SetText(fmt.Sprintf("State: Debugging/Paused\nPC: 0x%04X/%s", vm.Registers.PC.Value, plength))
-					}
-					registerView.SetText(getRegisterText(vm.Registers, vm.Registers))
-					setSRAMTable(vm, sramView)
-					terminalView.SetText(getStackText(terminalView, vm))
-				case "exit", "quit":
-					app.Stop()
-				default:
-					messageBox("Invalid command", "Type \"help\" to see a list of available commands.", app, modal, root)
 				}
 
-				cmdField.SetText("")
+				for !vm.Halted && timeout < maxTimeout {
+					brk, termout, err := vm.Step()
+					if err != nil {
+						messageBox("VM Error", fmt.Sprintf("A VM error occured during step 0x%X (at PC=0x%X): %s", vm.EEPROM[vm.Registers.PC.Value-1], vm.Registers.PC.Value-1, err.Error()), app, modal, root)
+					}
+					if termout != "" {
+						terminalText += termout
+					}
+					if (match == -1 && brk && split[0] == "run") || int(vm.Registers.PC.Value) == match {
+						break
+					}
+					timeout++
+				}
+
+				if timeout == 10000 && split[0] == "run" {
+					messageBox("Timeout", "Execution paused because a timeout was reached (10000 steps).", app, modal, root)
+				}
+
+				// Update view after steps
+				disassemblyView.SetText(toDisassembly(data16, vm, disassemblyView))
+				disassemblyView.Highlight(fmt.Sprintf("0x%04X", vm.Registers.PC.Value))
+				virtualPC = vm.Registers.PC.Value
+				disassemblyView.ScrollToHighlight()
+				if vm.Halted {
+					stateView.SetText(fmt.Sprintf("State: Halted\nPC: 0x%04X/%s", vm.Registers.PC.Value, plength))
+				} else {
+					stateView.SetText(fmt.Sprintf("State: Debugging/Paused\nPC: 0x%04X/%s", vm.Registers.PC.Value, plength))
+				}
+				registerView.SetText(getRegisterText(vm.Registers, vm.Registers))
+				setSRAMTable(vm, sramView)
+				terminalView.SetText(getStackText(terminalView, vm))
+			case "exit", "quit":
+				app.Stop()
+			default:
+				messageBox("Invalid command", "Type \"help\" to see a list of available commands.", app, modal, root)
 			}
-		})
 
-		// Set disassembly text last to avoid width glitching for label offsets
-		// Nevermind, doesn't work either way
-		disassemblyView.SetText(toDisassembly(data16, vm, disassemblyView))
-		disassemblyView.Highlight(fmt.Sprintf("0x%04X", virtualPC))
-
-		// Run GUI app
-
-		if err := app.Run(); err != nil {
-			log.Fatalln(err)
+			cmdField.SetText("")
 		}
+	})
 
-	} else {
+	// Set disassembly text last to avoid width glitching for label offsets
+	// Nevermind, doesn't work either way
+	disassemblyView.SetText(toDisassembly(data16, vm, disassemblyView))
+	disassemblyView.Highlight(fmt.Sprintf("0x%04X", virtualPC))
 
-		// GUI-less interpretation
-		// Deprecated
-		log.Fatalln("ERROR: <interpret> is deprecated in favor of <debug>!")
+	// Run GUI app
 
-		/*log.Println("Interpreting " + file + "...")
-		if maxSteps < 0 {
-			log.Println("No maximum step count set, using default of 100000")
-			maxSteps = 100000
-		}
+	if err := app.Run(); err != nil {
+		log.Fatalln(err)
+	}
 
-		// Create and run VM
-		vm := NewVM(data16)
-		steps := 0
-		for !vm.Halted && steps < maxSteps {
-			// BRK is ignored
-			_, termout, err := vm.Step()
-			if err != nil {
-				log.Fatalf("ERROR on instruction 0x%X (at PC=0x%X): %s\n", vm.EEPROM[vm.Registers.PC.Value-1], vm.Registers.PC.Value-1, err.Error())
-			}
-			if termout != "" {
-				fmt.Print(termout)
-			}
-			steps++
-		}
-
-		if steps == maxSteps {
-			fmt.Println()
-			log.Println("VM halted, max steps reached")
-		}*/
+	if attach && dev != nil {
+		dev.closeConnection()
 	}
 }
 

@@ -62,7 +62,7 @@ module main (
 // Reset on Power up
 reg [32:0] PWR_RST = 0;
 always @(posedge MAX10_CLK1_50) begin
-	if (!PWR_RST[24]) begin
+	if (!PWR_RST[25]) begin
 		PWR_RST <= PWR_RST + 1'b1;
 	end
 end
@@ -70,7 +70,7 @@ end
 
 // "Global" nets
 wire RST;
-assign RST = (~PWR_RST[24]) | (~KEY[0]);
+assign RST = (RST & core_clock) | (~PWR_RST[25]) | (~KEY[0]) | rstReq;
 
 
 // Blank HEX display
@@ -134,14 +134,15 @@ counter counter_instance_debug_clock (
 	.out(debug_clock)
 );
 
-wire core_clock = SW[0] ? (SW[1] ? debug_clock[2] : debug_clock[21]) : manual_clock;
+wire core_clock = SW[0] ? debug_clock[3] : manual_clock;
 
 
 // Main CPU instance
 wire [15:0] debug_bus;
+wire debugEn;
 
 cpu cpu_instance (
-	.clk(core_clock),
+	.clkCore(core_clock),
 	.clk50(MAX10_CLK1_50),
 	.rst(RST),
 	
@@ -163,7 +164,13 @@ cpu cpu_instance (
 
     .fb_data(fb_data_bus),
     .fb_addr(fb_addr_bus),
-    .fb_we(fb_we)
+    .fb_we(fb_we),
+
+	.debugEnOut(debugEn),
+	.rstReq(rstReq),
+
+	.ARDUINO_IO(ARDUINO_IO),
+	.GPIO(GPIO)
 );
 
 	
