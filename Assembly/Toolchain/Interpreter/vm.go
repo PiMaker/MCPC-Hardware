@@ -94,9 +94,9 @@ func (vm *VM) Step() (bool, string, error) {
 	case 0x0:
 		vm.Halted = true
 	case 0x1:
-		reg := getReg(vm, ins, regTo)
+		reg := GetReg(vm, ins, regTo)
 		if reg.Writeable {
-			reg.Value = getReg(vm, ins, regFrom).Value
+			reg.Value = GetReg(vm, ins, regFrom).Value
 
 			if reg == vm.Registers.PC {
 				vm.Registers.PC.Value--
@@ -105,10 +105,10 @@ func (vm *VM) Step() (bool, string, error) {
 			err = fmt.Errorf("Write to non-writable register %X", reg.Address)
 		}
 	case 0x2:
-		if getReg(vm, ins, regIf).Value != 0 {
-			reg := getReg(vm, ins, regTo)
+		if GetReg(vm, ins, regIf).Value != 0 {
+			reg := GetReg(vm, ins, regTo)
 			if reg.Writeable {
-				reg.Value = getReg(vm, ins, regFrom).Value
+				reg.Value = GetReg(vm, ins, regFrom).Value
 
 				if reg == vm.Registers.PC {
 					vm.Registers.PC.Value--
@@ -118,10 +118,10 @@ func (vm *VM) Step() (bool, string, error) {
 			}
 		}
 	case 0x3:
-		if getReg(vm, ins, regIf).Value == 0 {
-			reg := getReg(vm, ins, regTo)
+		if GetReg(vm, ins, regIf).Value == 0 {
+			reg := GetReg(vm, ins, regTo)
 			if reg.Writeable {
-				reg.Value = getReg(vm, ins, regFrom).Value
+				reg.Value = GetReg(vm, ins, regFrom).Value
 
 				if reg == vm.Registers.PC {
 					vm.Registers.PC.Value--
@@ -136,8 +136,8 @@ func (vm *VM) Step() (bool, string, error) {
 		brk = true
 
 	case 0x5:
-		addrReg := getReg(vm, ins, regFrom)
-		writeToReg := getReg(vm, ins, regTo)
+		addrReg := GetReg(vm, ins, regFrom)
+		writeToReg := GetReg(vm, ins, regTo)
 
 		if writeToReg.Writeable {
 			if (addrReg.Value & 0x8000) == 0 {
@@ -158,7 +158,7 @@ func (vm *VM) Step() (bool, string, error) {
 
 	case 0x6:
 		vm.Registers.PC.Value++
-		reg := getReg(vm, ins, regTo)
+		reg := GetReg(vm, ins, regTo)
 		if reg == vm.Registers.PC {
 			err = errors.New("SET was called on PC, this is not allowed in VM")
 		} else {
@@ -170,8 +170,8 @@ func (vm *VM) Step() (bool, string, error) {
 		}
 
 	case 0x7:
-		addrReg := getReg(vm, ins, regFrom)
-		dataReg := getReg(vm, ins, regIf)
+		addrReg := GetReg(vm, ins, regFrom)
+		dataReg := GetReg(vm, ins, regIf)
 
 		if (addrReg.Value & 0x8000) == 0 {
 			vm.SRAM[addrReg.Value] = dataReg.Value
@@ -180,36 +180,36 @@ func (vm *VM) Step() (bool, string, error) {
 		}
 
 	case 0x8, 0x9, 0xA, 0xB, 0xC, 0xD, 0xE, 0xF:
-		registerTo := getReg(vm, ins, regTo)
+		registerTo := GetReg(vm, ins, regTo)
 		if registerTo.Writeable {
 			// ALU instruction decoding
 			switch instruction {
 			case 0x8:
-				registerTo.Value = getReg(vm, ins, regFrom).Value & getReg(vm, ins, regOp).Value
+				registerTo.Value = GetReg(vm, ins, regFrom).Value & GetReg(vm, ins, regOp).Value
 			case 0x9:
-				registerTo.Value = getReg(vm, ins, regFrom).Value | getReg(vm, ins, regOp).Value
+				registerTo.Value = GetReg(vm, ins, regFrom).Value | GetReg(vm, ins, regOp).Value
 			case 0xA:
-				registerTo.Value = getReg(vm, ins, regFrom).Value ^ getReg(vm, ins, regOp).Value
+				registerTo.Value = GetReg(vm, ins, regFrom).Value ^ GetReg(vm, ins, regOp).Value
 			case 0xB:
-				registerTo.Value = getReg(vm, ins, regFrom).Value + getReg(vm, ins, regOp).Value
+				registerTo.Value = GetReg(vm, ins, regFrom).Value + GetReg(vm, ins, regOp).Value
 			case 0xC:
 				shft := (ins & regOp) >> 12
 				if shft&0x8 == 0 {
-					registerTo.Value = getReg(vm, ins, regFrom).Value >> shft
+					registerTo.Value = GetReg(vm, ins, regFrom).Value >> shft
 				} else {
-					registerTo.Value = getReg(vm, ins, regFrom).Value << (shft & 0x7)
+					registerTo.Value = GetReg(vm, ins, regFrom).Value << (shft & 0x7)
 				}
 			case 0xD:
-				registerTo.Value = getReg(vm, ins, regFrom).Value * getReg(vm, ins, regOp).Value
+				registerTo.Value = GetReg(vm, ins, regFrom).Value * GetReg(vm, ins, regOp).Value
 			case 0xE:
 				var val uint16
-				if getReg(vm, ins, regFrom).Value > getReg(vm, ins, regOp).Value {
+				if GetReg(vm, ins, regFrom).Value > GetReg(vm, ins, regOp).Value {
 					val = 0xFFFF
 				}
 				registerTo.Value = val
 			case 0xF:
 				var val uint16
-				if getReg(vm, ins, regFrom).Value == getReg(vm, ins, regOp).Value {
+				if GetReg(vm, ins, regFrom).Value == GetReg(vm, ins, regOp).Value {
 					val = 0xFFFF
 				}
 				registerTo.Value = val
@@ -225,7 +225,7 @@ func (vm *VM) Step() (bool, string, error) {
 	return brk, termout, err
 }
 
-func getReg(vm *VM, ins uint16, reg uint16) *Register {
+func GetReg(vm *VM, ins uint16, reg uint16) *Register {
 	addr := ins & reg
 	addr >>= getFirstSet(reg)
 	switch byte(addr) {

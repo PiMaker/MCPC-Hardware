@@ -1,0 +1,7 @@
+;autotest reg=0 val=0xFFFF;
+
+func var main(argc, argp) {
+    var x = 0;
+    x = [x - 1];
+    return x;
+}

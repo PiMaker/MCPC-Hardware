@@ -174,13 +174,21 @@ func Interpret(file string, attach bool, maxSteps int, symbolOverride string) {
 					if len(symEntrySplit) == 2 {
 						parsedAddr, err := strconv.ParseInt(symEntrySplit[0], 16, 16)
 						if err == nil {
-							symbolMap[int16(parsedAddr)] = symEntrySplit[1]
+							toAdd := symEntrySplit[1]
+
+							existing, ok := symbolMap[int16(parsedAddr)]
+							if ok {
+								toAdd = existing + ", " + toAdd
+							}
+
+							symbolMap[int16(parsedAddr)] = toAdd
 						}
 					}
 				}
 			}
 
 			symbolsFound = true
+			log.Println("Symbol file found and loaded!")
 		}
 	}
 
@@ -564,9 +572,9 @@ func decodeAssembly(c uint16, vm *VM) (cmd, params, note string, set bool) {
 	case 0x0:
 		cmd = "HALT"
 	case 0x1:
-		valueToMove := getReg(vm, c, regFrom).Value
+		valueToMove := GetReg(vm, c, regFrom).Value
 
-		if getReg(vm, c, regTo) == vm.Registers.PC {
+		if GetReg(vm, c, regTo) == vm.Registers.PC {
 			cmd = "JMP"
 			params = fmt.Sprintf("to 0x%04x", valueToMove)
 
@@ -583,14 +591,14 @@ func decodeAssembly(c uint16, vm *VM) (cmd, params, note string, set bool) {
 		note = fmt.Sprintf("set %s to 0x%04X", decodeRegister(byte((c&0x0F00)>>8), colorNotes), valueToMove)
 	case 0x2:
 		cmd = "MOVNZ"
-		valueToMove := getReg(vm, c, regFrom).Value
+		valueToMove := GetReg(vm, c, regFrom).Value
 
-		if getReg(vm, c, regTo) == vm.Registers.PC {
+		if GetReg(vm, c, regTo) == vm.Registers.PC {
 			cmd = "JMPNZ"
 		}
 
 		params = decodeRegister(byte((c&0x00F0)>>4), "white") + " -> " + decodeRegister(byte((c&0x0F00)>>8), "white") + " if " + decodeRegister(byte((c&0xF000)>>12), "white") + " != 0"
-		if getReg(vm, c, regIf).Value != 0 {
+		if GetReg(vm, c, regIf).Value != 0 {
 			note = fmt.Sprintf("TRUE: set %s to 0x%04X", decodeRegister(byte((c&0x0F00)>>8), colorNotes), valueToMove)
 		} else {
 			note = fmt.Sprintf("FALSE, would do: set %s to 0x%04X", decodeRegister(byte((c&0x0F00)>>8), colorNotes), valueToMove)
@@ -602,14 +610,14 @@ func decodeAssembly(c uint16, vm *VM) (cmd, params, note string, set bool) {
 		}
 	case 0x3:
 		cmd = "MOVEZ"
-		valueToMove := getReg(vm, c, regFrom).Value
+		valueToMove := GetReg(vm, c, regFrom).Value
 
-		if getReg(vm, c, regTo) == vm.Registers.PC {
+		if GetReg(vm, c, regTo) == vm.Registers.PC {
 			cmd = "JMPEZ"
 		}
 
 		params = decodeRegister(byte((c&0x00F0)>>4), "white") + " -> " + decodeRegister(byte((c&0x0F00)>>8), "white") + " if " + decodeRegister(byte((c&0xF000)>>12), "white") + " == 0"
-		if getReg(vm, c, regIf).Value == 0 {
+		if GetReg(vm, c, regIf).Value == 0 {
 			note = fmt.Sprintf("TRUE: set %s to 0x%04X", decodeRegister(byte((c&0x0F00)>>8), colorNotes), valueToMove)
 		} else {
 			note = fmt.Sprintf("FALSE, would do: set %s to 0x%04X", decodeRegister(byte((c&0x0F00)>>8), colorNotes), valueToMove)
@@ -626,12 +634,12 @@ func decodeAssembly(c uint16, vm *VM) (cmd, params, note string, set bool) {
 	case 0x5:
 		cmd = "MEMR"
 
-		if getReg(vm, c, regFrom) == vm.Registers.SP {
+		if GetReg(vm, c, regFrom) == vm.Registers.SP {
 			cmd = "POP"
 		}
 
 		params = decodeRegister(byte((c&0x0F00)>>8), "white") + " <- @" + decodeRegister(byte((c&0x00F0)>>4), "white")
-		addr := getReg(vm, c, regFrom).Value
+		addr := GetReg(vm, c, regFrom).Value
 
 		if (addr & 0x8000) == 0 {
 			note = fmt.Sprintf("Read data @%04x (=%04x) into register %s", addr, vm.SRAM[addr], decodeRegister(byte((c&0x0F00)>>8), colorNotes))
@@ -651,57 +659,57 @@ func decodeAssembly(c uint16, vm *VM) (cmd, params, note string, set bool) {
 	case 0x7:
 		cmd = "MEMW"
 
-		if getReg(vm, c, regFrom) == vm.Registers.SP {
+		if GetReg(vm, c, regFrom) == vm.Registers.SP {
 			cmd = "PUSH"
 		}
 
 		params = decodeRegister(byte((c&0xF000)>>12), "white") + " -> @" + decodeRegister(byte((c&0x00F0)>>4), "white")
-		addr := getReg(vm, c, regFrom).Value
+		addr := GetReg(vm, c, regFrom).Value
 
 		if (addr & 0x8000) == 0 {
-			note = fmt.Sprintf("Write data from register %s (=%04x) into RAM @%04x", decodeRegister(byte((c&0x0F00)>>8), colorNotes), getReg(vm, c, regIf).Value, addr)
+			note = fmt.Sprintf("Write data from register %s (=%04x) into RAM @%04x", decodeRegister(byte((c&0x0F00)>>8), colorNotes), GetReg(vm, c, regIf).Value, addr)
 		} else {
 			note = "STUB: Write to unknown CFG"
 		}
 	case 0x8:
 		cmd = "AND"
 		params = decodeRegister(byte((c&0x0F00)>>8), "white") + " = " + decodeRegister(byte((c&0x00F0)>>4), "white") + " & " + decodeRegister(byte((c&0xF000)>>12), "white")
-		note = fmt.Sprintf("%04X & %04X = %04X", getReg(vm, c, regFrom).Value, getReg(vm, c, regOp).Value, (getReg(vm, c, regFrom).Value & getReg(vm, c, regOp).Value))
+		note = fmt.Sprintf("%04X & %04X = %04X", GetReg(vm, c, regFrom).Value, GetReg(vm, c, regOp).Value, (GetReg(vm, c, regFrom).Value & GetReg(vm, c, regOp).Value))
 	case 0x9:
 		cmd = "OR"
 		params = decodeRegister(byte((c&0x0F00)>>8), "white") + " = " + decodeRegister(byte((c&0x00F0)>>4), "white") + " | " + decodeRegister(byte((c&0xF000)>>12), "white")
-		note = fmt.Sprintf("%04X | %04X = %04X", getReg(vm, c, regFrom).Value, getReg(vm, c, regOp).Value, (getReg(vm, c, regFrom).Value | getReg(vm, c, regOp).Value))
+		note = fmt.Sprintf("%04X | %04X = %04X", GetReg(vm, c, regFrom).Value, GetReg(vm, c, regOp).Value, (GetReg(vm, c, regFrom).Value | GetReg(vm, c, regOp).Value))
 	case 0xA:
 		cmd = "XOR"
 		params = decodeRegister(byte((c&0x0F00)>>8), "white") + " = " + decodeRegister(byte((c&0x00F0)>>4), "white") + " ^ " + decodeRegister(byte((c&0xF000)>>12), "white")
-		note = fmt.Sprintf("%04X ^ %04X = %04X", getReg(vm, c, regFrom).Value, getReg(vm, c, regOp).Value, (getReg(vm, c, regFrom).Value ^ getReg(vm, c, regOp).Value))
-		if getReg(vm, c, regFrom).Value == 0xFFFF || getReg(vm, c, regOp).Value == 0xFFFF {
+		note = fmt.Sprintf("%04X ^ %04X = %04X", GetReg(vm, c, regFrom).Value, GetReg(vm, c, regOp).Value, (GetReg(vm, c, regFrom).Value ^ GetReg(vm, c, regOp).Value))
+		if GetReg(vm, c, regFrom).Value == 0xFFFF || GetReg(vm, c, regOp).Value == 0xFFFF {
 			note += " (COM)"
 		}
 	case 0xB:
 		cmd = "ADD"
 		params = decodeRegister(byte((c&0x0F00)>>8), "white") + " = " + decodeRegister(byte((c&0x00F0)>>4), "white") + " + " + decodeRegister(byte((c&0xF000)>>12), "white")
-		note = fmt.Sprintf("%04X + %04X = %04X", getReg(vm, c, regFrom).Value, getReg(vm, c, regOp).Value, (getReg(vm, c, regFrom).Value + getReg(vm, c, regOp).Value))
+		note = fmt.Sprintf("%04X + %04X = %04X", GetReg(vm, c, regFrom).Value, GetReg(vm, c, regOp).Value, (GetReg(vm, c, regFrom).Value + GetReg(vm, c, regOp).Value))
 	case 0xC:
 		cmd = "SHFT"
 		sval := byte((c & 0xF000) >> 12)
 		if sval&0x8 == 0 {
 			params = decodeRegister(byte((c&0x0F00)>>8), "white") + " = " + decodeRegister(byte((c&0x00F0)>>4), "white") + " >> 0x" + fmt.Sprintf("%X", sval)
-			note = fmt.Sprintf("= %04X", getReg(vm, c, regFrom).Value>>sval)
+			note = fmt.Sprintf("= %04X", GetReg(vm, c, regFrom).Value>>sval)
 		} else {
 			params = decodeRegister(byte((c&0x0F00)>>8), "white") + " = " + decodeRegister(byte((c&0x00F0)>>4), "white") + " << 0x" + fmt.Sprintf("%X", sval&0x7)
-			note = fmt.Sprintf("= %04X (negative shift)", getReg(vm, c, regFrom).Value<<(sval&0x7))
+			note = fmt.Sprintf("= %04X (negative shift)", GetReg(vm, c, regFrom).Value<<(sval&0x7))
 		}
 	case 0xD:
 		cmd = "MUL"
 		params = decodeRegister(byte((c&0x0F00)>>8), "white") + " = " + decodeRegister(byte((c&0x00F0)>>4), "white") + " * " + decodeRegister(byte((c&0xF000)>>12), "white")
-		mulRes := int(getReg(vm, c, regFrom).Value) * int(getReg(vm, c, regOp).Value)
-		note = fmt.Sprintf("%04X * %04X = %04X (Overflow: %t)", getReg(vm, c, regFrom).Value, getReg(vm, c, regOp).Value, getReg(vm, c, regFrom).Value*getReg(vm, c, regOp).Value, mulRes > 0xFFFF)
+		mulRes := int(GetReg(vm, c, regFrom).Value) * int(GetReg(vm, c, regOp).Value)
+		note = fmt.Sprintf("%04X * %04X = %04X (Overflow: %t)", GetReg(vm, c, regFrom).Value, GetReg(vm, c, regOp).Value, GetReg(vm, c, regFrom).Value*GetReg(vm, c, regOp).Value, mulRes > 0xFFFF)
 	case 0xE:
 		cmd = "GT"
 		params = decodeRegister(byte((c&0x0F00)>>8), "white") + " = " + decodeRegister(byte((c&0x00F0)>>4), "white") + " > " + decodeRegister(byte((c&0xF000)>>12), "white")
-		val1 := getReg(vm, c, regFrom).Value
-		val2 := getReg(vm, c, regOp).Value
+		val1 := GetReg(vm, c, regFrom).Value
+		val2 := GetReg(vm, c, regOp).Value
 		if val1 > val2 {
 			note = fmt.Sprintf("%04X > %04X = 0xFFFF", val1, val2)
 		} else {
@@ -711,8 +719,8 @@ func decodeAssembly(c uint16, vm *VM) (cmd, params, note string, set bool) {
 		cmd = "EQ"
 		params = decodeRegister(byte((c&0x0F00)>>8), "white") + " = " + decodeRegister(byte((c&0x00F0)>>4), "white") + " == " + decodeRegister(byte((c&0xF000)>>12), "white")
 		note = "t/f = 0x0/0xFFFF"
-		val1 := getReg(vm, c, regFrom).Value
-		val2 := getReg(vm, c, regOp).Value
+		val1 := GetReg(vm, c, regFrom).Value
+		val2 := GetReg(vm, c, regOp).Value
 		if val1 == val2 {
 			note = fmt.Sprintf("%04X == %04X = 0xFFFF", val1, val2)
 		} else {
