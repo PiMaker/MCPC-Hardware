@@ -1,0 +1,9 @@
+;autotest reg=0 val=42;
+
+global x = 1;
+global y;
+
+func var main(argc, argp) {
+    y = 43;
+    return [y - x];
+}

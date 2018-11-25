@@ -7,19 +7,21 @@ import (
 	"log"
 	"os"
 
-	"./Assembler"
-	"./Interpreter"
+	"github.com/docopt/docopt.go"
 
-	"github.com/docopt/docopt-go"
+	"github.com/PiMaker/MCPC/Assembly/Toolchain/Assembler"
+	"github.com/PiMaker/MCPC/Assembly/Toolchain/Autotest"
+	"github.com/PiMaker/MCPC/Assembly/Toolchain/Interpreter"
 )
 
 func main() {
-	usage := `MCPC Toolchain (Compiler/Assembler/Linker/VM).
+	usage := `MCPC Toolchain (Assembler/Debugger/Test-runner).
 
 Usage:
   mcpc assemble <file> <output> [--library=<library>...] [--debug-symbols] [--offset=<offset>] [--enable-offset-jump] [--ascii] [--hex] [--length=<length>]
   mcpc debug <file> [--symbols=<msym>]
   mcpc attach <port> [--symbols=<msym>]
+  mcpc autotest <directory> [--mscr=<mscrcmd>] [--library=<library>...]
   mcpc -h | --help
   mcpc --version
 
@@ -27,7 +29,8 @@ Options:
   assemble                Assembles an assembler file to assembly.
   debug                   Uses the MCPC interpreter to run the specified binary file and shows a TUI interface for debugging purposes.
   attach                  Attaches to a physical MCPC device at <port> (e.g. /dev/ttyUSB0) and launches the hardware debugger.
-  --library=<library>     Includes a library, specified in HJSON format, which allows higher-level instructions to be compiled down.
+  autotest                Runs the autotest test-suite on all files in the specified <directory>.
+  --library=<library>     Includes a library, specified in mlib format, which allows higher-level instructions to be compiled down.
   --debug-symbols         Writes a symbol file to use with the MCPC debugger next to the output file (will overwrite existing symbol files!)
   --symbols=<msym>        Path to .msym debug symbol file. "debug" mode has <file>.msym as default, attach mode requires manual specification if symbols are wanted.
   --offset=<offset>       Specifies an offset that will be applied to the binary file [default: 0].
@@ -35,11 +38,12 @@ Options:
   --ascii                 Outputs the ascii binary format for use with the Digital circuit simulator.
   --hex                   Outputs raw binary in Verilog HEX format.
   --length=<length>       Length of hex output in bytes (one instruction word is 2 bytes!) [default: 4096].
+  --mscr=<mscrcmd>        Specify a command line to use to compile .mscr files before testing them with autotest. Leave empty to skip .mscr files.
   -h --help               Show this screen.
   --version               Show version.`
 
 	// Parse command line arguments
-	args, _ := docopt.ParseArgs(usage, os.Args[1:], "MCPC Assembly Toolchain - Version 0.1")
+	args, _ := docopt.ParseArgs(usage, os.Args[1:], "MCPC Assembler Toolchain - Version 0.4")
 
 	// Choose function to call based on arguments
 	if argBool(args, "assemble") {
@@ -71,6 +75,11 @@ Options:
 
 		// Interpret/Debug
 		interpreter.Interpret(argStringWithDefault(args, "<file>", argStringWithDefault(args, "<port>", "")), argBool(args, "attach"), argInt(args, "--max-steps"), argStringWithDefault(args, "--symbols", ""))
+
+	} else if argBool(args, "autotest") {
+
+		// Run autotests
+		autotest.RunAutotests(argString(args, "<directory>"), argStringWithDefault(args, "--mscr", ""), argStrings(args, "--library"))
 
 	} else {
 		log.Println("Invalid command, use -h for help")

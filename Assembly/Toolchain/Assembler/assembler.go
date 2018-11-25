@@ -35,7 +35,7 @@ type command struct {
 // tokenLine represents a single line of assembler code
 type tokenLine struct {
 	raw     string
-	label   string
+	label   []string
 	command string
 	args    []string
 }
@@ -106,9 +106,7 @@ func Compile(file string, offset int, libraries []string, autoJump bool) ([]byte
 						replacementTokens := tokenize(strings.NewReader(rawLibReplacement))
 
 						// Handle labels
-						if token.label != "" {
-							replacementTokens[0].label = token.label
-						}
+						replacementTokens[0].label = token.label
 
 						// Perform insert
 
@@ -138,10 +136,12 @@ func Compile(file string, offset int, libraries []string, autoJump bool) ([]byte
 	// Parse labels
 	labelMap := make(map[string]uint16)
 	for labelAddr, token := range tokens {
-		if token.label != "" {
-			labelMap[token.label] = uint16(labelAddr)
-			fmt.Println(" > Label " + token.label + " located at 0x" + strconv.FormatInt(int64(labelMap[token.label]), 16))
-			sym = append(sym, []byte(fmt.Sprintf("%04x=%s;", labelMap[token.label], token.label))...)
+		for _, lbl := range token.label {
+			labelMap[lbl] = uint16(labelAddr)
+			fmt.Println(" > Label " + lbl + " located at 0x" + strconv.FormatInt(int64(labelMap[lbl]), 16))
+
+			// Add to symbol map
+			sym = append(sym, []byte(fmt.Sprintf("%04x=%s;", labelMap[lbl], lbl))...)
 		}
 	}
 
@@ -161,7 +161,7 @@ func Compile(file string, offset int, libraries []string, autoJump bool) ([]byte
 		nullCommand := &tokenLine{
 			raw:     "0x0",
 			command: "RAW",
-			label:   "",
+			label:   []string{},
 			args:    make([]string, 0),
 		}
 		offsetLines := make([]*tokenLine, offset)
@@ -176,19 +176,19 @@ func Compile(file string, offset int, libraries []string, autoJump bool) ([]byte
 		tokens[0] = &tokenLine{
 			raw:     "SET SCR1",
 			command: "SET",
-			label:   "",
+			label:   []string{},
 			args:    []string{"SCR1"},
 		}
 		tokens[1] = &tokenLine{
 			raw:     "0x" + strconv.FormatInt(int64(offset), 16),
 			command: "RAW",
-			label:   "",
+			label:   []string{},
 			args:    make([]string, 0),
 		}
 		tokens[2] = &tokenLine{
 			raw:     "MOV SCR1 PC",
 			command: "MOV",
-			label:   "",
+			label:   []string{},
 			args:    []string{"SCR1", "PC"},
 		}
 	}
@@ -256,9 +256,18 @@ func Compile(file string, offset int, libraries []string, autoJump bool) ([]byte
 		}
 	}
 
+	// Append HALT at end if not already present
+	if len(output) > 0 && (output[len(output)-1] != 0 || output[len(output)-2] != 0) {
+		output = append(output, []byte{0x0, 0x0}...)
+	}
+
 	log.Println("Compilation complete, " + strconv.Itoa(len(output)) + " bytes generated!")
 
-	return output, sym[:len(sym)-1]
+	if len(sym) > 0 {
+		return output, sym[:len(sym)-1]
+	} else {
+		return output, make([]byte, 0)
+	}
 }
 
 // Transforms an ALU command token to assembly
@@ -347,12 +356,15 @@ func ParseRegister(reg string) byte {
 }
 
 func loadLibrary(path string) library {
+	for strings.HasPrefix(path, "--library=") {
+		path = path[len("--library="):] // Weirdness on parameter passing sometimes
+	}
+
 	log.Println("Loading library: " + path)
 
 	file, err := os.Open(path)
 	if err != nil {
-		log.Println("ERROR: Can't read input file.")
-		os.Exit(1)
+		log.Fatalln("ERROR: Can't read library file: " + err.Error())
 	}
 	defer file.Close()
 
@@ -439,7 +451,7 @@ var longestDeclaration int
 func tokenize(reader io.Reader) []*tokenLine {
 	var tokens []*tokenLine
 
-	var nextLabel *string
+	nextLabel := []string{}
 
 	scanner := bufio.NewScanner(reader)
 	for scanner.Scan() {
@@ -492,33 +504,32 @@ func tokenize(reader io.Reader) []*tokenLine {
 
 		// Label detection
 		isLabel := tspaced[0][0] == '.'
-		label := ""
+		label := []string{}
 
 		if isLabel {
-			label = tspaced[0]
-
-			if nextLabel != nil {
-				log.Fatalln("ERROR: Cannot set two labels for one command (__LABEL_SET)") // TODO: Make work
-			}
+			lineLabel := tspaced[0]
 
 			if len(tspaced) == 1 {
 				// Label only, treat as command
 				tokens = append(tokens, &tokenLine{
-					raw:     label,
-					label:   "",
+					raw:     lineLabel,
+					label:   []string{},
 					command: "RAW",
 					args:    make([]string, 0),
 				})
+				nextLabel = []string{}
 				continue
 			} else if tspaced[1] == "__LABEL_SET" {
-				nextLabel = &label
+				nextLabel = append(nextLabel, lineLabel)
 				continue
 			}
 
 			tspaced = tspaced[1:]
+			label = append(nextLabel, lineLabel)
+			nextLabel = []string{}
 		} else if nextLabel != nil {
-			label = *nextLabel
-			nextLabel = nil
+			label = nextLabel
+			nextLabel = []string{}
 		}
 
 		// Check for raw instructions

@@ -1,0 +1,9 @@
+;autotest reg=0 val=42;
+
+func var main(argc, argp) {
+    return getValue();
+}
+
+func var getValue() {
+    return 42;
+}
