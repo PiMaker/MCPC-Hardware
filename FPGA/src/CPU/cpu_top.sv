@@ -166,6 +166,7 @@ module cpu(
 
 		.cpuClk(clk),
 		.cpuState(cpu_state),
+		.halted(halted),
 
 		.instructionOverride(debugInsOvrData),
 		.instructionOverrideEn(debugInsOvr),

@@ -2,6 +2,7 @@ package interpreter
 
 import (
 	"errors"
+	"strconv"
 
 	"github.com/tarm/serial"
 )
@@ -13,6 +14,7 @@ const DEBUGGER_OPCODE_HI uint8 = 0x4
 const DEBUGGER_OPCODE_LO uint8 = 0x8
 const DEBUGGER_OPCODE_STEP uint8 = 0xC
 const DEBUGGER_OPCODE_DUMP_ROM uint8 = 0xE
+const DEBUGGER_OPCODE_DUMP_REGS uint8 = 0xA
 
 // Device represents a physical MCPC device attached via a serial port
 type Device struct {
@@ -139,7 +141,6 @@ func (device *Device) setRegister(reg, data uint8) error {
 
 func (device *Device) step() error {
 	n, err := device.port.Write([]byte{DEBUGGER_OPCODE_STEP})
-
 	if err != nil {
 		return err
 	}
@@ -175,5 +176,38 @@ func (device *Device) getMCPCReg(reg uint8) (uint16, error) {
 		return 0, err
 	}
 	regVal := uint16(low) | (uint16(high) << 8)
+	err = device.setRegister(0, 1)
+	if err != nil {
+		return 0, err
+	}
 	return regVal, nil
+}
+
+func (device *Device) getMCPCRegDump() ([]uint16, error) {
+	n, err := device.port.Write([]byte{DEBUGGER_OPCODE_DUMP_REGS})
+	if err != nil {
+		return nil, err
+	}
+
+	if n <= 0 {
+		return nil, errors.New("No bytes have been written")
+	}
+
+	dump := make([]uint16, 16)
+	rawDump := make([]byte, 32)
+
+	n, err = device.port.Read(rawDump)
+	if err != nil {
+		return nil, err
+	}
+
+	if n != len(rawDump) {
+		return nil, errors.New("Regdump: Wrong amount of bytes read: " + strconv.Itoa(n))
+	}
+
+	for i := 0; i < 16; i++ {
+		dump[i] = uint16(rawDump[i*2]) | (uint16(rawDump[i*2+1]) << 8)
+	}
+
+	return dump, nil
 }

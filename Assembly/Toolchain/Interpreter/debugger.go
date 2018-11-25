@@ -43,7 +43,7 @@ func Interpret(file string, attach bool, maxSteps int, symbolOverride string) {
 		handleError(err)
 
 		log.Println("Waiting for reset...")
-		time.Sleep(time.Millisecond * 100)
+		time.Sleep(time.Millisecond * 150)
 
 		log.Println("Sanity checking")
 
@@ -359,6 +359,25 @@ func Interpret(file string, attach bool, maxSteps int, symbolOverride string) {
 				if err != nil {
 					messageBox("VM Error", "A VM error occured during the step: "+err.Error(), app, modal, root)
 				}
+
+				// Compare with device if running in attached mode
+				if attach {
+					handleError(dev.step())
+					different, diff, err := vm.compareRegistersWithDevice(dev)
+					handleError(err)
+					if different {
+						toShow := "Difference in device registers found:"
+
+						for _, d := range diff {
+							toShow += " [" + d + "]"
+						}
+
+						toShow += " - State is now invalid"
+
+						messageBox("Device inconsistency", toShow, app, modal, root)
+					}
+				}
+
 			case "run", "runfor":
 				// Run until BRK, timeout or match
 				stateView.SetText(fmt.Sprintf("State: Running\nPC: -"))
@@ -398,6 +417,27 @@ func Interpret(file string, attach bool, maxSteps int, symbolOverride string) {
 					if termout != "" {
 						terminalText += termout
 					}
+
+					// Compare with device if running in attached mode
+					if attach {
+						handleError(dev.step())
+						different, diff, err := vm.compareRegistersWithDevice(dev)
+						handleError(err)
+						if different {
+							toShow := "Difference in device registers found:"
+
+							for _, d := range diff {
+								toShow += " [" + d + "]"
+							}
+
+							toShow += " - State is now invalid"
+
+							messageBox("Device inconsistency", toShow, app, modal, root)
+
+							break
+						}
+					}
+
 					if (match == -1 && brk && split[0] == "run") || int(vm.Registers.PC.Value) == match {
 						break
 					}
