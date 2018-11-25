@@ -276,7 +276,7 @@ func getFirstSet(val uint16) byte {
 }
 
 func (vm *VM) registerFromNumber(regNum uint16) *Register {
-	return getReg(vm, regNum, 0xFFFF)
+	return GetReg(vm, regNum, 0xFFFF)
 }
 
 func (vm *VM) compareRegistersWithDevice(dev *Device) (different bool, differences []string, err error) {
