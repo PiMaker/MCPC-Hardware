@@ -1,0 +1,15 @@
+;autotest reg=0 val=0xFFBD;
+
+func var main(argc, argp) {
+    var x = 0x44;
+    
+    if [x > 0x43] {
+        x = [x - 1];
+    }
+
+    if [x <= 0x43] {
+        x = [x - 1];
+    }
+
+    return [~x];
+}

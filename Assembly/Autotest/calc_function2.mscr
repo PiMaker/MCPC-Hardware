@@ -1,0 +1,21 @@
+;autotest reg=0 val=82;
+
+func var main(argc, argp) {
+    argc = getValue(); // 42
+    argc = [argc + (2 * sub(5, 2))]; // 48
+    var retval = [sum(argc, sub(30, 10), 44) - 30]; // 48 + 34 = 82
+    return retval;
+}
+
+func var getValue() {
+    return 42;
+}
+
+func var sum(a, b, c) {
+    return [a + b + c];
+}
+
+func var sub(a, b) {
+    var x = [a - b];
+    return x;
+}

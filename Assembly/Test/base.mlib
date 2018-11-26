@@ -1,5 +1,6 @@
 - NOT from.reg to.reg =             XOR :from :to -1 - bitwise negate
 - COM from.reg to.reg =             NOT :from :to - Alias for NOT
+- LT a.reg out.reg b.reg =          GT :b :out :a - Reverse GT for convenience
 - SETREG to.reg val.lit =           SET :to, :val - Sets a register to a value in a single line of assembler code
 - NEG from.reg to.reg =             NOT :from :to, ADD :to :to 1 - negates a 2's complement number, also converts from and to 2's complement
 - SUB val.reg out.reg minus.reg =   NEG :minus SCR1, ADD :val :out SCR1 - Subtracts minus.reg from value.reg and stores result in out.reg (2's complement arithmetic)
@@ -20,3 +21,6 @@
 - PUSH val.reg =                    DEC SP, STOR :val SP - Stack push
 - POP val.reg =                     LOAD :val SP, INC SP - Stack pop
 - FAULT num.lit =                   SETREG SCR1 0xFA00, SETREG H :num, OR H H SCR1, HALT - Faults and halts the CPU displaying an error code on the hex display (H)
+- GTOE a.reg out.reg b.reg =        GT :a SCR1 :b, EQ :a SCR2 :b, OR SCR1 :out SCR2 - Greater than or equal
+- LTOE a.reg out.reg b.reg =        GTOE :b :out :a - Lower than or equal
+- NEQ a.reg out.reg b.reg =         EQ :a :out :b, NOT :out :out - Not equal

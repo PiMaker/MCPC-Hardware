@@ -1,0 +1,13 @@
+;autotest reg=0 val=10;
+
+func var main(argc, argp) {
+    return rec(0, 10);
+}
+
+func var rec(counter, max) {
+    if [counter == max] {
+        return max;
+    }
+
+    return rec([counter + 1], max);
+}

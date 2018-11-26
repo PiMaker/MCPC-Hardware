@@ -1,0 +1,20 @@
+;autotest reg=0 val=45;
+
+func var main(argc, argp) {
+    var x = 40;
+
+    _reg_assign(0, x);
+    _asm {
+        INC A
+        INC A
+        INC A
+    }
+
+    _reg_assign(2, x);
+    _asm {
+        INC C
+        INC C
+    }
+
+    return x;
+}
