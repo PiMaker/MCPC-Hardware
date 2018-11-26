@@ -5,6 +5,7 @@
 `define DEBUGGER_OPCODE_LO 4'h8
 `define DEBUGGER_OPCODE_STEP 4'hC
 `define DEBUGGER_OPCODE_DUMP_ROM 4'hE
+`define DEBUGGER_OPCODE_DUMP_REGS 4'hA
 
 `define BOOTLOADER_ROM_SIZE 2047
 
@@ -19,6 +20,7 @@ module cpu_debugger(
 
     output wire cpuClk,
     input wire [7:0] cpuState,
+    input wire halted,
 
     input wire [15:0] regRead,
     output reg [3:0] regAddrOvr,
@@ -77,16 +79,20 @@ module cpu_debugger(
     reg dumpingHiBits = 1'h0;
     reg [15:0] currentDumpAddr = 16'h0;
 
+    reg dumpingRegs = 1'h0;
+    reg [3:0] currentDumpReg = 4'h0;
+
     assign rom_addr = currentDumpAddr;
 
     assign debugEn = dbgRegs[0][0];
     assign cpuClk = debugEn && ~rst ? dbgClk : clk;
 
     assign dbgDbg[12] = dumpingRom;
+    assign dbgDbg[13] = dumpingRegs;
 
     // Debug Register Assignments
-    assign regAddrOvrEn =          debugEn && dbgRegs[0][1];
-    assign regAddrOvr =            dbgRegs[1][3:0];
+    assign regAddrOvrEn =          debugEn && (dbgRegs[0][1] || dumpingRegs);
+    assign regAddrOvr =            dumpingRegs ? currentDumpReg : dbgRegs[1][3:0];
     assign rstReq =                dbgRegs[0][2];
     assign instructionOverrideEn = dbgRegs[0][3];
     assign instructionOverride   = {dbgRegs[5], dbgRegs[4], dbgRegs[7], dbgRegs[6]};
@@ -94,14 +100,20 @@ module cpu_debugger(
     always_comb begin
         dbgRegs[8] <= regRead[7:0];
         dbgRegs[9] <= regRead[15:8];
+        dbgRegs[4'hF][0] <= halted;
     end
 
-    // Clocked debugger logic
+    // Internal states
     reg stepStarted;
     reg prevUartRdy = 1'b0;
+
     reg dumpStarted = 1'b0;
     reg [7:0] checksum = 8'h0;
     reg checksumWrite = 1'h0;
+
+    reg [3:0] resetHoldCounter = 4'h0;
+
+    // Clocked debugger logic
     always @(posedge clk50) begin
 
         if (dumpingRom) begin
@@ -146,6 +158,38 @@ module cpu_debugger(
                 uart_wr_en <= 1'b0;
             end
 
+        end else if (dumpingRegs) begin
+
+            // Register dump logic
+            if (~uart_tx_busy && ~dumpStarted) begin
+                dumpStarted <= 1'b1;
+
+                if (dumpingHiBits) begin
+                    uart_din = regRead[15:8];
+                end else begin
+                    uart_din = regRead[7:0];
+                end
+
+                if (dumpingHiBits) begin
+                    currentDumpReg = currentDumpReg + 4'h1;
+
+                    if (currentDumpReg == 0) begin
+                        dumpingRegs <= 1'h0;
+                    end
+                end
+
+                dumpingHiBits <= ~dumpingHiBits;
+                uart_wr_en <= 1'b1;
+
+            end else begin
+
+                if (uart_tx_busy) begin
+                    dumpStarted <= 1'b0;
+                end
+
+                uart_wr_en <= 1'b0;
+            end
+
         end else begin
 
             uart_din <= 8'hAB;
@@ -155,6 +199,7 @@ module cpu_debugger(
             uart_rdy_clr <= 1'b0;
             if (uart_rdy && ~prevUartRdy) begin
                 uart_rdy_clr <= 1'b1;
+                resetHoldCounter <= 4'h0;
 
                 dbgDbg[7:0] <= uart_dout;
 
@@ -193,6 +238,13 @@ module cpu_debugger(
                         checksumWrite <= 1'h0;
                         checksum <= 8'h0;
                     end
+
+                    `DEBUGGER_OPCODE_DUMP_REGS: begin
+                        dumpingRegs <= 1'h1;
+                        currentDumpReg <= 4'h0;
+                        dumpingHiBits <= 1'h0;
+                        dumpStarted <= 1'h0;
+                    end
                 endcase
             end else begin
                 // Reset logic
@@ -210,12 +262,25 @@ module cpu_debugger(
                     checksumWrite <= 1'h0;
                     checksum <= 8'h0;
 
-                    dbgRegs[0][2] <= 1'b0;
+                    if (dbgRegs[0][2]) begin
+                        // We triggered the reset ourselves, keep holding it for a while
+                        resetHoldCounter <= resetHoldCounter + 4'h1;
+                        
+                        if (resetHoldCounter == 4'hF) begin
+                            dbgRegs[0][2] <= 1'b0;
+                            resetHoldCounter <= 4'h0;
+                        end
+                    end else begin
+                        // Otherwise reset debugger state fully as well
+                        for (int i=0; i<8; i++) begin
+                            dbgRegs[i] <= 8'h0;
+                        end
+                    end
 
                 // Step logic
                 end else if (stepReq && ~stepDone) begin
 
-                    if (cpuState == 0 && ~stepStarted) begin
+                    if (halted || (cpuState == 0 && ~stepStarted)) begin
                         stepDone <= 1'h1;
                         stepReq <= 1'h0;
                     end

@@ -274,3 +274,27 @@ func getFirstSet(val uint16) byte {
 	}
 	return ret
 }
+
+func (vm *VM) registerFromNumber(regNum uint16) *Register {
+	return GetReg(vm, regNum, 0xFFFF)
+}
+
+func (vm *VM) compareRegistersWithDevice(dev *Device) (different bool, differences []string, err error) {
+	diff := make([]string, 0)
+
+	dump, err := dev.getMCPCRegDump()
+	if err != nil {
+		return false, nil, err
+	}
+
+	for reg := uint16(0); reg < 16; reg++ {
+		devReg := dump[reg]
+		vmReg := vm.registerFromNumber(reg)
+
+		if vmReg.Value != devReg {
+			diff = append(diff, fmt.Sprintf("Register %d: VM=0x%04x : Device=0x%04x", reg, vmReg.Value, devReg))
+		}
+	}
+
+	return len(diff) > 0, diff, nil
+}

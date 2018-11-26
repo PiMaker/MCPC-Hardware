@@ -148,6 +148,7 @@ Debug-Registers:
 = Readable:
 8b7-0: Low-bit content of currently selected CPU register
 9b7-0: High-bit content of currently selected CPU register
+Fb0: Halted
 
 
 
