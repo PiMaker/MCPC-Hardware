@@ -1,0 +1,11 @@
+- STOR_P data.reg addr.reg page.lit = SETPAGE :page, STOR :data :addr, STOR 0 SCR2 - Store data in RAM to specific page
+- STORL_P data.lit addr.reg page.lit = SETPAGE :page, STORL :data :addr, RSTPAGE
+- STORLA_P data.reg addr.lit page.lit = SETPAGE :page, STORLA :data :addr, RSTPAGE
+
+- LOAD_P data.reg addr.reg page.lit = SETPAGE :page, LOAD :data :addr, STOR 0 SCR2 - Retrieves data from SRAM (paged)
+- LOADL_P data.lit addr.reg page.lit = SETPAGE :page, LOADL :data :addr, RSTPAGE
+- LOADLA_P data.reg addr.lit page.lit = SETPAGE :page, LOADLA :data :addr, RSTPAGE
+
+- RSTPAGE = STORLA 0 0x8800
+- SETPAGE page.reg = SET SCR1, :page, STORLA SCR1 0x8800 - Set page address
+- GETPAGE result.reg = LOADLA :result 0x8800 - Get page address

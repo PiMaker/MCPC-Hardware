@@ -14,6 +14,13 @@ import (
 	"github.com/PiMaker/MCPC/Assembly/Toolchain/Interpreter"
 )
 
+const LicenseNotice string = `
+Copyright (C) 2018  Stefan Reiter (pimaker.at)
+This program comes with ABSOLUTELY NO WARRANTY.
+This is free software, and you are welcome to redistribute it
+under certain conditions.
+See https://github.com/PiMaker/mscr/blob/master/LICENSE for more.`
+
 func main() {
 	usage := `MCPC Toolchain (Assembler/Debugger/Test-runner).
 
@@ -35,7 +42,7 @@ Options:
   --symbols=<msym>        Path to .msym debug symbol file. "debug" mode has <file>.msym as default, attach mode requires manual specification if symbols are wanted.
   --offset=<offset>       Specifies an offset that will be applied to the binary file [default: 0].
   --enable-offset-jump    If enabled, a 'jmp' instruction will be inserted at the beginning, jumping to the offset position. If the offset is smaller than 3, this flag will be ignored.
-  --ascii                 Outputs the ascii binary format for use with the Digital circuit simulator.
+  --ascii                 Outputs the ascii binary format for use with the hneemann/Digital circuit simulator.
   --hex                   Outputs raw binary in Verilog HEX format.
   --length=<length>       Length of hex output in bytes (one instruction word is 2 bytes!) [default: 4096].
   --mscr=<mscrcmd>        Specify a command line to use to compile .mscr files before testing them with autotest. Leave empty to skip .mscr files.
@@ -43,7 +50,7 @@ Options:
   --version               Show version.`
 
 	// Parse command line arguments
-	args, _ := docopt.ParseArgs(usage, os.Args[1:], "MCPC Assembler Toolchain - Version 0.4")
+	args, _ := docopt.ParseArgs(usage, os.Args[1:], "MCPC Assembler Toolchain - Version 0.4\r\n"+LicenseNotice)
 
 	// Choose function to call based on arguments
 	if argBool(args, "assemble") {

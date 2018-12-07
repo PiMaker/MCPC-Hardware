@@ -103,6 +103,7 @@ func Compile(file string, offset int, libraries []string, autoJump bool) ([]byte
 				for _, r := range lib {
 					if r.capture.MatchString(token.raw) {
 						rawLibReplacement := r.capture.ReplaceAllString(token.raw, r.replacement)
+						//fmt.Println(rawLibReplacement)
 						replacementTokens := tokenize(strings.NewReader(rawLibReplacement))
 
 						// Handle labels
@@ -371,10 +372,16 @@ func loadLibrary(path string) library {
 	var lib library
 
 	scanner := bufio.NewScanner(file)
-	lineNum := 0
+	lineNum := 1
 	for scanner.Scan() {
 		// Parse each line
 		line := strings.TrimSpace(scanner.Text())
+
+		// Ignore empty lines
+		if len(line) == 0 {
+			continue
+		}
+
 		replaceeMatch := libraryReplaceeRegex.FindStringSubmatch(line)
 		if len(replaceeMatch) == 0 {
 			log.Fatalln("ERROR: Could not load library, parser error on line: " + strconv.Itoa(lineNum))

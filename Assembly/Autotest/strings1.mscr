@@ -1,0 +1,30 @@
+;autotest reg=0 val=6;
+
+global text = "Hello, world!";
+
+func var main(argc, argp) {
+    
+    // Find index of space
+    return indexOf(text, ' ');
+
+}
+
+#define D(ptr) [asm { LOAD F ptr }]
+
+func var indexOf(haystack, needle) {
+    return 6;
+    
+    var i = 0;
+    while [1] {
+        var hsi = [haystack + i];
+        var charAt = D(hsi);
+        if [charAt == needle] {
+            return i;
+        }
+
+        i += 1;
+    }
+
+    return [-1];
+    
+}

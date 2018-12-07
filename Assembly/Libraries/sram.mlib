@@ -1,0 +1,7 @@
+- STOR data.reg addr.reg = MEMW :addr :data - Stores data in SRAM
+- STORL data.lit addr.reg = SET SCR2, :data, STOR SCR2 :addr
+- STORLA data.reg addr.lit = SET SCR2, :addr, STOR :data SCR2
+
+- LOAD data.reg addr.reg = MEMR :addr :data - Retrieves data from SRAM
+- LOADL data.lit addr.reg = SET SCR2, :data, LOAD SCR2 :addr
+- LOADLA data.reg addr.lit = SET SCR2, :addr, LOAD :data SCR2

@@ -19,6 +19,7 @@ type VM struct {
 	SRAM      []uint16
 	EEPROM    []uint16
 	Halted    bool
+	SRAMPage  uint16
 }
 
 // Registers includes all registers of an MCPC instance
@@ -36,13 +37,22 @@ type Register struct {
 // MaxSRAMValue is the maximum address the SRAM can be accessed at
 const MaxSRAMValue uint16 = 0x7FFF
 
+// SRAMPageCount determines how many memory pages are available
+const SRAMPageCount uint = 16
+
+// SRAMPageBits is the bit count needed to represent SRAMPageCount
+const SRAMPageBits uint = 4
+
+// SRAMPageMask is a mask that can be applied to a 16 bit unsigned integer to make it safe to use as an SRAM page address
+const SRAMPageMask uint16 = 0x000F
+
 var sramWriteWaiting = false
 var sramWriteAddress uint16
 
 // NewVM creates a new MCPC virtual machine instance
 func NewVM(program []uint16) *VM {
 
-	sram := make([]uint16, MaxSRAMValue+1)
+	sram := make([]uint16, uint(MaxSRAMValue+1)<<SRAMPageBits)
 
 	regs := &Registers{
 		A:      &Register{Value: 0, Address: 0x0, Writeable: true},
@@ -68,6 +78,7 @@ func NewVM(program []uint16) *VM {
 		SRAM:      sram,
 		Registers: regs,
 		Halted:    false,
+		SRAMPage:  0,
 	}
 
 	return &vm
@@ -141,13 +152,15 @@ func (vm *VM) Step() (bool, string, error) {
 
 		if writeToReg.Writeable {
 			if (addrReg.Value & 0x8000) == 0 {
-				writeToReg.Value = vm.SRAM[addrReg.Value]
+				writeToReg.Value = vm.SRAM[uint(vm.SRAMPage&SRAMPageMask)<<16|uint(addrReg.Value)]
 			} else if addrReg.Value == 0x8000 {
 				writeToReg.Value = 0x8001
 			} else if addrReg.Value == 0x8065 {
 				writeToReg.Value = 0xE000
 			} else if addrReg.Value >= 0xD000 && addrReg.Value < 0xD800 {
 				writeToReg.Value = vm.EEPROM[addrReg.Value-0xD000]
+			} else if addrReg.Value == 0x8800 {
+				writeToReg.Value = vm.SRAMPage
 			} else {
 				// other CFGs return 0 (not implemented)
 				writeToReg.Value = 0
@@ -174,9 +187,12 @@ func (vm *VM) Step() (bool, string, error) {
 		dataReg := GetReg(vm, ins, regIf)
 
 		if (addrReg.Value & 0x8000) == 0 {
-			vm.SRAM[addrReg.Value] = dataReg.Value
+			vm.SRAM[uint(vm.SRAMPage&SRAMPageMask)<<16|uint(addrReg.Value)] = dataReg.Value
 		} else {
-			// ignore CFG writes for now
+			// CFG write, ignores unknown CFGs
+			if addrReg.Value == 0x8800 {
+				vm.SRAMPage = dataReg.Value
+			}
 		}
 
 	case 0x8, 0x9, 0xA, 0xB, 0xC, 0xD, 0xE, 0xF:
@@ -225,6 +241,7 @@ func (vm *VM) Step() (bool, string, error) {
 	return brk, termout, err
 }
 
+// GetReg extracts details about a register from an instruction in the context of a VM
 func GetReg(vm *VM, ins uint16, reg uint16) *Register {
 	addr := ins & reg
 	addr >>= getFirstSet(reg)

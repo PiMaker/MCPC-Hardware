@@ -1,0 +1,17 @@
+;autotest reg=0 val=0x20;
+
+func var main(argc, argp) {
+    var x = 10;
+    var addr = 0x552;
+
+    _reg_assign(3, addr);
+    _reg_assign(2, x);
+    _asm {
+        STOR_P C D 0x2
+        STORLA_P C 0x552 0x1
+        STORL_P 0x20 D 0x2
+        LOAD_P C D 0x2
+    }
+
+    return x;
+}
