@@ -12,13 +12,13 @@ func var main(argc, argp) {
 #define D(ptr) [asm { LOAD F ptr }]
 
 func var indexOf(haystack, needle) {
-    return 6;
+    //return 6;
     
     var i = 0;
     while [1] {
         var hsi = [haystack + i];
         var charAt = D(hsi);
-        if [charAt == needle] {
+        if [charAt == needle | charAt == 0] {
             return i;
         }
 
