@@ -1,0 +1,7 @@
+;autotest reg=0 val=10;
+
+global test = 20;
+
+func var main (argc, argp) {
+    return [test + (-10)];
+}

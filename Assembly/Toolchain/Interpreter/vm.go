@@ -158,6 +158,7 @@ func (vm *VM) Step() (bool, string, error) {
 			} else if addrReg.Value == 0x8065 {
 				writeToReg.Value = 0xE000
 			} else if addrReg.Value >= 0xD000 && addrReg.Value < 0xD800 {
+				//fmt.Printf("VM: Access to EEPROM (len=%d): [%d-0xD000=%d]\n", len(vm.EEPROM), addrReg.Value, addrReg.Value-0xD000)
 				writeToReg.Value = vm.EEPROM[addrReg.Value-0xD000]
 			} else if addrReg.Value == 0x8800 {
 				writeToReg.Value = vm.SRAMPage

@@ -253,7 +253,7 @@ func Compile(file string, offset int, libraries []string, autoJump bool) ([]byte
 			break
 
 		default:
-			log.Println("WARNING: Invalid instruction encountered: \"" + tkn.command + "\" (in \"" + tkn.raw + "\"); Output will be 0x0 (HALT)")
+			log.Println("ERROR: Invalid instruction encountered: \"" + tkn.command + "\" (in \"" + tkn.raw + "\")")
 		}
 	}
 
@@ -350,9 +350,8 @@ func ParseRegister(reg string) byte {
 	case "BUS":
 		return 0xF
 	default:
-		log.Println("WARNING: Invalid register name encountered: " + reg + "; Output will be 0x8 (SCR1)")
-		// SCR1 is default
-		return 0x8
+		log.Fatalln("ERROR: Invalid register name encountered: " + reg)
+		return 0
 	}
 }
 
