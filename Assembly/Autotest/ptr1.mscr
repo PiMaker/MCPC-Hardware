@@ -1,0 +1,11 @@
+;autotest reg=0 val=20;
+
+func var main(argc, argp) {
+    var x = 10;
+    var x_ptr = [$$(x)];
+    if [$(x_ptr) == x] {
+        x = 20;
+    }
+
+    return x;
+}
