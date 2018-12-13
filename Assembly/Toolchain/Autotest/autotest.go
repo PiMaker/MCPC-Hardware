@@ -31,6 +31,7 @@ func RunAutotests(dir, mscr string, libraries []string) {
 
 	counter := -1
 	failedTotal := 0
+	perfTrace := 0
 	for _, f := range files {
 		if !f.IsDir() {
 			counter++
@@ -56,9 +57,13 @@ func RunAutotests(dir, mscr string, libraries []string) {
 					continue
 				}
 
-				state, testOut := performAutotest(tmpFile, counter, libraries)
+				state, testOut, inses := performAutotest(tmpFile, counter, libraries)
 				stateOut = state
 				output = fmt.Sprintf("%s, %s", output, testOut)
+
+				if inses > 0 {
+					perfTrace += inses
+				}
 
 				if state == aurora.Red("FAIL").String() { // WTF
 					failedTotal++
@@ -79,9 +84,13 @@ func RunAutotests(dir, mscr string, libraries []string) {
 			} else if strings.HasSuffix(f.Name(), ".ma") {
 				output = fmt.Sprintf("%s%s (Assembler", output, f.Name())
 
-				state, testOut := performAutotest(path.Join(dir, f.Name()), counter, libraries)
+				state, testOut, inses := performAutotest(path.Join(dir, f.Name()), counter, libraries)
 				stateOut = state
 				output = fmt.Sprintf("%s, %s", output, testOut)
+
+				if inses > 0 {
+					perfTrace += inses
+				}
 
 				if state == aurora.Red("FAIL").String() { // WTF 2
 					failedTotal++
@@ -102,6 +111,7 @@ func RunAutotests(dir, mscr string, libraries []string) {
 	log.Println(aurora.Gray(fmt.Sprintf("Tests total:  %d", counter+1)))
 	log.Println(aurora.Green(fmt.Sprintf("Tests passed: %d", (counter+1)-failedTotal)))
 	log.Println(aurora.Red(fmt.Sprintf("Tests failed: %d", failedTotal)))
+	log.Printf("Performance trace: %s\n", aurora.Bold(strconv.Itoa(perfTrace)))
 
 	if failedTotal == 0 {
 		os.Exit(0)
@@ -155,9 +165,10 @@ func callMscr(input, output, mscr string) (success bool, state, mscrLog string) 
 	return
 }
 
-func performAutotest(file string, counter int, libraries []string) (state, result string) {
+func performAutotest(file string, counter int, libraries []string) (state, result string, instructions int) {
 
 	result = ""
+	instructions = -1
 
 	fileContents, err := ioutil.ReadFile(file)
 
@@ -230,7 +241,8 @@ func performAutotest(file string, counter int, libraries []string) (state, resul
 	}
 
 	state = aurora.Green("PASS").String()
-	result = fmt.Sprintf("Expected value (%d) matched", expected)
+	result = fmt.Sprintf("Expected value (%d) matched, steps: %d", expected, steps)
+	instructions = steps
 
 	return
 }

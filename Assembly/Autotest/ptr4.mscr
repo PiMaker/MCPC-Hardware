@@ -1,0 +1,15 @@
+;autotest reg=0 val=20;
+
+func var main(argc, argp) {
+
+    // Test __SET_DIRECT implementation
+
+    var x = 10;
+    var x_ptr = [$$(x)];
+    x = 15;
+    if [$(x_ptr) == x] {
+        x = 20;
+    }
+
+    return x;
+}

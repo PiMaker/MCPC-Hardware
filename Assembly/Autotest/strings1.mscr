@@ -3,10 +3,8 @@
 global text = "Hello, world!";
 
 func var main(argc, argp) {
-    
-    // Find index of space
+    // Find index of letter 'w'
     return indexOf(text, 'w');
-
 }
 
 func var indexOf(haystack, needle) {
@@ -23,3 +21,4 @@ func var indexOf(haystack, needle) {
 
     return [-1];
 }
+
