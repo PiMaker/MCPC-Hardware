@@ -1,11 +1,11 @@
-;autotest reg=0 val=6;
+;autotest reg=0 val=7;
 
 global text = "Hello, world!";
 
 func var main(argc, argp) {
     
     // Find index of space
-    return indexOf(text, ' ');
+    return indexOf(text, 'w');
 
 }
 
