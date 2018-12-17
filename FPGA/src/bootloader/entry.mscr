@@ -1,0 +1,21 @@
+/*
+Main entry point for the MCPC bootloader.
+Function "var main(argc, argp)" will be called by the the bootloader preamble at h0.
+*/
+
+//#include "vga.mscr"
+
+global text = "Hello, world!";
+
+func var main(argc, argp) {
+    //vga_printString(text);
+    var fb_addr = 0xE000;
+    var char = 'M';
+    _reg_assign(0, char);
+    _reg_assign(1, fb_addr);
+    _asm {
+        // WTF
+        STOR A B
+    }
+    return 0x7353; // Esel-Lese ;)
+}

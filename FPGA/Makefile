@@ -5,6 +5,14 @@ help:
 	@echo "build:          Build .sof file with Quartus II"
 	@echo "program:        Program FPGA device via JTAG"
 	@echo "clean:          Clean unnecessary file and empty build/ directory"
+	@echo ""
+	@echo "bootloader:     Build bootloader source in src/bootloader/ directory and overwrite current bootloader.hex"
+
+
+bootloader: src/CPU/bootloader.hex
+	mscr src/bootloader/entry.mscr build/bootloader.ma --bootloader
+	mcpc assemble --library=../Assembly/Libraries/base.mlib --library=../Assembly/Libraries/sram.mlib --library=../Assembly/Libraries/sram_paged.mlib build/bootloader.ma src/CPU/bootloader.hex --hex --length 4096 --debug-symbols
+
 
 ###############################################################################
 #

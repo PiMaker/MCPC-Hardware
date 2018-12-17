@@ -134,7 +134,7 @@ counter counter_instance_debug_clock (
 	.out(debug_clock)
 );
 
-wire core_clock = SW[0] ? debug_clock[3] : manual_clock;
+wire core_clock = SW[0] ? debug_clock[2] : manual_clock;
 
 
 // Main CPU instance

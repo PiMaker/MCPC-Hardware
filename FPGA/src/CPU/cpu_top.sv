@@ -251,6 +251,8 @@ module cpu(
 			instruction_buffer <= 16'h0;
 			pc_inc <= 0;
 			pc_dbg_virt <= 0;
+			mem_addr_ext_kernel <= 0;
+			mem_addr_ext_user <= 0;
 
 			reset_instruction_tasks();
 
@@ -480,6 +482,12 @@ module cpu(
         end
     end
 
+	// Address extension registers
+	reg [4:0]
+		mem_addr_ext_user,
+		mem_addr_ext_kernel;
+
+	// Read (MEMR)
     reg [16:0] task_memr_state;
     reg task_memr_is_cfg;
 	task task_memr;
@@ -490,18 +498,22 @@ module cpu(
 
 		case (task_memr_state)
 			2'h0: begin
-				mem_readaddr = {9'h0,reg_data_read};
+				mem_readaddr = {mem_addr_ext_kernel,mem_addr_ext_user,reg_data_read[14:0]};
 				mem_read = task_memr_is_cfg ? 1'h0 : 1'h1;
+
+				// Wait for memory data to be ready before continuing
 				task_memr_state <= (mem_busy || mem_read_ready_stor || task_memr_is_cfg) ? 2'h1 : 2'h0;
-                //task_memr_state <= 2'h1;
 			end
             2'h1: begin
 				if (task_memr_is_cfg) begin
-					// CFG register read
+					// CFG register reads
 
-					// Bootloader ROM read
 					if (reg_data_read >= 16'hD000 && reg_data_read < (16'hD000 + `BOOTLOADER_ROM_SIZE)) begin
-						reg_data_write_inputs[`INS_MEMR] = {bootloader_rom[reg_data_read - 16'hD000], 1'b1};
+						reg_data_write_inputs[`INS_MEMR] <= {bootloader_rom[reg_data_read - 16'hD000], 1'b1}; // Bootloader ROM read
+					end else if (reg_data_read == 16'h8004) begin
+						reg_data_write_inputs[`INS_MEMR] <= {11'h0, mem_addr_ext_kernel, 1'b1};
+					end else if (reg_data_read == 16'h8800) begin
+						reg_data_write_inputs[`INS_MEMR] <= {11'h0, mem_addr_ext_user, 1'b1};
 					end
 
                     write_enable_register[`INS_MEMR] <= 1'h1;
@@ -521,6 +533,7 @@ module cpu(
 	end
 	endtask
 
+	// Write (MEMW)
 	reg [16:0] task_memw_state;
 	reg [15:0] task_memw_addr_buffer;
     reg task_memw_is_cfg;
@@ -538,15 +551,22 @@ module cpu(
             end
             2'h1: begin
                 if (task_memw_is_cfg) begin
+					// CFG register writes
                     if (task_memw_addr_buffer >= 16'hE000 && task_memw_addr_buffer <= 16'hF2BF) begin
+						// Framebuffer write
                         fb_addr = task_memw_addr_buffer - 16'hE000;
                         fb_data = reg_data_read[0 +: 8];
                         fb_we = 1'b1;
-                    end
+                    end else if (task_memw_addr_buffer == 16'h8004) begin
+						mem_addr_ext_kernel <= reg_data_read[4:0];
+					end else if (task_memw_addr_buffer == 16'h8800) begin
+						mem_addr_ext_user <= reg_data_read[4:0];
+					end
 
                     task_memw_state <= 2'h2;
                 end else begin
-                    mem_writeaddr = {9'h0,task_memw_addr_buffer};
+					// Direct RAM write
+                    mem_writeaddr = {mem_addr_ext_kernel,mem_addr_ext_user,task_memw_addr_buffer[14:0]};
                     mem_writedata = reg_data_read;
                     mem_write = 1'h1;
 
@@ -599,7 +619,7 @@ module cpu(
 
 	// DEBUG OUTPUT LOGIC
 	assign DEBUG_BUS = SW[9] ? reg_h_out : (SW[8] ? pc_out : (SW[7] ? instruction_buffer : (SW[6] ? mem_readdata :
-		dbgDbg
+		dbgDbg // Display debug stats if nothing else selected
 	)));
 
 	assign LEDR[0] = halted;

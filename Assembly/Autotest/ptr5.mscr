@@ -1,0 +1,16 @@
+;autotest reg=0 val=20;
+
+global x = 10;
+
+func var main(argc, argp) {
+
+    var addr = [$$(x)];
+    var val = 20;
+    _reg_assign(0, val);
+    _reg_assign(1, addr);
+    _asm {
+        STOR A B
+    }
+
+    return x;
+}

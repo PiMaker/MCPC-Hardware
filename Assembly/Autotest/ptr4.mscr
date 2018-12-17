@@ -7,7 +7,7 @@ func var main(argc, argp) {
     var x = 10;
     var x_ptr = [$$(x)];
     x = 15;
-    if [$(x_ptr) == x] {
+    if [$(x_ptr) == x & $(x_ptr) == 15] {
         x = 20;
     }
 
