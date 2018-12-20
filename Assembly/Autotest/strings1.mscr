@@ -21,4 +21,3 @@ func var indexOf(haystack, needle) {
 
     return [-1];
 }
-
