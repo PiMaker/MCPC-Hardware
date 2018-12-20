@@ -7,7 +7,7 @@ func var main(argc, argp) {
 
     setGlobal();
 
-    return [y - x];
+    return y - x;
 }
 
 func void setGlobal() {

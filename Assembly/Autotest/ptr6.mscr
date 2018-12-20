@@ -7,11 +7,11 @@ func var main(argc, argp) {
     // Test $$ (ptr-set) meta-function
     
     var y = 0x10;
-    var z = [$$(x)];
+    var z = $$(x);
     $$(z, 0x21);
-    z = [$$(y)];
+    z = $$(y);
     $$(z, 0x21);
 
-    return [x + y];
+    return x + y;
 
 }

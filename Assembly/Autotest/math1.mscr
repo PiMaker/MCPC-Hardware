@@ -2,6 +2,6 @@
 
 func var main(argc, argp) {
     var x = 43;
-    x = [x - 1];
+    x = x - 1;
     return x;
 }

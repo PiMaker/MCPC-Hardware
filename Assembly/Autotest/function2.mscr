@@ -7,9 +7,9 @@ func var main(argc, argp) {
 
     setGlobal(4, 5);
 
-    return [p1 - x];
+    return p1 - x;
 }
 
 func void setGlobal(p1, p2) {
-    x += [p2 - p1];
+    x += p2 - p1;
 }
