@@ -5,7 +5,7 @@ Function "var main(argc, argp)" will be called by the the bootloader preamble at
 
 //#include "vga.mscr"
 
-global text = "Hello, world!";
+//global text = "Hello, world!";
 
 func var main(argc, argp) {
     //vga_printString(text);

@@ -39,11 +39,15 @@ func Interpret(file string, attach bool, maxSteps int, symbolOverride string) {
 		handleError(err)
 
 		log.Println("Enabling debug mode and requesting reset")
+		err = dev.setRegister(0, 0)
+		handleError(err)
 		err = dev.setRegister(0, (1<<0)|(1<<2))
+		handleError(err)
+		err = dev.setRegister(0, (1 << 0))
 		handleError(err)
 
 		log.Println("Waiting for reset...")
-		time.Sleep(time.Millisecond * 150)
+		time.Sleep(time.Millisecond * 2000)
 
 		log.Println("Sanity checking")
 

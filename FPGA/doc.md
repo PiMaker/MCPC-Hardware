@@ -127,11 +127,13 @@ Command syntax:
  - bits 3-0: OP-code
 
 OP-codes:
- DEBUGGER_OPCODE_GET 4'h1  = Set read address (3 bit) and print contents of specified register
- DEBUGGER_OPCODE_SET 4'h2  = Set write address (3 bit)
- DEBUGGER_OPCODE_HI 4'h4   = Write data to high bits at write address
- DEBUGGER_OPCODE_LO 4'h8   = Write data to low bits at write address
- DEBUGGER_OPCODE_STEP 4'hC = Execute a single processor instruction and print FF when done
+ DEBUGGER_OPCODE_GET 4'h1       = Set read address (3 bit) and print contents of specified register
+ DEBUGGER_OPCODE_SET 4'h2       = Set write address (3 bit)
+ DEBUGGER_OPCODE_HI 4'h4        = Write data to high bits at write address
+ DEBUGGER_OPCODE_LO 4'h8        = Write data to low bits at write address
+ DEBUGGER_OPCODE_STEP 4'hC      = Execute a single processor instruction and print FF when done
+ DEBUGGER_OPCODE_DUMP_ROM 4'hE  = Dumps the entire bootloader ROM to serial
+ DEBUGGER_OPCODE_DUMP_REGS 4'hA = Dumps all 16 registers to serial
 
 Debug-Registers:
 = Writeable:
@@ -149,6 +151,8 @@ Debug-Registers:
 9b7-0: High-bit content of currently selected CPU register
 Fb0: Halted
 
+
+Known Issues: A program *starting* with a "SET" instruction can lead to issues in debugging mode.
 
 
 

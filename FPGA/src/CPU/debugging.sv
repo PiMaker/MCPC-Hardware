@@ -46,7 +46,7 @@ module cpu_debugger(
     reg uart_rdy_clr = 1'b0;
     wire uart_rdy, uart_tx_busy;
     uart uart_instance(
-        .rst(rst),
+        .rst(1'h0),
         .din(uart_din_rev),
 	    .wr_en(uart_wr_en),
 	    .clk_50m(clk50),
@@ -262,20 +262,12 @@ module cpu_debugger(
                     checksumWrite <= 1'h0;
                     checksum <= 8'h0;
 
-                    if (dbgRegs[0][2]) begin
-                        // We triggered the reset ourselves, keep holding it for a while
-                        resetHoldCounter <= resetHoldCounter + 4'h1;
-                        
-                        if (resetHoldCounter == 4'hF) begin
-                            dbgRegs[0][2] <= 1'b0;
-                            resetHoldCounter <= 4'h0;
-                        end
-                    end else begin
-                        // Otherwise reset debugger state fully as well
+                    // Reset debugger state if reset was not triggered by us
+                    /*if (~dbgRegs[0][2]) begin
                         for (int i=0; i<8; i++) begin
                             dbgRegs[i] <= 8'h0;
                         end
-                    end
+                    end*/
 
                 // Step logic
                 end else if (stepReq && ~stepDone) begin

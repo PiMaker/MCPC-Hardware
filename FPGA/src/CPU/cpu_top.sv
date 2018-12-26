@@ -497,14 +497,15 @@ module cpu(
         end
 
 		case (task_memr_state)
-			2'h0: begin
-				mem_readaddr = {mem_addr_ext_kernel,mem_addr_ext_user,reg_data_read[14:0]};
-				mem_read = task_memr_is_cfg ? 1'h0 : 1'h1;
-
-				// Wait for memory data to be ready before continuing
-				task_memr_state <= (mem_busy || mem_read_ready_stor || task_memr_is_cfg) ? 2'h1 : 2'h0;
+			0: begin
+				mem_readaddr <= {mem_addr_ext_kernel,mem_addr_ext_user,reg_data_read[14:0]};
+				task_memr_state <= task_memr_is_cfg ? 2 : 1;
 			end
-            2'h1: begin
+			1: begin
+				mem_read <= 1'h1;
+				task_memr_state <= 2;
+			end
+            2: begin
 				if (task_memr_is_cfg) begin
 					// CFG register reads
 
@@ -516,6 +517,7 @@ module cpu(
 						reg_data_write_inputs[`INS_MEMR] <= {11'h0, mem_addr_ext_user, 1'b1};
 					end
 
+					mem_read <= 1'h0;
                     write_enable_register[`INS_MEMR] <= 1'h1;
                     continue_execution_register[`INS_MEMR] <= 1'h1;
 
@@ -523,33 +525,33 @@ module cpu(
 					// Direct RAM read
                     mem_read_ready_stor_reset <= 1'b1;
                     reg_data_write_inputs[`INS_MEMR] = {mem_readdata, 1'b1};
+
+					mem_read <= 1'h0;
+
                     write_enable_register[`INS_MEMR] <= 1'h1;
                     continue_execution_register[`INS_MEMR] <= 1'h1;
                 end
-
-                mem_read <= 1'h0;
             end
 		endcase
 	end
 	endtask
 
 	// Write (MEMW)
+	`define MEMW_DELAY 3
 	reg [16:0] task_memw_state;
 	reg [15:0] task_memw_addr_buffer;
     reg task_memw_is_cfg;
 	task task_memw;
 	begin
-        if (reg_data_read[15] || task_memw_is_cfg) begin
-            task_memw_is_cfg <= 1'b1;
-        end
+        task_memw_is_cfg = task_memw_addr_buffer[15] || task_memw_is_cfg;
 
         case (task_memw_state)
-            2'h0: begin
+            0: begin
                 task_memw_addr_buffer <= reg_data_read;
                 reg_if_en <= 1'b1;
-                task_memw_state <= 2'h1;
+                task_memw_state <= 1;
             end
-            2'h1: begin
+            1: begin
                 if (task_memw_is_cfg) begin
 					// CFG register writes
                     if (task_memw_addr_buffer >= 16'hE000 && task_memw_addr_buffer <= 16'hF2BF) begin
@@ -563,22 +565,24 @@ module cpu(
 						mem_addr_ext_user <= reg_data_read[4:0];
 					end
 
-                    task_memw_state <= 2'h2;
+					task_memw_state <= `MEMW_DELAY;
                 end else begin
 					// Direct RAM write
                     mem_writeaddr = {mem_addr_ext_kernel,mem_addr_ext_user,task_memw_addr_buffer[14:0]};
                     mem_writedata = reg_data_read;
-                    mem_write = 1'h1;
+                    mem_write <= 1'h1;
 
-                    task_memw_state <= 2'h2;
+					task_memw_state <= 2;
                 end
             end
-            2'h2: begin
+            `MEMW_DELAY: begin
                 mem_write <= 1'b0;
                 fb_we <= 1'b0;
                 continue_execution_register[`INS_MEMW] <= 1'h1;
-                task_memw_state <= 2'h0;
             end
+			default: begin
+				task_memw_state <= task_memw_state + 1;
+			end
         endcase
 	end
 	endtask
