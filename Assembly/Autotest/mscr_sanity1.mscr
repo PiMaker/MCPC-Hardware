@@ -1,0 +1,5 @@
+;autotest reg=0 val=0x42;
+
+func var main(argc, argp) {
+    return 0x42;
+}

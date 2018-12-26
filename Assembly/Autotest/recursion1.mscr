@@ -5,9 +5,9 @@ func var main(argc, argp) {
 }
 
 func var rec(counter, max) {
-    if [counter == max] {
+    if counter == max {
         return max;
     }
 
-    return rec([counter + 1], max);
+    return rec(counter + 1, max);
 }

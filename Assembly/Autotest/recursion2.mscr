@@ -7,20 +7,20 @@ func var main(argc, argp)
 
 func var fib(n)
 {
-    if [n == 0] { return 0; }
-    if [n == 1] { return 1; }
+    if n == 0 { return 0; }
+    if n == 1 { return 1; }
 
     return fibRec(1, 0, n);
 }
 
 func var fibRec(a, b, counter)
 {
-    if [counter == 0]
+    if counter == 0
     {
         return a;
     }
     else
     {
-        return fibRec([a+b], a, [counter-1]);
+        return fibRec(a+b, a, counter-1);
     }
 }

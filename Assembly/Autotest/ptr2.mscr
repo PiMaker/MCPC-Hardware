@@ -3,6 +3,6 @@
 global y = 20;
 
 func var main(argc, argp) {
-    var addr = [$$(y)];
-    return [$(addr)];
+    var addr = $$(y);
+    return $(addr);
 }

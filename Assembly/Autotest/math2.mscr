@@ -3,7 +3,7 @@
 func var main(argc, argp) {
     var x = 10;
     var y = 20;
-    var z = [x + y*2];
+    var z = x + y*2;
     y = z;
     x = y;
     return x;

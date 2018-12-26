@@ -5,5 +5,5 @@ global y;
 
 func var main(argc, argp) {
     y = 43;
-    return [y - x];
+    return y - x;
 }

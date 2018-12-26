@@ -2,8 +2,8 @@
 
 func var main(argc, argp) {
     argc = getValue(); // 42
-    argc = [argc + (2 * sub(5, 2))]; // 48
-    var retval = [sum(argc, sub(30, 10), 44) - 30]; // 48 + 34 = 82
+    argc =argc + (2 * sub(5, 2)); // 48
+    var retval = sum(argc, sub(30, 10), 44) -30; // 48 + 34 = 82
     return retval;
 }
 
@@ -12,10 +12,10 @@ func var getValue() {
 }
 
 func var sum(a, b, c) {
-    return [a + b + c];
+    return a + b + c;
 }
 
 func var sub(a, b) {
-    var x = [a - b];
+    var x = a - b;
     return x;
 }

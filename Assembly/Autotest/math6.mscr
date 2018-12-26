@@ -3,5 +3,5 @@
 global test = 20;
 
 func var main (argc, argp) {
-    return [test * (-2)]; // Expected: -40 two's complement
+    return test * (-2); // Expected: -40 two's complement
 }
