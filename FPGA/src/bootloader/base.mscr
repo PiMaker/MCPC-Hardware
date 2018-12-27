@@ -1,0 +1,13 @@
+/*
+Provides general helper functions and macros.
+*/
+
+#ifndef LIB_BASE
+#define LIB_BASE
+
+#define true 0xFFFF
+#define false 0x0
+#define True true
+#define False false
+
+#endif

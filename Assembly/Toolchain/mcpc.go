@@ -165,8 +165,7 @@ func toHEXFormat(data []byte, length int) []byte {
 	log.Printf("Converting to Verilog hex, padding to: %d\n", length)
 
 	if len(data) >= length {
-		log.Printf("WARNING: No padding applied, padding length less than generated assembly.")
-		return data
+		log.Fatalf("ERROR: No padding applied, padding length less than generated assembly.")
 	}
 
 	buf := make([]byte, length)
