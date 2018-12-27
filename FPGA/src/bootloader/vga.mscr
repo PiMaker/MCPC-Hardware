@@ -16,26 +16,23 @@ global vga_buf_pos_y = 0;
 // Prints a single character and advances the buffer position by one
 func var vga_printChar(char) {
     // Set framebuffer at buffer location to given character
-    //$$([vga_buf_pos_y*VGA_DIM_Y + vga_buf_pos_x], char);
-    var fb_addr = [0xE000];
-    _reg_assign(2, char);
-    _reg_assign(3, fb_addr);
-    _asm {
-        STOR C D
-    }
+    $$(
+        0xE000 + (vga_buf_pos_y * VGA_DIM_Y) + vga_buf_pos_x,
+        char
+    );
 
     // Advance buffer
-    /*vga_buf_pos_x += 1;
+    vga_buf_pos_x += 1;
 
-    if [vga_buf_pos_x == VGA_DIM_X] {
+    if vga_buf_pos_x == VGA_DIM_X {
         vga_buf_pos_x = 0;
         vga_buf_pos_y += 1;
 
-        if [vga_buf_pos_y == VGA_DIM_Y] {
+        if vga_buf_pos_y == VGA_DIM_Y {
             // Console shift logic
             // TODO
         }
-    }*/
+    }
 
     return 1;
 }
@@ -43,10 +40,10 @@ func var vga_printChar(char) {
 // Prints an entire null-terminated string
 func void vga_printString(str) {
     var i = 0;
-    var charAt = [$(str)];
-    while [charAt != 0] {
+    var charAt = $(str);
+    while charAt != 0 {
         vga_printChar(charAt);
         i += 1;
-        charAt = [$(str + i)];
+        charAt = $(str + i);
     }
 }

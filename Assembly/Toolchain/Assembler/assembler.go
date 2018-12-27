@@ -275,6 +275,10 @@ func Compile(file string, offset int, libraries []string, autoJump bool) ([]byte
 func aluCmd(output *[]byte, i int, tkn *tokenLine) {
 	out := *output
 
+	if len(tkn.args) != 3 {
+		log.Fatalf("ERROR: ALU instructions require 3 parameters (found: %s)\n", tkn.raw)
+	}
+
 	var ins byte
 	switch tkn.command {
 	case "AND":
