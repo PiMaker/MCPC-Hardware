@@ -1,10 +1,10 @@
-;autotest reg=0 val=7;
+;autotest reg=0 val=6;
 
-global text = "Hello, world!";
+global text = "Hello,\nworld!";
 
 func var main(argc, argp) {
-    // Find index of letter 'w'
-    return indexOf(text, 'w');
+    // Find index of newline
+    return indexOf(text, 0xA);
 }
 
 func var indexOf(haystack, needle) {

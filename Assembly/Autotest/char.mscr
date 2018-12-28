@@ -1,0 +1,5 @@
+;autotest reg=0 val=0xFFFF;
+
+func var main(argc, argp) {
+    return '\t' == 0x9;
+}
