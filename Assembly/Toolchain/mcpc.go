@@ -15,7 +15,7 @@ import (
 )
 
 const LicenseNotice string = `
-Copyright (C) 2018  Stefan Reiter (pimaker.at)
+Copyright (C) 2019  Stefan Reiter (pimaker.at)
 This program comes with ABSOLUTELY NO WARRANTY.
 This is free software, and you are welcome to redistribute it
 under certain conditions.
@@ -50,7 +50,7 @@ Options:
   --version               Show version.`
 
 	// Parse command line arguments
-	args, _ := docopt.ParseArgs(usage, os.Args[1:], "MCPC Assembler Toolchain - Version 0.4\r\n"+LicenseNotice)
+	args, _ := docopt.ParseArgs(usage, os.Args[1:], "MCPC Assembler Toolchain - Version 0.5\r\n"+LicenseNotice)
 
 	// Choose function to call based on arguments
 	if argBool(args, "assemble") {

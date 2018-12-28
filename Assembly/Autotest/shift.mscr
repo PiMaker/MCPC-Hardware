@@ -1,0 +1,11 @@
+;autotest reg=0 val=0xCDAB;
+
+func var main(argc, argp) {
+    var orig = 0xABCD;
+    var temp = orig << 8;
+    var shiftBy = 4 + 4;
+    var mask = 0x0FF0 << 4;
+    var temp2 = (orig & mask) >> shiftBy;
+    var retval = temp ^ temp2;
+    return retval;
+}

@@ -24,3 +24,5 @@
 - GTOE a.reg out.reg b.reg =        GT :a SCR1 :b, EQ :a SCR2 :b, OR SCR1 :out SCR2 - Greater than or equal
 - LTOE a.reg out.reg b.reg =        GTOE :b :out :a - Lower than or equal
 - NEQ a.reg out.reg b.reg =         EQ :a :out :b, NOT :out :out - Not equal
+- SHFR val.reg out.reg by.reg =     SHFT :val :out :by - Logical shift right
+- SHFL val.reg out.reg by.reg =     SETREG SCR1 0xFF00, OR SCR1 SCR1 :by, SHFT :val :out SCR1 - Logical shift left
