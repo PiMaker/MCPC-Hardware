@@ -10,7 +10,7 @@ help:
 
 
 bootloader: src/CPU/bootloader.hex
-	mscr src/bootloader/entry.mscr build/bootloader.ma --bootloader
+	cd src/bootloader; mscr ./entry.mscr ../../build/bootloader.ma --bootloader
 	mcpc assemble --library=../Assembly/Libraries/base.mlib --library=../Assembly/Libraries/sram.mlib --library=../Assembly/Libraries/sram_paged.mlib build/bootloader.ma src/CPU/bootloader.hex --hex --length 4096 --debug-symbols
 
 

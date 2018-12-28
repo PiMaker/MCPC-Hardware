@@ -499,11 +499,8 @@ module cpu(
 		case (task_memr_state)
 			0: begin
 				mem_readaddr <= {mem_addr_ext_kernel,mem_addr_ext_user,reg_data_read[14:0]};
-				task_memr_state <= task_memr_is_cfg ? 2 : 1;
-			end
-			1: begin
 				mem_read <= 1'h1;
-				task_memr_state <= 2;
+				task_memr_state <= task_memr_is_cfg ? 2 : 1;
 			end
             2: begin
 				if (task_memr_is_cfg) begin
@@ -532,6 +529,9 @@ module cpu(
                     continue_execution_register[`INS_MEMR] <= 1'h1;
                 end
             end
+			default: begin
+				task_memr_state <= task_memr_state + 1;
+			end
 		endcase
 	end
 	endtask

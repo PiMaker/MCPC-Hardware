@@ -3,11 +3,15 @@ Main entry point for the MCPC bootloader.
 Function "var main(argc, argp)" will be called by the the bootloader preamble at h0.
 */
 
+#include "base.mscr"
 #include "vga.mscr"
 
 global text = "Hello, world!";
 
 func var main(argc, argp) {
     vga_printString(text);
-    return 0x7353; // Esel-Lese ;)
+    vga_printChar(0xA); // 0xA = Newline
+    vga_printString(text);
+
+    return 0x7353;
 }
