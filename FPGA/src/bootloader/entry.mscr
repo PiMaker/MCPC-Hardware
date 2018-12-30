@@ -9,8 +9,15 @@ Function "var main(argc, argp)" will be called by the the bootloader preamble at
 global text = "Hello, world!";
 
 func var main(argc, argp) {
+    _asm {
+        SET SCR1
+        .IRQ_HANDLER
+        STORLA SCR1 0x9000
+        STORLA 1 0x9001
+    }
+
     vga_printString(text);
-    vga_printChar(0xA); // 0xA = Newline
+    vga_printChar('\n');
     vga_printString(text);
 
     return 0x7353;

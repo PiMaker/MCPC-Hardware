@@ -75,7 +75,7 @@ wire RST;
 assign RST = (RST & core_clock) | (~PWR_RST[25]) | (~KEY[0]);
 
 
-// Blank HEX display
+// HEX display
 assign HEX5 = 8'hFF;
 assign HEX4 = 8'h7F;
 
@@ -139,6 +139,31 @@ counter counter_instance_debug_clock (
 wire core_clock = SW[0] ? debug_clock[2] : manual_clock;
 
 
+// Keyboard
+wire [7:0] ps2_data;
+wire ps2_data_en;
+
+PS2_Controller ps2_instance (
+	// Inputs
+	.CLOCK_50(MAX10_CLK1_50),
+	.reset(), // No reset, we like to live dangerously
+
+	.the_command(0'hFF),
+	.send_command(RST), // Reset triggers keyboard reset instead
+
+	// Bidirectionals
+	.PS2_CLK(ARDUINO_IO[6]),					// PS2 Clock
+ 	.PS2_DAT(ARDUINO_IO[7]),					// PS2 Data
+
+	// Outputs
+	.command_was_sent(),
+	.error_communication_timed_out(),
+
+	.received_data(debug_bus),
+	.received_data_en()			// If 1 - new data has been received
+);
+
+
 // Main CPU instance
 wire [15:0] debug_bus;
 wire debugEn;
@@ -160,6 +185,9 @@ cpu cpu_instance (
 	.DRAM_RAS_N(DRAM_RAS_N),
 	.DRAM_UDQM(DRAM_UDQM),
 	.DRAM_WE_N(DRAM_WE_N),
+
+	.ps2_data(ps2_data),
+	.ps2_data_en(ps2_data_en),
 	
 	.DEBUG_BUS(debug_bus),
 	.LEDR(LEDR),
@@ -176,5 +204,4 @@ cpu cpu_instance (
 	.GPIO(GPIO)
 );
 
-	
 endmodule

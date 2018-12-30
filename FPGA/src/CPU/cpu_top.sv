@@ -3,6 +3,7 @@
 `define CPU_STATE_WAITING 8'h01
 `define CPU_STATE_COMMIT 8'h02
 `define CPU_STATE_PC_INC 8'h03
+`define CPU_STATE_IRQ_ENTER 8'h04
 
 // Instructions
 `define INS_HALT 4'h0 // done
@@ -58,6 +59,9 @@ module cpu(
     output reg [11:0] fb_addr,
     output reg fb_we,
 
+	//////////// PS2 ////////////
+	input [7:0] ps2_data,
+	input ps2_data_en,
 
 	//////////// MISC ////////////
 	output			[15:0]		DEBUG_BUS,
@@ -182,6 +186,23 @@ module cpu(
         .dbgDbg(dbgDbg)
 	);
 
+
+	// INTERRUPTS
+	reg irq_en = 1'h0;
+	reg irq_rd_en;
+	wire irq_full, irq_empty;
+	wire [31:0] irq_dout;
+	irq_fifo u_irq_fifo(
+		.clock(clk50),
+		.reset(rst),
+		.wr(ps2_data_en),
+		.rd(ps2_rd_en),
+		.din({8'h0,ps2_data,16'h000A}),
+		.empty(irq_empty),
+		.full(irq_empty),
+		.dout(irq_dout)
+    );
+
 	
 	// CORE COMPONENTS
 	wire [3:0] reg_addr_read_wire;
@@ -190,22 +211,74 @@ module cpu(
 	wire pc_inc_real;
 	assign pc_inc_real = debugInsOvr ? 1'b0 : pc_inc;
 
+	reg in_irq_context = 1'h0;
+	reg in_irq_context_prev = 1'h0;
+
+	reg [15:0] irq_handler_addr;
+
 	core_registers  u_core_registers (
 		.clk                     ( clk            ),
 		.rst                     ( rst            ),
 		.addr_read               ( reg_addr_read_wire      ),
 		.addr_write              ( reg_addr_write     ),
 		.data_write              ( reg_data_write     ),
-		.write_enable            ( reg_we   ),
+		.write_enable            ( reg_we_irq_off   ),
 		.bus_datain              ( bus_datain     ),
 		.bus_fromin              ( bus_fromin     ),
-		.pc_inc                  ( pc_inc_real    ),
+		.pc_inc                  ( pc_inc_real_irq_off    ),
+		.pc_default              ( 16'h0 ),
 
-		.data_read               ( reg_data_read  ),
-		.pc_out                  ( pc_out         ),
+		.data_read               ( reg_data_read_irq_off  ),
+		.pc_out                  ( pc_out_irq_off         ),
 		.reg_h_out               ( reg_h_out      )
 	);
 
+	// In IRQ context we use seperate registers to avoid dirtying state
+	core_registers  u_core_registers_irq (
+		.clk                     ( clk            ),
+		.rst                     ( rst_irq_regs            ),
+		.addr_read               ( reg_addr_read_wire      ),
+		.addr_write              ( reg_addr_write     ),
+		.data_write              ( reg_data_write     ),
+		.write_enable            ( reg_we_irq_on   ),
+		.bus_datain              (      ),
+		.bus_fromin              (      ),
+		.pc_inc                  ( pc_inc_real_irq_on    ),
+		.pc_default              ( irq_handler_addr ),
+
+		.data_read               ( reg_data_read_irq_on  ),
+		.pc_out                  ( pc_out_irq_on         ),
+		.reg_h_out               ()
+	);
+
+	// IRQ and regular register combining
+	wire reg_we_irq_on, reg_we_irq_off;
+	wire pc_inc_real_irq_on, pc_inc_real_irq_off;
+	wire reg_data_read_irq_on, reg_data_read_irq_off;
+	wire pc_out_irq_on, pc_out_irq_off;
+
+	assign reg_we_irq_on = in_irq_context ? reg_we : 1'h0;
+	assign reg_we_irq_off = !in_irq_context ? reg_we : 1'h0;
+	assign pc_inc_real_irq_on = in_irq_context ? pc_inc_real : 1'h0;
+	assign pc_inc_real_irq_off = !in_irq_context ? pc_inc_real : 1'h0;
+
+	assign reg_data_read = in_irq_context ? reg_data_read_irq_on : reg_data_read_irq_off;
+	assign pc_out = in_irq_context ? pc_out_irq_on : pc_out_irq_off;
+
+	// Reset logic for IRQ registers
+	reg rst_irq_regs = 1'h0;
+	always @(posedge clk) begin
+		if (in_irq_context && !in_irq_context_prev) begin
+			// We entered irq context, reset irq registers
+			rst_irq_regs = 1'h1;
+		end else if (in_irq_context && in_irq_context_prev) begin
+			rst_irq_regs = 1'h0;
+		end
+
+		in_irq_context_prev = in_irq_context;
+	end
+
+	// Register data write arbitration
 	reg [16:0] reg_data_write_inputs [0:15];
 	RegisterDataArbitrator  u_RegisterDataArbitrator (
 		.clk                     ( clk             ),
@@ -512,6 +585,16 @@ module cpu(
 						reg_data_write_inputs[`INS_MEMR] <= {11'h0, mem_addr_ext_kernel, 1'b1};
 					end else if (reg_data_read == 16'h8800) begin
 						reg_data_write_inputs[`INS_MEMR] <= {11'h0, mem_addr_ext_user, 1'b1};
+					end else if (reg_data_read == 16'h9000) begin
+						reg_data_write_inputs[`INS_MEMR] <= irq_handler_addr;
+					end else if (reg_data_read == 16'h9001) begin
+						reg_data_write_inputs[`INS_MEMR] <= irq_en ? 16'hFFFF : 16'h0;
+					end else if (reg_data_read == 16'h9002) begin
+						reg_data_write_inputs[`INS_MEMR] <= in_irq_context ? 16'hFFFF : 16'h0;
+					end else if (reg_data_read == 16'h9010) begin
+						reg_data_write_inputs[`INS_MEMR] <= irq_dout[0+:16];
+					end else if (reg_data_read == 16'h9011) begin
+						reg_data_write_inputs[`INS_MEMR] <= irq_dout[16+:16];
 					end
 
 					mem_read <= 1'h0;
@@ -563,6 +646,14 @@ module cpu(
 						mem_addr_ext_kernel <= reg_data_read[4:0];
 					end else if (task_memw_addr_buffer == 16'h8800) begin
 						mem_addr_ext_user <= reg_data_read[4:0];
+					end else if (task_memw_addr_buffer == 16'h9000) begin
+						irq_handler_addr <= reg_data_read;
+					end else if (task_memw_addr_buffer == 16'h9001) begin
+						irq_en <= (|reg_addr_read) ? 1'h1 : 1'h0;
+					end else if (task_memw_addr_buffer == 16'h9002) begin
+						if (in_irq_context) begin
+							in_irq_context <= (|reg_addr_read) ? 1'h1 : 1'h0;
+						end
 					end
 
 					task_memw_state <= `MEMW_DELAY;

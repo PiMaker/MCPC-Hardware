@@ -9,6 +9,7 @@ module core_registers(
 	input [15:0] bus_datain,
 	input bus_fromin,
 	input pc_inc,
+	input [15:0] pc_default,
 	
 	output [15:0] data_read,
 	output [15:0] pc_out,
@@ -48,7 +49,7 @@ module core_registers(
  		
  		// PC logic
  		if (rst) begin
- 			pc_reg <= 0;
+ 			pc_reg <= pc_default;
  		end else begin
 	 		if (write_enable && (addr_write == 11)) begin
 	 			pc_reg <= data_write;
