@@ -73,7 +73,7 @@ func Compile(file string, offset int, libraries []string, autoJump bool) ([]byte
 	}
 
 	if offset > 0 {
-		log.Printf("Using offset: %X (Auto-Jump: %t)\n", offset, autoJump)
+		log.Printf("Using offset: %d (Auto-Jump: %t)\n", offset, autoJump)
 	}
 
 	if offset < 0 {
@@ -234,6 +234,7 @@ func Compile(file string, offset int, libraries []string, autoJump bool) ([]byte
 			output[i*2+1] = 0x5
 		case "SET":
 			output[i*2] = ParseRegister(tkn.args[0])
+			// This is supported now:
 			//if output[i*2] == 0xB {
 			//	log.Fatalln("ERROR: Cannot SET program counter (PC/0xB)")
 			//}
@@ -300,16 +301,7 @@ func aluCmd(output *[]byte, i int, tkn *tokenLine) {
 	}
 
 	out[i*2+1] = ins | (ParseRegister(tkn.args[0]) << 4)
-	if tkn.command == "SHFT" {
-		if tkn.args[2][0] == '-' {
-			// Special care for negative shiftings by manually setting highest bit to 1
-			v, _ := strconv.ParseInt(tkn.args[2][3:], 16, 17)
-			tkn.args[2] = "0X" + strconv.FormatInt(v|0x8, 16)
-		}
-		out[i*2] = ParseRegister(tkn.args[1]) | (byte(parseHex(tkn.args[2])&0xF) << 4)
-	} else {
-		out[i*2] = ParseRegister(tkn.args[1]) | (ParseRegister(tkn.args[2]) << 4)
-	}
+	out[i*2] = ParseRegister(tkn.args[1]) | (ParseRegister(tkn.args[2]) << 4)
 }
 
 // Parses a hex encoded string with leading "0x" marker to an unsigned 16 bit integer

@@ -155,8 +155,6 @@ func (vm *VM) Step() (bool, string, error) {
 				writeToReg.Value = vm.SRAM[uint(vm.SRAMPage&SRAMPageMask)<<16|uint(addrReg.Value)]
 			} else if addrReg.Value == 0x8000 {
 				writeToReg.Value = 0x8001
-			} else if addrReg.Value == 0x8065 {
-				writeToReg.Value = 0xE000
 			} else if addrReg.Value >= 0xD000 && addrReg.Value < 0xD800 {
 				//fmt.Printf("VM: Access to EEPROM (len=%d): [%d-0xD000=%d]\n", len(vm.EEPROM), addrReg.Value, addrReg.Value-0xD000)
 				writeToReg.Value = vm.EEPROM[addrReg.Value-0xD000]
@@ -179,7 +177,7 @@ func (vm *VM) Step() (bool, string, error) {
 			if reg.Writeable {
 				reg.Value = vm.EEPROM[vm.Registers.PC.Value]
 			} else {
-				err = fmt.Errorf("Write to non-writable register %X", reg.Address)
+				err = fmt.Errorf("Write to non-writable register 0x%X", reg.Address)
 			}
 		}
 
@@ -210,12 +208,14 @@ func (vm *VM) Step() (bool, string, error) {
 			case 0xB:
 				registerTo.Value = GetReg(vm, ins, regFrom).Value + GetReg(vm, ins, regOp).Value
 			case 0xC:
-				shft := (ins & regOp) >> 12
-				if shft&0x8 == 0 {
-					registerTo.Value = GetReg(vm, ins, regFrom).Value >> shft
+				// SHFT
+				by := GetReg(vm, ins, regOp).Value
+				if by&0xFF00 == 0 {
+					registerTo.Value = GetReg(vm, ins, regFrom).Value >> (by & 0x00FF)
 				} else {
-					registerTo.Value = GetReg(vm, ins, regFrom).Value << (shft & 0x7)
+					registerTo.Value = GetReg(vm, ins, regFrom).Value << (by & 0x00FF)
 				}
+
 			case 0xD:
 				registerTo.Value = GetReg(vm, ins, regFrom).Value * GetReg(vm, ins, regOp).Value
 			case 0xE:
@@ -232,7 +232,7 @@ func (vm *VM) Step() (bool, string, error) {
 				registerTo.Value = val
 			}
 		} else {
-			err = fmt.Errorf("Write to non-writable register %X (by ALU)", registerTo.Address)
+			err = fmt.Errorf("Write to non-writable register 0x%X (by ALU)", registerTo.Address)
 		}
 	}
 

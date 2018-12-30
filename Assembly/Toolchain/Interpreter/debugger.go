@@ -689,8 +689,6 @@ func decodeAssembly(c uint16, vm *VM) (cmd, params, note string, set bool) {
 			note = fmt.Sprintf("Read data @%04x (=%04x) into register %s", addr, vm.SRAM[addr], decodeRegister(byte((c&0x0F00)>>8), colorNotes))
 		} else if addr == 0x8000 {
 			note = fmt.Sprintf("Read data @%04x (MCPC version = 0x8001 [VM]) into register %s", addr, decodeRegister(byte((c&0x0F00)>>8), colorNotes))
-		} else if addr == 0x8065 {
-			note = fmt.Sprintf("Read data @%04x (Framebuffer start = 0xE000) into register %s", addr, decodeRegister(byte((c&0x0F00)>>8), colorNotes))
 		} else if addr >= 0xD000 && addr < 0xD800 {
 			note = fmt.Sprintf("Read ROM-data @%04x (ROM @%04x) (=%04x) into register %s", addr, addr-0xD000, vm.EEPROM[addr-0xD000], decodeRegister(byte((c&0x0F00)>>8), colorNotes))
 		} else {
@@ -736,14 +734,15 @@ func decodeAssembly(c uint16, vm *VM) (cmd, params, note string, set bool) {
 		note = fmt.Sprintf("%04X + %04X = %04X", GetReg(vm, c, regFrom).Value, GetReg(vm, c, regOp).Value, (GetReg(vm, c, regFrom).Value + GetReg(vm, c, regOp).Value))
 	case 0xC:
 		cmd = "SHFT"
-		sval := byte((c & 0xF000) >> 12)
-		if sval&0x8 == 0 {
-			params = decodeRegister(byte((c&0x0F00)>>8), "white") + " = " + decodeRegister(byte((c&0x00F0)>>4), "white") + " >> 0x" + fmt.Sprintf("%X", sval)
-			note = fmt.Sprintf("= %04X", GetReg(vm, c, regFrom).Value>>sval)
+		byVal := GetReg(vm, c, regOp).Value
+		if byVal&0xFF00 == 0 {
+			params = decodeRegister(byte((c&0x0F00)>>8), "white") + " = " + decodeRegister(byte((c&0x00F0)>>4), "white") + " >> " + decodeRegister(byte((c&0xF000)>>12), "white")
+			note = fmt.Sprintf("%04X >> %02X = %04X (dir: %02X == 0, right)", GetReg(vm, c, regFrom).Value, byVal&0x00FF, (GetReg(vm, c, regFrom).Value >> (byVal & 0x00FF)), byVal>>8)
 		} else {
-			params = decodeRegister(byte((c&0x0F00)>>8), "white") + " = " + decodeRegister(byte((c&0x00F0)>>4), "white") + " << 0x" + fmt.Sprintf("%X", sval&0x7)
-			note = fmt.Sprintf("= %04X (negative shift)", GetReg(vm, c, regFrom).Value<<(sval&0x7))
+			params = decodeRegister(byte((c&0x0F00)>>8), "white") + " = " + decodeRegister(byte((c&0x00F0)>>4), "white") + " << " + decodeRegister(byte((c&0xF000)>>12), "white")
+			note = fmt.Sprintf("%04X << %02X = %04X (dir: %02X != 0, left)", GetReg(vm, c, regFrom).Value, byVal&0x00FF, (GetReg(vm, c, regFrom).Value << (byVal & 0x00FF)), byVal>>8)
 		}
+
 	case 0xD:
 		cmd = "MUL"
 		params = decodeRegister(byte((c&0x0F00)>>8), "white") + " = " + decodeRegister(byte((c&0x00F0)>>4), "white") + " * " + decodeRegister(byte((c&0xF000)>>12), "white")
