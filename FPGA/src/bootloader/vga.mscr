@@ -15,7 +15,7 @@ Provides helper functions regarding the integrated VGA framebuffer.
 
 // VGA dimensions
 #define VGA_DIM_X 98
-#define VGA_DIM_Y 60
+#define VGA_DIM_Y 35
 
 // Globals responsible for maintaining internal position buffering
 global vga_buf_pos_x = 0;

@@ -131,7 +131,7 @@ end
 wire [31:0] debug_clock;
 counter counter_instance_debug_clock (
 	.clk(MAX10_CLK1_50),
-	.reset(rst),
+	.reset(),
 	.enable(1'b1),
 	.out(debug_clock)
 );
@@ -148,7 +148,7 @@ PS2_Controller ps2_instance (
 	.CLOCK_50(MAX10_CLK1_50),
 	.reset(), // No reset, we like to live dangerously
 
-	.the_command(0'hFF),
+	.the_command(16'hFF),
 	.send_command(RST), // Reset triggers keyboard reset instead
 
 	// Bidirectionals
@@ -159,8 +159,8 @@ PS2_Controller ps2_instance (
 	.command_was_sent(),
 	.error_communication_timed_out(),
 
-	.received_data(debug_bus),
-	.received_data_en()			// If 1 - new data has been received
+	.received_data(ps2_data),
+	.received_data_en(ps2_data_en)			// If 1 - new data has been received
 );
 
 

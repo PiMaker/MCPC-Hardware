@@ -183,7 +183,7 @@ module cpu(
 		.regAddrOvrEn(debugRegRead),
 
 		.ARDUINO_IO(ARDUINO_IO),
-        .dbgDbg(dbgDbg)
+        .dbgDbg() // dbgDbg
 	);
 
 
@@ -196,12 +196,14 @@ module cpu(
 		.clock(clk50),
 		.reset(rst),
 		.wr(ps2_data_en),
-		.rd(ps2_rd_en),
+		.rd(irq_rd_en),
 		.din({8'h0,ps2_data,16'h000A}),
 		.empty(irq_empty),
-		.full(irq_empty),
+		.full(irq_full),
 		.dout(irq_dout)
     );
+
+	assign dbgDbg = {ps2_data_en,7'h0,ps2_data};
 
 	
 	// CORE COMPONENTS
@@ -254,13 +256,13 @@ module cpu(
 	// IRQ and regular register combining
 	wire reg_we_irq_on, reg_we_irq_off;
 	wire pc_inc_real_irq_on, pc_inc_real_irq_off;
-	wire reg_data_read_irq_on, reg_data_read_irq_off;
-	wire pc_out_irq_on, pc_out_irq_off;
+	wire [15:0] reg_data_read_irq_on, reg_data_read_irq_off;
+	wire [15:0] pc_out_irq_on, pc_out_irq_off;
 
 	assign reg_we_irq_on = in_irq_context ? reg_we : 1'h0;
-	assign reg_we_irq_off = !in_irq_context ? reg_we : 1'h0;
+	assign reg_we_irq_off = in_irq_context ? 1'h0 : reg_we;
 	assign pc_inc_real_irq_on = in_irq_context ? pc_inc_real : 1'h0;
-	assign pc_inc_real_irq_off = !in_irq_context ? pc_inc_real : 1'h0;
+	assign pc_inc_real_irq_off = in_irq_context ? 1'h0 : pc_inc_real;
 
 	assign reg_data_read = in_irq_context ? reg_data_read_irq_on : reg_data_read_irq_off;
 	assign pc_out = in_irq_context ? pc_out_irq_on : pc_out_irq_off;
@@ -268,13 +270,6 @@ module cpu(
 	// Reset logic for IRQ registers
 	reg rst_irq_regs = 1'h0;
 	always @(posedge clk) begin
-		if (in_irq_context && !in_irq_context_prev) begin
-			// We entered irq context, reset irq registers
-			rst_irq_regs = 1'h1;
-		end else if (in_irq_context && in_irq_context_prev) begin
-			rst_irq_regs = 1'h0;
-		end
-
 		in_irq_context_prev = in_irq_context;
 	end
 
@@ -326,6 +321,9 @@ module cpu(
 			pc_dbg_virt <= 0;
 			mem_addr_ext_kernel <= 0;
 			mem_addr_ext_user <= 0;
+			irq_rd_en <= 0;
+			in_irq_context <= 0;
+			irq_en <= 0;
 
 			reset_instruction_tasks();
 
@@ -351,7 +349,7 @@ module cpu(
 					reg_addr_write <= `INSDECOMP_TO(instruction_buffer);
 					reg_addr_read <= `INSDECOMP_FROM(instruction_buffer);
 					reg_addr_if <= `INSDECOMP_IF(instruction_buffer);
-					end
+				end
 
 				`CPU_STATE_WAITING: begin
 					if (continue_execution) begin
@@ -375,28 +373,46 @@ module cpu(
 
 						endcase
 					end
-					end
+				end
 
 				`CPU_STATE_COMMIT: begin
-					reg_we_approved <= 1'b1;
-					pc_inc <= 1'b1;
-					cpu_state <= `CPU_STATE_PC_INC;
+					// Only commit and increment PC if we didn't just leave an IRQ context
+					if (!(!in_irq_context && in_irq_context_prev)) begin
+						reg_we_approved <= 1'b1;
+						pc_inc <= 1'b1;
 					end
+
+					cpu_state <= `CPU_STATE_PC_INC;
+				end
 				
 				`CPU_STATE_PC_INC: begin
 					pc_inc <= 1'b0;
 					reg_we_approved <= 1'b0;
 					write_enable_register <= 16'h0;
-					cpu_state <= `CPU_STATE_INS_LOAD;
 
-					// Debug instruction override virtual PC increment
-					if (debugInsOvr) begin
-						pc_dbg_virt <= pc_dbg_virt + 1'b1;
+					if (!debugInsOvr && !irq_empty && irq_en && !in_irq_context) begin
+						// Interrupt detected, enter IRQ handler
+						in_irq_context <= 1'h1;
+						irq_rd_en <= 1'h1;
+						cpu_state <= `CPU_STATE_IRQ_ENTER;
+						rst_irq_regs <= 1'h1;
+					end else begin
+						cpu_state <= `CPU_STATE_INS_LOAD;
+
+						// Debug instruction override virtual PC increment
+						if (debugInsOvr) begin
+							pc_dbg_virt <= pc_dbg_virt + 1'b1;
+						end
 					end
 					
 					reset_instruction_tasks();
+				end
 
-					end
+				`CPU_STATE_IRQ_ENTER: begin
+					irq_rd_en <= 1'h0;
+					rst_irq_regs <= 1'h0;
+					cpu_state <= `CPU_STATE_INS_LOAD;
+				end
 
 				default: cpu_state <= `CPU_STATE_INS_LOAD;
 
@@ -649,10 +665,10 @@ module cpu(
 					end else if (task_memw_addr_buffer == 16'h9000) begin
 						irq_handler_addr <= reg_data_read;
 					end else if (task_memw_addr_buffer == 16'h9001) begin
-						irq_en <= (|reg_addr_read) ? 1'h1 : 1'h0;
+						irq_en <= (|reg_data_read) ? 1'h1 : 1'h0;
 					end else if (task_memw_addr_buffer == 16'h9002) begin
 						if (in_irq_context) begin
-							in_irq_context <= (|reg_addr_read) ? 1'h1 : 1'h0;
+							in_irq_context <= (|reg_data_read) ? 1'h1 : 1'h0;
 						end
 					end
 
@@ -718,7 +734,7 @@ module cpu(
 	)));
 
 	assign LEDR[0] = halted;
-	assign LEDR[1] = reg_we;
+	assign LEDR[1] = in_irq_context;
 	assign LEDR[2] = continue_execution;
 	assign LEDR[3] = debugEn;
 	assign LEDR[4] = clk;

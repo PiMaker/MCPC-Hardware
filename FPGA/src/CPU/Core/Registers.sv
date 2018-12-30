@@ -28,7 +28,7 @@ module core_registers(
 	// Read logic
 	assign data_read = 	addr_read < 11 ? gp_reg[addr_read] :
 						addr_read == 11 ? pc_reg :
-						addr_read == 12 ? '0 :
+						addr_read == 12 ? 1'b0 :
 						addr_read == 13 ? 1'b1 :
 						addr_read == 14 ? 16'hFFFF :
 						bus_reg;

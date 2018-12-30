@@ -13,7 +13,7 @@ CFG register layout
 * [0xD000-0xD800] r ... Bootloader ROM read-only access
 
 = VGA subsystem =
-* [0xE000-0xF2BF] w ... ASCII buffer (98x60 display, one ascii characted per data word, high bits unused)
+* [0xE000-0xF2BF] w ... ASCII buffer (98x35 display, one ascii characted per data word, high bits unused)
 
 = Interrupt/Timer subsystem =
 * [0x9000] rw(k) ... Interrupt handler address

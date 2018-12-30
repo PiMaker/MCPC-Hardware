@@ -10,7 +10,7 @@ Status output:
     - no switch up: Debug information ~0xdead~
 - Status LEDs:
     - LEDR0: Halted
-    - LEDR1: reg_we bit
+    - LEDR1: In IRQ handler/context
     - LEDR2: continue_execution bit
     - LEDR3: Debugger enabled
     - LEDR4: CLK

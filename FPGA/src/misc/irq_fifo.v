@@ -31,6 +31,7 @@ reg [abits-1:0] wr_reg, wr_next, wr_succ; //points to the register that needs to
 reg [abits-1:0] rd_reg, rd_next, rd_succ; //points to the register that needs to be read from
 reg full_reg, empty_reg, full_next, empty_next;
 
+wire wr_en;
 assign wr_en = db_wr & ~full; //only write if write signal is high and fifo is not full
 
 //always block for write operation

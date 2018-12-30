@@ -9,6 +9,7 @@ Function "var main(argc, argp)" will be called by the the bootloader preamble at
 global text = "Hello, world!";
 
 func var main(argc, argp) {
+    // Enable interrupts
     _asm {
         SET SCR1
         .IRQ_HANDLER
@@ -16,9 +17,16 @@ func var main(argc, argp) {
         STORLA 1 0x9001
     }
 
-    vga_printString(text);
-    vga_printChar('\n');
-    vga_printString(text);
+    var c = 0;
+    while true {
+        if c == 0 {
+            vga_printString(text);
+            vga_printChar('\n');
+        }
 
+        c += 1;
+    }
+
+    // Return Esel
     return 0x7353;
 }
