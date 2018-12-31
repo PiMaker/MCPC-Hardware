@@ -67,14 +67,15 @@ module cpu(
 	output			[15:0]		DEBUG_BUS,
 	output			[9:0]		LEDR,
 	input			[9:0]		SW,
+	output			[7:0]		irq_count,
 	output						debugEnOut,
 	output						rstReq,
+	output reg					clkbreak,
 
 	//////////// GPIO ////////////
 	inout 		    [15:0]		ARDUINO_IO,
 	inout			[35:0]		GPIO
 );
-
 
     // SDRAM new
     wire ram_clk;
@@ -190,20 +191,22 @@ module cpu(
 	// INTERRUPTS
 	reg irq_en = 1'h0;
 	reg irq_rd_en;
-	wire irq_full, irq_empty;
+	wire irq_empty;
 	wire [31:0] irq_dout;
-	irq_fifo u_irq_fifo(
-		.clock(clk50),
-		.reset(rst),
-		.wr(ps2_data_en),
-		.rd(irq_rd_en),
-		.din({8'h0,ps2_data,16'h000A}),
-		.empty(irq_empty),
-		.full(irq_full),
-		.dout(irq_dout)
-    );
 
-	assign dbgDbg = {ps2_data_en,7'h0,ps2_data};
+	irq_fifo u_irq_fifo(
+		.aclr(rst),
+		.data({8'h0,ps2_data,16'h000A}),
+		.rdclk(clk),
+		.rdreq(irq_rd_en),
+		.wrclk(clk50),
+		.wrreq(ps2_data_en && irq_en),
+		.q(irq_dout),
+		.rdempty(irq_empty),
+		.rdusedw(irq_count)
+	);
+
+	assign dbgDbg = {irq_dout[16 +: 16]};
 
 	
 	// CORE COMPONENTS
@@ -302,6 +305,8 @@ module cpu(
 	assign reg_we_requested = |write_enable_register;
 	assign reg_we = reg_we_requested && reg_we_approved && ~debugRegRead;
 
+	reg ins_started_in_irq = 0;
+
 
 	initial begin
 		$readmemh("bootloader.hex", bootloader_rom);
@@ -324,6 +329,7 @@ module cpu(
 			irq_rd_en <= 0;
 			in_irq_context <= 0;
 			irq_en <= 0;
+			ins_started_in_irq <= 0;
 
 			reset_instruction_tasks();
 
@@ -344,6 +350,8 @@ module cpu(
 					end else begin
 						instruction_buffer = bootloader_rom[pc_out];
 					end
+
+					ins_started_in_irq <= in_irq_context;
 
 					// Decompose instruction into different register busses
 					reg_addr_write <= `INSDECOMP_TO(instruction_buffer);
@@ -377,7 +385,7 @@ module cpu(
 
 				`CPU_STATE_COMMIT: begin
 					// Only commit and increment PC if we didn't just leave an IRQ context
-					if (!(!in_irq_context && in_irq_context_prev)) begin
+					if (!(!in_irq_context && ins_started_in_irq)) begin
 						reg_we_approved <= 1'b1;
 						pc_inc <= 1'b1;
 					end
@@ -390,7 +398,7 @@ module cpu(
 					reg_we_approved <= 1'b0;
 					write_enable_register <= 16'h0;
 
-					if (!debugInsOvr && !irq_empty && irq_en && !in_irq_context) begin
+					if (!debugInsOvr && !irq_empty && irq_en && !ins_started_in_irq) begin
 						// Interrupt detected, enter IRQ handler
 						in_irq_context <= 1'h1;
 						irq_rd_en <= 1'h1;
@@ -545,10 +553,10 @@ module cpu(
 					`INS_ALU_EQ: task_alu_temp_buffer  =  (task_alu_input_buffer ==  reg_data_read ? 16'hFFFF : 16'h0);
 					`INS_ALU_GT: task_alu_temp_buffer  =  (task_alu_input_buffer > reg_data_read ? 16'hFFFF : 16'h0);
 					`INS_ALU_SHFT: begin
-						if (reg_addr_if & 4'h8) begin
-							task_alu_temp_buffer = task_alu_input_buffer << (reg_addr_if & 4'b0111);
+						if (reg_data_read & 16'hFF00) begin
+							task_alu_temp_buffer = task_alu_input_buffer << (reg_data_read & 16'h00FF);
 						end else begin
-							task_alu_temp_buffer = task_alu_input_buffer >> reg_addr_if;
+							task_alu_temp_buffer = task_alu_input_buffer >> (reg_data_read & 16'h00FF);
 						end
 					end
 				endcase
@@ -670,6 +678,8 @@ module cpu(
 						if (in_irq_context) begin
 							in_irq_context <= (|reg_data_read) ? 1'h1 : 1'h0;
 						end
+					end else if (task_memw_addr_buffer == 16'hFFFF) begin
+						clkbreak <= (|reg_data_read) ? 1'h1 : 1'h0;
 					end
 
 					task_memw_state <= `MEMW_DELAY;
@@ -720,6 +730,8 @@ module cpu(
 		mem_write <= 0;
 		mem_writeaddr <= 0;
 		mem_writedata <= 0;
+
+		clkbreak <= 0;
 
 		for (ix = 0; ix < 16; ix = ix + 1) begin
 		  reg_data_write_inputs[ix] <= 0;

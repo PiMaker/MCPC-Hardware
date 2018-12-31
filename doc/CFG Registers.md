@@ -23,3 +23,6 @@ CFG register layout
 
 = Virtualization subsystem =
 TBD
+
+= Debugging =
+* [0xFFFF] w ... Break Execution (enable manual clock)

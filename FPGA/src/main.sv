@@ -76,27 +76,40 @@ assign RST = (RST & core_clock) | (~PWR_RST[25]) | (~KEY[0]);
 
 
 // HEX display
-assign HEX5 = 8'hFF;
-assign HEX4 = 8'h7F;
-
 hex_bus_display hex_bus_display_instance_0 (
 	.bus(debug_bus[0 +: 4]),
-	.hex_port(HEX0)
+	.hex_port(HEX0),
+	.comma(1'h1)
 );
 
 hex_bus_display hex_bus_display_instance_1 (
 	.bus(debug_bus[4 +: 4]),
-	.hex_port(HEX1)
+	.hex_port(HEX1),
+	.comma(1'h1)
 );
 
 hex_bus_display hex_bus_display_instance_2 (
 	.bus(debug_bus[8 +: 4]),
-	.hex_port(HEX2)
+	.hex_port(HEX2),
+	.comma(1'h1)
 );
 
 hex_bus_display hex_bus_display_instance_3 (
 	.bus(debug_bus[12 +: 4]),
-	.hex_port(HEX3)
+	.hex_port(HEX3),
+	.comma(1'h1)
+);
+
+hex_bus_display hex_bus_display_instance_4 (
+	.bus(irq_count[0 +: 4]),
+	.hex_port(HEX4),
+	.comma(1'h0)
+);
+
+hex_bus_display hex_bus_display_instance_5 (
+	.bus(irq_count[4 +: 4]),
+	.hex_port(HEX5),
+	.comma(1'h1)
 );
 
 
@@ -122,7 +135,7 @@ vga_controller vga_controller_instance (
 );
 
 
-// Manual clock for testing/debugging
+// Clocking
 reg manual_clock;
 always @(*) begin
 	manual_clock <= !KEY[1];
@@ -136,7 +149,17 @@ counter counter_instance_debug_clock (
 	.out(debug_clock)
 );
 
-wire core_clock = SW[0] ? debug_clock[2] : manual_clock;
+wire core_clock_fast = debug_clock[1];
+wire core_clock;
+wire clkbreak_act = clkbreak && !RST;
+
+always @(posedge core_clock_fast) begin
+	if (SW[0] && !clkbreak_act) begin
+		core_clock <= ~core_clock;
+	end else if (debug_clock[1]) begin
+		core_clock <= manual_clock;
+	end
+end
 
 
 // Keyboard
@@ -156,18 +179,23 @@ PS2_Controller ps2_instance (
  	.PS2_DAT(ARDUINO_IO[7]),					// PS2 Data
 
 	// Outputs
-	.command_was_sent(),
-	.error_communication_timed_out(),
+	.command_was_sent(a),
+	.error_communication_timed_out(b),
 
 	.received_data(ps2_data),
 	.received_data_en(ps2_data_en)			// If 1 - new data has been received
 );
 
+wire a, b;
+//assign debug_bus = {3'h0, ps2_data_en, 2'h0, b, a, ps2_data};
+
 
 // Main CPU instance
 wire [15:0] debug_bus;
+wire [7:0] irq_count;
 wire debugEn;
 wire rstReq;
+wire clkbreak;
 
 cpu cpu_instance (
 	.clkCore(core_clock),
@@ -192,6 +220,7 @@ cpu cpu_instance (
 	.DEBUG_BUS(debug_bus),
 	.LEDR(LEDR),
 	.SW(SW),
+	.irq_count(irq_count),
 
     .fb_data(fb_data_bus),
     .fb_addr(fb_addr_bus),
@@ -199,6 +228,7 @@ cpu cpu_instance (
 
 	.debugEnOut(debugEn),
 	.rstReq(rstReq),
+	.clkbreak(clkbreak),
 
 	.ARDUINO_IO(ARDUINO_IO),
 	.GPIO(GPIO)

@@ -9,6 +9,7 @@ Provides helper functions regarding the integrated VGA framebuffer.
 
 // Starting address of VGA framebuffer CFG region
 #define VGA_BASE_ADDR 0xE000
+#define VGA_END_ADDR 0xF2BF
 
 // The newline character
 #define VGA_NEWLINE 0xA
@@ -67,8 +68,43 @@ func void vga_printString(str) {
     }
 }
 
+// Prints a value as 4 hexadecimal characters
+global vga_hex_char_lookup = "0123456789ABCDEF";
+func void vga_printHex(value) {
+    var mask = 0x000F;
+    var masked = (value >> 12) & mask;
+    vga_printChar($(vga_hex_char_lookup + masked));
+    masked = (value >> 8) & mask;
+    vga_printChar($(vga_hex_char_lookup + masked));
+    masked = (value >> 4) & mask;
+    vga_printChar($(vga_hex_char_lookup + masked));
+    masked = value & mask;
+    vga_printChar($(vga_hex_char_lookup + masked));
+}
+
 func void vga_shiftConsoleDown(clearBottomRow) {
-    // TODO
+    // TODO: Implement correctly
+    vga_buf_pos_x = 0;
+    vga_buf_pos_y = 0;
+    vga_clearScreen();
+}
+
+func void vga_setCursorPos(x, y) {
+    vga_buf_pos_x = x;
+    vga_buf_pos_y = y;
+
+    while vga_buf_pos_x > VGA_DIM_X {
+        vga_buf_pos_x -= VGA_DIM_X;
+        vga_buf_pos_y += 1;
+    }
+}
+
+func void vga_clearScreen() {
+    var x = VGA_BASE_ADDR;
+    while x <= VGA_END_ADDR {
+        $$(x, 0);
+        x += 1;
+    }
 }
 
 #endif
