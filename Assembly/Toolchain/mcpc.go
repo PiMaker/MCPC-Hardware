@@ -27,6 +27,7 @@ func main() {
 Usage:
   mcpc assemble <file> <output> [--library=<library>...] [--debug-symbols] [--offset=<offset>] [--enable-offset-jump] [--ascii] [--hex] [--length=<length>]
   mcpc debug <file> [--symbols=<msym>]
+  mcpc vm <file>
   mcpc attach <port> [--symbols=<msym>]
   mcpc autotest <directory> [--mscr=<mscrcmd>] [--library=<library>...]
   mcpc -h | --help
@@ -35,6 +36,7 @@ Usage:
 Options:
   assemble                Assembles an assembler file to assembly.
   debug                   Uses the MCPC interpreter to run the specified binary file and shows a TUI interface for debugging purposes.
+  vm                      Run a specified binary (.mb format) on a virtual MCPC. Supports user IO.
   attach                  Attaches to a physical MCPC device at <port> (e.g. /dev/ttyUSB0) and launches the hardware debugger.
   autotest                Runs the autotest test-suite on all files in the specified <directory>.
   --library=<library>     Includes a library, specified in mlib format, which allows higher-level instructions to be compiled down.
@@ -87,6 +89,11 @@ Options:
 
 		// Run autotests
 		autotest.RunAutotests(argString(args, "<directory>"), argStringWithDefault(args, "--mscr", ""), argStrings(args, "--library"))
+
+	} else if argBool(args, "vm") {
+
+		// Run virtual MCPC
+		interpreter.VMRun(argString(args, "<file>"))
 
 	} else {
 		log.Println("Invalid command, use -h for help")

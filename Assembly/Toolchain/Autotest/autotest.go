@@ -211,11 +211,11 @@ func performAutotest(file string, counter int, libraries []string) (state, resul
 		data16[i] = uint16(assembly[i*2])<<8 | uint16(assembly[i*2+1])
 	}
 
-	vm := interpreter.NewVM(data16)
+	vm := interpreter.NewVM(data16, 98, 35)
 
 	steps := 0
 	for !vm.Halted {
-		_, _, err := vm.Step()
+		_, err := vm.Step()
 
 		if err != nil {
 			state = aurora.Red("FAIL").String()

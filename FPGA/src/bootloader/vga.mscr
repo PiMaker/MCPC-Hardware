@@ -9,18 +9,27 @@ Provides helper functions regarding the integrated VGA framebuffer.
 
 // Starting address of VGA framebuffer CFG region
 #define VGA_BASE_ADDR 0xE000
-#define VGA_END_ADDR 0xF2BF
+global vga_end_addr;
 
-// The newline character
+// The newline character '\n' (ASCII)
 #define VGA_NEWLINE 0xA
 
 // VGA dimensions
-#define VGA_DIM_X 98
-#define VGA_DIM_Y 35
+global vga_dim_x;
+global vga_dim_y;
 
 // Globals responsible for maintaining internal position buffering
-global vga_buf_pos_x = 0;
-global vga_buf_pos_y = 0;
+global vga_buf_pos_x;
+global vga_buf_pos_y;
+
+// Call once before printing to initialize vga display
+func void vga_init() {
+    vga_dim_x = $(0xDFFD);
+    vga_dim_y = $(0xDFFE);
+    vga_end_addr = $(0xDFFF);
+    vga_buf_pos_x = 0;
+    vga_buf_pos_y = 0;
+}
 
 // Prints a single character and advances the buffer position by one
 func void vga_printChar(char) {
@@ -28,7 +37,7 @@ func void vga_printChar(char) {
     if char == VGA_NEWLINE {
         vga_buf_pos_x = 0;
 
-        if (vga_buf_pos_y + 1) == VGA_DIM_Y {
+        if (vga_buf_pos_y + 1) == vga_dim_y {
             vga_shiftConsoleDown(true);
         } else {
             vga_buf_pos_y += 1;
@@ -39,17 +48,17 @@ func void vga_printChar(char) {
 
     // Set framebuffer at buffer location to given character
     $$(
-        VGA_BASE_ADDR + (vga_buf_pos_y * VGA_DIM_X) + vga_buf_pos_x,
+        VGA_BASE_ADDR + (vga_buf_pos_y * vga_dim_x) + vga_buf_pos_x,
         char
     );
 
     // Advance buffer
     vga_buf_pos_x += 1;
 
-    if vga_buf_pos_x == VGA_DIM_X {
+    if vga_buf_pos_x == vga_dim_x {
         vga_buf_pos_x = 0;
 
-        if (vga_buf_pos_y + 1) == VGA_DIM_Y {
+        if (vga_buf_pos_y + 1) == vga_dim_y {
             vga_shiftConsoleDown(true);
         } else {
             vga_buf_pos_y += 1;
@@ -93,15 +102,15 @@ func void vga_setCursorPos(x, y) {
     vga_buf_pos_x = x;
     vga_buf_pos_y = y;
 
-    while vga_buf_pos_x > VGA_DIM_X {
-        vga_buf_pos_x -= VGA_DIM_X;
+    while vga_buf_pos_x > vga_dim_x {
+        vga_buf_pos_x -= vga_dim_x;
         vga_buf_pos_y += 1;
     }
 }
 
 func void vga_clearScreen() {
     var x = VGA_BASE_ADDR;
-    while x <= VGA_END_ADDR {
+    while x <= vga_end_addr {
         $$(x, 0);
         x += 1;
     }

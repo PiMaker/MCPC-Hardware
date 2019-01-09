@@ -18,14 +18,10 @@ func var main(argc, argp) {
         STORLA 1 0x9001
     }
 
+    vga_init();
     //vga_clearScreen();
-    vga_setCursorPos(0, 0);
 
-    vga_printHex(0x1234);
-    vga_printChar('\n');
-    vga_printHex(0xE5E1);
-    vga_printChar('\n');
-    vga_printHex(0x3E9C);
+    vga_printString(prompt);
     vga_printChar('\n');
 
     // Loop hello world
@@ -51,12 +47,15 @@ func var main(argc, argp) {
             _reg_assign(1, input_irq);
             _asm {
                 LOADLA_P A 0x1 0x1
-                STORLA_P 0 0x1 0x1
                 LOADLA_P B 0x0 0x1
+            }
+
+            if input & input_irq {
+            _asm {
+                STORLA_P 0 0x1 0x1
                 STORLA_P 0 0x0 0x1
             }
 
-            if input | input_irq {
                 vga_printHex(input_irq);
                 vga_printChar('-');
                 vga_printChar('>');

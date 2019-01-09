@@ -15,11 +15,24 @@ const (
 
 // VM represents an MCPC virtual machine state
 type VM struct {
-	Registers *Registers
+	RegDef    *Registers
+	RegIrq    *Registers
 	SRAM      []uint16
 	EEPROM    []uint16
 	Halted    bool
 	SRAMPage  uint16
+	VgaWidth  uint16
+	VgaHeight uint16
+	VgaBuffer []uint16
+
+	IrqEn      bool
+	InIrq      bool
+	IrqHandler uint16
+	IrqQueue   chan uint32
+	irqDataBuf uint32
+
+	// addr relative to VgaBuffer (0 is x=y=0)
+	VgaChangeCallback func(addr, x, y, old, new uint16)
 }
 
 // Registers includes all registers of an MCPC instance
@@ -49,56 +62,69 @@ const SRAMPageMask uint16 = 0x000F
 var sramWriteWaiting = false
 var sramWriteAddress uint16
 
-// NewVM creates a new MCPC virtual machine instance
-func NewVM(program []uint16) *VM {
-
-	sram := make([]uint16, uint(MaxSRAMValue+1)<<SRAMPageBits)
-
-	regs := &Registers{
-		A:      &Register{Value: 0, Address: 0x0, Writeable: true},
-		B:      &Register{Value: 0, Address: 0x1, Writeable: true},
-		C:      &Register{Value: 0, Address: 0x2, Writeable: true},
-		D:      &Register{Value: 0, Address: 0x3, Writeable: true},
-		E:      &Register{Value: 0, Address: 0x4, Writeable: true},
-		F:      &Register{Value: 0, Address: 0x5, Writeable: true},
-		G:      &Register{Value: 0, Address: 0x6, Writeable: true},
-		H:      &Register{Value: 0, Address: 0x7, Writeable: true},
-		SCR1:   &Register{Value: 0, Address: 0x8, Writeable: true},
-		SCR2:   &Register{Value: 0, Address: 0x9, Writeable: true},
-		SP:     &Register{Value: 0, Address: 0xA, Writeable: true},
-		PC:     &Register{Value: 0, Address: 0xB, Writeable: true},
-		Zero:   &Register{Value: 0, Address: 0xC, Writeable: false},
-		One:    &Register{Value: 1, Address: 0xD, Writeable: false},
-		NegOne: &Register{Value: 0xFFFF, Address: 0xE, Writeable: false},
-		BUS:    &Register{Value: 0, Address: 0xF, Writeable: false},
+// Register arbitration (DEF/IRQ)
+func (vm *VM) Registers() *Registers {
+	if vm.InIrq {
+		return vm.RegIrq
 	}
+
+	return vm.RegDef
+}
+
+// NewVM creates a new MCPC virtual machine instance
+func NewVM(program []uint16, vgaWidth, vgaHeight uint16) *VM {
+
+	// Clamp to max VGA size to avoid overflow
+	if vgaWidth > 120 {
+		vgaWidth = 120
+	}
+	if vgaHeight > 65 {
+		vgaHeight = 65
+	}
+
+	sram := make([]uint16, 0x1FFFFFF)
 
 	vm := VM{
 		EEPROM:    program,
 		SRAM:      sram,
-		Registers: regs,
+		RegDef:    generateEmptyRegisterSet(0),
+		RegIrq:    generateEmptyRegisterSet(0),
 		Halted:    false,
 		SRAMPage:  0,
+		VgaWidth:  vgaWidth,
+		VgaHeight: vgaHeight,
+		VgaBuffer: make([]uint16, vgaWidth*vgaHeight),
+
+		InIrq:      false,
+		IrqEn:      false,
+		IrqHandler: 0,
+		IrqQueue:   make(chan uint32, 256),
 	}
 
 	return &vm
 }
 
-// Step executes a single instruction step of this MCPC virtual machine instance; Returns true if a debug break instruction has been hit; String value is expected terminal output
-func (vm *VM) Step() (bool, string, error) {
+// Step executes a single instruction step of this MCPC virtual machine instance; Returns true if a debug break instruction has been hit
+func (vm *VM) Step() (bool, error) {
 	if vm.Halted {
-		return false, "", nil
+		return false, nil
 	}
 
 	brk := false
-	termout := ""
 	var err error
 
-	if int(vm.Registers.PC.Value) >= len(vm.EEPROM) {
-		return false, "", errors.New("Invalid EEPROM address, PC out of range")
+	// Check for IRQ enter
+	if vm.IrqEn && !vm.InIrq && len(vm.IrqQueue) > 0 {
+		vm.RegIrq = generateEmptyRegisterSet(vm.IrqHandler)
+		vm.InIrq = true
+		vm.irqDataBuf = <-vm.IrqQueue
 	}
 
-	ins := vm.EEPROM[vm.Registers.PC.Value]
+	if int(vm.Registers().PC.Value) >= len(vm.EEPROM) {
+		return false, errors.New("Invalid EEPROM address, PC out of range")
+	}
+
+	ins := vm.EEPROM[vm.Registers().PC.Value]
 	instruction := ins & 0x000F
 
 	switch instruction {
@@ -109,8 +135,8 @@ func (vm *VM) Step() (bool, string, error) {
 		if reg.Writeable {
 			reg.Value = GetReg(vm, ins, regFrom).Value
 
-			if reg == vm.Registers.PC {
-				vm.Registers.PC.Value--
+			if reg == vm.Registers().PC {
+				vm.Registers().PC.Value--
 			}
 		} else {
 			err = fmt.Errorf("Write to non-writable register %X", reg.Address)
@@ -121,8 +147,8 @@ func (vm *VM) Step() (bool, string, error) {
 			if reg.Writeable {
 				reg.Value = GetReg(vm, ins, regFrom).Value
 
-				if reg == vm.Registers.PC {
-					vm.Registers.PC.Value--
+				if reg == vm.Registers().PC {
+					vm.Registers().PC.Value--
 				}
 			} else {
 				err = fmt.Errorf("Write to non-writable register %X", reg.Address)
@@ -134,8 +160,8 @@ func (vm *VM) Step() (bool, string, error) {
 			if reg.Writeable {
 				reg.Value = GetReg(vm, ins, regFrom).Value
 
-				if reg == vm.Registers.PC {
-					vm.Registers.PC.Value--
+				if reg == vm.Registers().PC {
+					vm.Registers().PC.Value--
 				}
 			} else {
 				err = fmt.Errorf("Write to non-writable register %X", reg.Address)
@@ -160,6 +186,30 @@ func (vm *VM) Step() (bool, string, error) {
 				writeToReg.Value = vm.EEPROM[addrReg.Value-0xD000]
 			} else if addrReg.Value == 0x8800 {
 				writeToReg.Value = vm.SRAMPage
+			} else if addrReg.Value == 0xDFFD {
+				writeToReg.Value = vm.VgaWidth
+			} else if addrReg.Value == 0xDFFE {
+				writeToReg.Value = vm.VgaHeight
+			} else if addrReg.Value == 0xDFFF {
+				writeToReg.Value = 0xE000 + vm.VgaWidth*vm.VgaHeight - 1
+			} else if addrReg.Value == 0x9000 {
+				writeToReg.Value = vm.IrqHandler
+			} else if addrReg.Value == 0x9001 {
+				if vm.IrqEn {
+					writeToReg.Value = 0xFFFF
+				} else {
+					writeToReg.Value = 0x0
+				}
+			} else if addrReg.Value == 0x9002 {
+				if vm.InIrq {
+					writeToReg.Value = 0xFFFF
+				} else {
+					writeToReg.Value = 0x0
+				}
+			} else if addrReg.Value == 0x9010 {
+				writeToReg.Value = uint16(vm.irqDataBuf)
+			} else if addrReg.Value == 0x9011 {
+				writeToReg.Value = uint16(vm.irqDataBuf >> 16)
 			} else {
 				// other CFGs return 0 (not implemented)
 				writeToReg.Value = 0
@@ -169,13 +219,13 @@ func (vm *VM) Step() (bool, string, error) {
 		}
 
 	case 0x6:
-		vm.Registers.PC.Value++
+		vm.Registers().PC.Value++
 		reg := GetReg(vm, ins, regTo)
-		if reg == vm.Registers.PC {
+		if reg == vm.Registers().PC {
 			err = errors.New("SET was called on PC, this is not allowed in VM")
 		} else {
 			if reg.Writeable {
-				reg.Value = vm.EEPROM[vm.Registers.PC.Value]
+				reg.Value = vm.EEPROM[vm.Registers().PC.Value]
 			} else {
 				err = fmt.Errorf("Write to non-writable register 0x%X", reg.Address)
 			}
@@ -187,6 +237,34 @@ func (vm *VM) Step() (bool, string, error) {
 
 		if (addrReg.Value & 0x8000) == 0 {
 			vm.SRAM[uint(vm.SRAMPage&SRAMPageMask)<<16|uint(addrReg.Value)] = dataReg.Value
+		} else if addrReg.Value >= 0xE000 && addrReg.Value < uint16(0xE000+len(vm.VgaBuffer)) { // VGA
+			relAddr := addrReg.Value - 0xE000
+			old := vm.VgaBuffer[relAddr]
+			vm.VgaBuffer[relAddr] = dataReg.Value
+			if vm.VgaChangeCallback != nil {
+				vm.VgaChangeCallback(relAddr,
+					relAddr%vm.VgaWidth,
+					relAddr/vm.VgaWidth,
+					old,
+					dataReg.Value)
+			}
+		} else if addrReg.Value == 0x9000 { // IRQs
+			vm.IrqHandler = dataReg.Value
+		} else if addrReg.Value == 0x9001 {
+			vm.IrqEn = dataReg.Value != 0
+
+			if dataReg.Value == 0 {
+				// Empty IRQ queue on IRQ disable
+				for len(vm.IrqQueue) > 0 {
+					<-vm.IrqQueue
+				}
+			}
+		} else if addrReg.Value == 0x9002 {
+			if dataReg.Value == 0 {
+				vm.InIrq = false
+			}
+		} else if addrReg.Value == 0xFFFF { // Debug BRK
+			brk = true
 		} else {
 			// CFG write, ignores unknown CFGs
 			if addrReg.Value == 0x8800 {
@@ -237,9 +315,17 @@ func (vm *VM) Step() (bool, string, error) {
 	}
 
 	// Increase program counter by one
-	vm.Registers.PC.Value++
+	vm.Registers().PC.Value++
 
-	return brk, termout, err
+	return brk, err
+}
+
+// InjectIRQ writes the given IRQ payload into the VM's IRQ FIFO
+func (vm *VM) InjectIRQ(irqData uint32) {
+	// Discard IRQ if queue full or IRQ disabled
+	if vm.IrqEn && len(vm.IrqQueue) < cap(vm.IrqQueue) {
+		vm.IrqQueue <- irqData
+	}
 }
 
 // GetReg extracts details about a register from an instruction in the context of a VM
@@ -247,40 +333,40 @@ func GetReg(vm *VM, ins uint16, reg uint16) *Register {
 	addr := ins & reg
 	addr >>= getFirstSet(reg)
 	switch byte(addr) {
-	case vm.Registers.A.Address:
-		return vm.Registers.A
-	case vm.Registers.B.Address:
-		return vm.Registers.B
-	case vm.Registers.C.Address:
-		return vm.Registers.C
-	case vm.Registers.D.Address:
-		return vm.Registers.D
-	case vm.Registers.E.Address:
-		return vm.Registers.E
-	case vm.Registers.F.Address:
-		return vm.Registers.F
-	case vm.Registers.G.Address:
-		return vm.Registers.G
-	case vm.Registers.H.Address:
-		return vm.Registers.H
-	case vm.Registers.SCR1.Address:
-		return vm.Registers.SCR1
-	case vm.Registers.SCR2.Address:
-		return vm.Registers.SCR2
-	case vm.Registers.SP.Address:
-		return vm.Registers.SP
-	case vm.Registers.PC.Address:
-		return vm.Registers.PC
-	case vm.Registers.Zero.Address:
-		return vm.Registers.Zero
-	case vm.Registers.One.Address:
-		return vm.Registers.One
-	case vm.Registers.NegOne.Address:
-		return vm.Registers.NegOne
-	case vm.Registers.BUS.Address:
-		return vm.Registers.BUS
+	case vm.Registers().A.Address:
+		return vm.Registers().A
+	case vm.Registers().B.Address:
+		return vm.Registers().B
+	case vm.Registers().C.Address:
+		return vm.Registers().C
+	case vm.Registers().D.Address:
+		return vm.Registers().D
+	case vm.Registers().E.Address:
+		return vm.Registers().E
+	case vm.Registers().F.Address:
+		return vm.Registers().F
+	case vm.Registers().G.Address:
+		return vm.Registers().G
+	case vm.Registers().H.Address:
+		return vm.Registers().H
+	case vm.Registers().SCR1.Address:
+		return vm.Registers().SCR1
+	case vm.Registers().SCR2.Address:
+		return vm.Registers().SCR2
+	case vm.Registers().SP.Address:
+		return vm.Registers().SP
+	case vm.Registers().PC.Address:
+		return vm.Registers().PC
+	case vm.Registers().Zero.Address:
+		return vm.Registers().Zero
+	case vm.Registers().One.Address:
+		return vm.Registers().One
+	case vm.Registers().NegOne.Address:
+		return vm.Registers().NegOne
+	case vm.Registers().BUS.Address:
+		return vm.Registers().BUS
 	default:
-		return vm.Registers.A
+		return vm.Registers().A
 	}
 }
 
@@ -315,4 +401,25 @@ func (vm *VM) compareRegistersWithDevice(dev *Device) (different bool, differenc
 	}
 
 	return len(diff) > 0, diff, nil
+}
+
+func generateEmptyRegisterSet(pc uint16) *Registers {
+	return &Registers{
+		A:      &Register{Value: 0, Address: 0x0, Writeable: true},
+		B:      &Register{Value: 0, Address: 0x1, Writeable: true},
+		C:      &Register{Value: 0, Address: 0x2, Writeable: true},
+		D:      &Register{Value: 0, Address: 0x3, Writeable: true},
+		E:      &Register{Value: 0, Address: 0x4, Writeable: true},
+		F:      &Register{Value: 0, Address: 0x5, Writeable: true},
+		G:      &Register{Value: 0, Address: 0x6, Writeable: true},
+		H:      &Register{Value: 0, Address: 0x7, Writeable: true},
+		SCR1:   &Register{Value: 0, Address: 0x8, Writeable: true},
+		SCR2:   &Register{Value: 0, Address: 0x9, Writeable: true},
+		SP:     &Register{Value: 0, Address: 0xA, Writeable: true},
+		PC:     &Register{Value: pc, Address: 0xB, Writeable: true},
+		Zero:   &Register{Value: 0, Address: 0xC, Writeable: false},
+		One:    &Register{Value: 1, Address: 0xD, Writeable: false},
+		NegOne: &Register{Value: 0xFFFF, Address: 0xE, Writeable: false},
+		BUS:    &Register{Value: 0, Address: 0xF, Writeable: false},
+	}
 }

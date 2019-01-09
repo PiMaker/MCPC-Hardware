@@ -203,7 +203,7 @@ func Interpret(file string, attach bool, maxSteps int, symbolOverride string) {
 	}
 
 	// Run with GUI
-	vm := NewVM(data16)
+	vm := NewVM(data16, 98, 35)
 
 	plength := fmt.Sprintf("0x%04X", len(data16))
 
@@ -236,7 +236,7 @@ func Interpret(file string, attach bool, maxSteps int, symbolOverride string) {
 	registerView.SetTitle("Registers")
 	registerView.SetDynamicColors(true)
 	registerView.SetRegions(true)
-	registerView.SetText(getRegisterText(vm.Registers, vm.Registers))
+	registerView.SetText(getRegisterText(vm.Registers(), vm.Registers()))
 	root.AddItem(registerView, 1, 1, 1, 1, 0, 0, false)
 
 	sramView := tview.NewTable()
@@ -259,7 +259,7 @@ func Interpret(file string, attach bool, maxSteps int, symbolOverride string) {
 	terminalText := getStackText(terminalView, vm)
 	terminalView.SetText(terminalText)
 
-	virtualPC := vm.Registers.PC.Value
+	virtualPC := vm.Registers().PC.Value
 
 	// Create application
 	var modal *tview.Modal
@@ -308,7 +308,7 @@ func Interpret(file string, attach bool, maxSteps int, symbolOverride string) {
 				virtualPC = uint16(p) - 1
 				retval = nil
 			} else if key.Key() == tcell.KeyHome {
-				virtualPC = vm.Registers.PC.Value
+				virtualPC = vm.Registers().PC.Value
 				retval = nil
 			}
 
@@ -342,22 +342,22 @@ func Interpret(file string, attach bool, maxSteps int, symbolOverride string) {
 				messageBox("MCPC Debugger Help", "Arrow keys to move around in disassembly, press HOME to return to current instruction; Available commands: step = Executes a single instruction step (default, use <ENTER> to call with no command in input) :: run <to> = Executes instructions until HALT, BRK or specified PC address <to> is encountered :: runfor <num> = Executes <num> instructions :: exit, quit = Quits the MCPC debugger", app, modal, root)
 			case "", "step":
 				// Backup values for comparison
-				regBck := cloneRegisters(vm.Registers)
+				regBck := cloneRegisters(vm.Registers())
 				sramBck := make([]uint16, len(vm.SRAM))
 				copier.Copy(sramBck, vm.SRAM)
 				// Step VM
-				_, output, err := vm.Step()
+				_, err := vm.Step()
 				// Update view after step
 				disassemblyView.SetText(toDisassembly(data16, vm, disassemblyView))
-				disassemblyView.Highlight(fmt.Sprintf("0x%04X", vm.Registers.PC.Value))
-				virtualPC = vm.Registers.PC.Value
+				disassemblyView.Highlight(fmt.Sprintf("0x%04X", vm.Registers().PC.Value))
+				virtualPC = vm.Registers().PC.Value
 				disassemblyView.ScrollToHighlight()
 				if vm.Halted {
-					stateView.SetText(fmt.Sprintf("State: Halted\nPC: 0x%04X/%s", vm.Registers.PC.Value, plength))
+					stateView.SetText(fmt.Sprintf("State: Halted\nPC: 0x%04X/%s", vm.Registers().PC.Value, plength))
 				} else {
-					stateView.SetText(fmt.Sprintf("State: Debugging/Paused\nPC: 0x%04X/%s", vm.Registers.PC.Value, plength))
+					stateView.SetText(fmt.Sprintf("State: Debugging/Paused\nPC: 0x%04X/%s", vm.Registers().PC.Value, plength))
 				}
-				registerView.SetText(getRegisterText(vm.Registers, regBck))
+				registerView.SetText(getRegisterText(vm.Registers(), regBck))
 				setSRAMTable(vm, sramView)
 				for sramI := 0; sramI < len(sramBck); sramI++ {
 					if sramBck[sramI] != vm.SRAM[sramI] {
@@ -365,7 +365,7 @@ func Interpret(file string, attach bool, maxSteps int, symbolOverride string) {
 						break
 					}
 				}
-				terminalText += output
+				//terminalText += output
 				terminalView.SetText(getStackText(terminalView, vm))
 				// Show error message if necessary
 				if err != nil {
@@ -422,12 +422,9 @@ func Interpret(file string, attach bool, maxSteps int, symbolOverride string) {
 				}
 
 				for !vm.Halted && timeout < maxTimeout {
-					brk, termout, err := vm.Step()
+					brk, err := vm.Step()
 					if err != nil {
-						messageBox("VM Error", fmt.Sprintf("A VM error occured during step 0x%X (at PC=0x%X): %s", vm.EEPROM[vm.Registers.PC.Value-1], vm.Registers.PC.Value-1, err.Error()), app, modal, root)
-					}
-					if termout != "" {
-						terminalText += termout
+						messageBox("VM Error", fmt.Sprintf("A VM error occured during step 0x%X (at PC=0x%X): %s", vm.EEPROM[vm.Registers().PC.Value-1], vm.Registers().PC.Value-1, err.Error()), app, modal, root)
 					}
 
 					// Compare with device if running in attached mode
@@ -450,7 +447,7 @@ func Interpret(file string, attach bool, maxSteps int, symbolOverride string) {
 						}
 					}
 
-					if (match == -1 && brk && split[0] == "run") || int(vm.Registers.PC.Value) == match {
+					if (match == -1 && brk && split[0] == "run") || int(vm.Registers().PC.Value) == match {
 						break
 					}
 					timeout++
@@ -462,15 +459,15 @@ func Interpret(file string, attach bool, maxSteps int, symbolOverride string) {
 
 				// Update view after steps
 				disassemblyView.SetText(toDisassembly(data16, vm, disassemblyView))
-				disassemblyView.Highlight(fmt.Sprintf("0x%04X", vm.Registers.PC.Value))
-				virtualPC = vm.Registers.PC.Value
+				disassemblyView.Highlight(fmt.Sprintf("0x%04X", vm.Registers().PC.Value))
+				virtualPC = vm.Registers().PC.Value
 				disassemblyView.ScrollToHighlight()
 				if vm.Halted {
-					stateView.SetText(fmt.Sprintf("State: Halted\nPC: 0x%04X/%s", vm.Registers.PC.Value, plength))
+					stateView.SetText(fmt.Sprintf("State: Halted\nPC: 0x%04X/%s", vm.Registers().PC.Value, plength))
 				} else {
-					stateView.SetText(fmt.Sprintf("State: Debugging/Paused\nPC: 0x%04X/%s", vm.Registers.PC.Value, plength))
+					stateView.SetText(fmt.Sprintf("State: Debugging/Paused\nPC: 0x%04X/%s", vm.Registers().PC.Value, plength))
 				}
-				registerView.SetText(getRegisterText(vm.Registers, vm.Registers))
+				registerView.SetText(getRegisterText(vm.Registers(), vm.Registers()))
 				setSRAMTable(vm, sramView)
 				terminalView.SetText(getStackText(terminalView, vm))
 			case "exit", "quit":
@@ -618,7 +615,7 @@ func decodeAssembly(c uint16, vm *VM) (cmd, params, note string, set bool) {
 	case 0x1:
 		valueToMove := GetReg(vm, c, regFrom).Value
 
-		if GetReg(vm, c, regTo) == vm.Registers.PC {
+		if GetReg(vm, c, regTo) == vm.Registers().PC {
 			cmd = "JMP"
 			params = fmt.Sprintf("to 0x%04x", valueToMove)
 
@@ -637,7 +634,7 @@ func decodeAssembly(c uint16, vm *VM) (cmd, params, note string, set bool) {
 		cmd = "MOVNZ"
 		valueToMove := GetReg(vm, c, regFrom).Value
 
-		if GetReg(vm, c, regTo) == vm.Registers.PC {
+		if GetReg(vm, c, regTo) == vm.Registers().PC {
 			cmd = "JMPNZ"
 		}
 
@@ -656,7 +653,7 @@ func decodeAssembly(c uint16, vm *VM) (cmd, params, note string, set bool) {
 		cmd = "MOVEZ"
 		valueToMove := GetReg(vm, c, regFrom).Value
 
-		if GetReg(vm, c, regTo) == vm.Registers.PC {
+		if GetReg(vm, c, regTo) == vm.Registers().PC {
 			cmd = "JMPEZ"
 		}
 
@@ -678,7 +675,7 @@ func decodeAssembly(c uint16, vm *VM) (cmd, params, note string, set bool) {
 	case 0x5:
 		cmd = "MEMR"
 
-		if GetReg(vm, c, regFrom) == vm.Registers.SP {
+		if GetReg(vm, c, regFrom) == vm.Registers().SP {
 			cmd = "POP"
 		}
 
@@ -701,7 +698,7 @@ func decodeAssembly(c uint16, vm *VM) (cmd, params, note string, set bool) {
 	case 0x7:
 		cmd = "MEMW"
 
-		if GetReg(vm, c, regFrom) == vm.Registers.SP {
+		if GetReg(vm, c, regFrom) == vm.Registers().SP {
 			cmd = "PUSH"
 		}
 
@@ -902,7 +899,7 @@ func setSRAMTable(vm *VM, tbl *tview.Table) {
 
 func getStackText(view *tview.TextView, vm *VM) string {
 	_, _, _, lines := view.GetInnerRect()
-	addr := vm.Registers.SP.Value
+	addr := vm.Registers().SP.Value
 	retval := ""
 
 	if addr > 0 && addr < 0x7FFF {

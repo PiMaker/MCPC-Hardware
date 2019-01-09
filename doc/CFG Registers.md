@@ -13,12 +13,15 @@ CFG register layout
 * [0xD000-0xD800] r ... Bootloader ROM read-only access
 
 = VGA subsystem =
-* [0xE000-0xF2BF] w ... ASCII buffer (98x35 display, one ascii characted per data word, high bits unused)
+* [0xDFFD] r ... Width of display (maximum x, exclusive, 98 on hardware, 120 max)
+* [0xDFFE] r ... Height of display (maximum y, exclusive, 35 on hardware, 65 max)
+* [0xDFFF] r ... Last valid address of ASCII buffer
+* [0xE000-{0xDFFF}] w ... ASCII buffer (one ascii characted per data word, high bits unused)
 
 = Interrupt/Timer subsystem =
 * [0x9000] rw(k) ... Interrupt handler address
 * [0x9001] rw(k) ... Interrupt enable
-* [0x9002] rw(k) ... Interrupt context state
+* [0x9002] rw(k) ... Interrupt context state (can only write 0 to exit IRQ, other writes are ignored)
 * [0x9010-0x9011] r(k) ... Current interrupt data (reads 0 if [0x9002] reads 0)
 
 = Virtualization subsystem =
