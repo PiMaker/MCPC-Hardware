@@ -138,12 +138,21 @@ func Compile(file string, offset int, libraries []string, autoJump bool) ([]byte
 	labelMap := make(map[string]uint16)
 	for labelAddr, token := range tokens {
 		for _, lbl := range token.label {
+			for lblExists := range labelMap {
+				if lbl == lblExists {
+					fmt.Println("WARNING: Redefinition of label: " + lbl)
+				}
+			}
+
 			labelMap[lbl] = uint16(labelAddr)
 			fmt.Println(" > Label " + lbl + " located at 0x" + strconv.FormatInt(int64(labelMap[lbl]), 16))
-
-			// Add to symbol map
-			sym = append(sym, []byte(fmt.Sprintf("%04x=%s;", labelMap[lbl], lbl))...)
 		}
+	}
+
+	// Create symbol map (after label iteration to avoid doubles)
+	for lbl, addr := range labelMap {
+		// Add to symbol map
+		sym = append(sym, []byte(fmt.Sprintf("%04x=%s;", addr, lbl))...)
 	}
 
 	// Replace labels

@@ -3,7 +3,7 @@ FPGA
 
 Status output:
 - 7-segment hex display:
-    - SW9: Register H
+    - SW9: Register H (SW5 up: from IRQ regs)
     - SW8: PC
     - SW7: Instruction buffer
     - SW6: Memory FIFO data read

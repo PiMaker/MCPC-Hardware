@@ -50,7 +50,7 @@ Options:
   --version               Show version.`
 
 	// Parse command line arguments
-	args, _ := docopt.ParseArgs(usage, os.Args[1:], "MCPC Assembler Toolchain - Version 0.5\r\n"+LicenseNotice)
+	args, _ := docopt.ParseArgs(usage, os.Args[1:], "MCPC Assembler Toolchain - Version 0.5.1\r\n"+LicenseNotice)
 
 	// Choose function to call based on arguments
 	if argBool(args, "assemble") {

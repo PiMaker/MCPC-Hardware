@@ -129,6 +129,7 @@ module cpu(
 		reg_data_write,
 		
 		reg_h_out,
+		reg_h_out_irq,
 		pc_out,
 
 		bus_datain;
@@ -206,7 +207,7 @@ module cpu(
 		.rdusedw(irq_count)
 	);
 
-	assign dbgDbg = {irq_dout[16 +: 16]};
+	//assign dbgDbg = {irq_dout[16 +: 16]};
 
 	
 	// CORE COMPONENTS
@@ -219,7 +220,8 @@ module cpu(
 	reg in_irq_context = 1'h0;
 	reg in_irq_context_prev = 1'h0;
 
-	reg [15:0] irq_handler_addr;
+	reg [15:0] irq_handler_addr, irq_last_ins_debug;
+	assign dbgDbg = irq_last_ins_debug;
 
 	core_registers  u_core_registers (
 		.clk                     ( clk            ),
@@ -253,7 +255,7 @@ module cpu(
 
 		.data_read               ( reg_data_read_irq_on  ),
 		.pc_out                  ( pc_out_irq_on         ),
-		.reg_h_out               ()
+		.reg_h_out               ( reg_h_out_irq )
 	);
 
 	// IRQ and regular register combining
@@ -352,6 +354,10 @@ module cpu(
 					end
 
 					ins_started_in_irq <= in_irq_context;
+
+					if (!in_irq_context) begin
+						irq_last_ins_debug <= instruction_buffer; // Debug only
+					end
 
 					// Decompose instruction into different register busses
 					reg_addr_write <= `INSDECOMP_TO(instruction_buffer);
@@ -603,6 +609,8 @@ module cpu(
 				if (task_memr_is_cfg) begin
 					// CFG register reads
 
+					reg_data_write_inputs[`INS_MEMR] <= 16'h0; // Default to 0x0000
+
 					if (reg_data_read >= 16'hD000 && reg_data_read < (16'hD000 + `BOOTLOADER_ROM_SIZE)) begin
 						reg_data_write_inputs[`INS_MEMR] <= {bootloader_rom[reg_data_read - 16'hD000], 1'b1}; // Bootloader ROM read
 					end else if (reg_data_read == 16'h8004) begin
@@ -615,9 +623,9 @@ module cpu(
 						reg_data_write_inputs[`INS_MEMR] <= irq_en ? 16'hFFFF : 16'h0;
 					end else if (reg_data_read == 16'h9002) begin
 						reg_data_write_inputs[`INS_MEMR] <= in_irq_context ? 16'hFFFF : 16'h0;
-					end else if (reg_data_read == 16'h9010) begin
+					end else if (reg_data_read == 16'h9010 && in_irq_context) begin
 						reg_data_write_inputs[`INS_MEMR] <= irq_dout[0+:16];
-					end else if (reg_data_read == 16'h9011) begin
+					end else if (reg_data_read == 16'h9011 && in_irq_context) begin
 						reg_data_write_inputs[`INS_MEMR] <= irq_dout[16+:16];
 					end
 
@@ -741,7 +749,7 @@ module cpu(
 
 
 	// DEBUG OUTPUT LOGIC
-	assign DEBUG_BUS = SW[9] ? reg_h_out : (SW[8] ? pc_out : (SW[7] ? instruction_buffer : (SW[6] ? mem_readdata :
+	assign DEBUG_BUS = SW[9] ? (SW[5] ? reg_h_out_irq : reg_h_out) : (SW[8] ? pc_out : (SW[7] ? instruction_buffer : (SW[6] ? mem_readdata :
 		dbgDbg // Display debug stats if nothing else selected
 	)));
 
