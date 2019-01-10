@@ -136,6 +136,7 @@ func (vm *VM) Step() (bool, error) {
 		vm.RegIrq = generateEmptyRegisterSet(vm.IrqHandler)
 		vm.InIrq = true
 		vm.irqDataBuf = <-vm.IrqQueue
+		vm.SRAMPageIrq = 0
 
 		vm.t("IRQ enter, buf=h%08X, irq_reg_pc=h%04X (irq_handler=h%04X), #irq_q=%d", vm.irqDataBuf, vm.RegIrq.PC.Value, vm.IrqHandler, len(vm.IrqQueue))
 	}

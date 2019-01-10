@@ -90,7 +90,7 @@ func Compile(file string, offset int, libraries []string, autoJump bool) ([]byte
 	log.Println("Tokenizing...")
 	tokens := readFile(file)
 
-	log.Println("Applying library transforms...")
+	log.Println("Applying library transforms")
 	// Handle each library in a loop until no more replacements have occured
 	replaced := 1
 	for replaced > 0 {
@@ -103,8 +103,7 @@ func Compile(file string, offset int, libraries []string, autoJump bool) ([]byte
 				for _, r := range lib {
 					if r.capture.MatchString(token.raw) {
 						rawLibReplacement := r.capture.ReplaceAllString(token.raw, r.replacement)
-						//fmt.Println(rawLibReplacement)
-						replacementTokens := tokenize(strings.NewReader(rawLibReplacement))
+						replacementTokens := tokenize(strings.NewReader(rawLibReplacement), token.raw)
 
 						// Handle labels
 						replacementTokens[0].label = token.label
@@ -452,14 +451,14 @@ func readFile(path string) []*tokenLine {
 	}
 	defer file.Close()
 
-	return tokenize(file)
+	return tokenize(file, "file://"+path)
 }
 
 // Defined globally, not very pretty but gets the job done
 var declarationMap map[string]string
 var longestDeclaration int
 
-func tokenize(reader io.Reader) []*tokenLine {
+func tokenize(reader io.Reader, originalSource string) []*tokenLine {
 	var tokens []*tokenLine
 
 	nextLabel := []string{}
@@ -544,6 +543,10 @@ func tokenize(reader io.Reader) []*tokenLine {
 		}
 
 		// Check for raw instructions
+		if len(t) < 3 {
+			log.Fatalf("ERROR: Invalid syntax in expansion of '%s': %s\n", originalSource, t)
+		}
+
 		n, err := strconv.ParseInt(t[2:], 16, 17)
 		if err == nil {
 			// Number literal found

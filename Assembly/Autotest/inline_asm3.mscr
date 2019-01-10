@@ -1,0 +1,25 @@
+;autotest reg=0 val=5;
+
+func var main(argc, argp) {
+    var x;
+    var y;
+
+    _reg_assign(0, x);
+    _asm {
+        MOV 0 A
+        INC A
+        INC A
+        INC A
+    }
+
+    if 2+2 == 4 {
+        _reg_assign(2, y);
+        _asm {
+            MOV 0 C
+            INC C
+            INC C
+        }
+    }
+
+    return x + y;
+}

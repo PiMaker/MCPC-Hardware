@@ -12,59 +12,100 @@ global prompt = "MCPC> ";
 func var main(argc, argp) {
     // Enable interrupts
     _asm {
-        SET SCR1
-        .IRQ_HANDLER
-        STORLA SCR1 0x9000
-        STORLA 1 0x9001
+        set SCR1
+        .irq_handler // Declared in asm.ma
+        storla SCR1 0x9000
+        storla 1 0x9001 // IRQ_EN
     }
 
     vga_init();
-    //vga_clearScreen();
+    vga_clearScreen();
 
-    vga_printString(prompt);
-    vga_printChar('\n');
-
-    // Loop hello world
-    /*var c = 0;
-    while true {
-        if c == 1000 {
-            vga_printString(text);
-            c = 0;
-        }
-
-        c += 1;
-    }*/
-
-    while true {
-        //vga_printString(prompt);
+    while (true) {
+        vga_printString(prompt);
 
         var read_en = true;
-        while read_en {
+        while (read_en) {
             // Check for new keyboard input
-            var input = 0;
-            var input_irq = 0;
-            _reg_assign(0, input);
-            _reg_assign(1, input_irq);
-            _asm {
-                LOADLA_P A 0x1 0x1
-                LOADLA_P B 0x0 0x1
-            }
-
-            if input & input_irq {
-            _asm {
-                STORLA_P 0 0x1 0x1
-                STORLA_P 0 0x0 0x1
-            }
-
-                vga_printHex(input_irq);
-                vga_printChar('-');
-                vga_printChar('>');
-                vga_printHex(input);
-                vga_printChar('\n');
+            var key = getKeyPressed();
+            if (key != 0) {
+                if (key == 0x5A) { // Enter
+                    vga_printChar('\n');
+                    read_en = false;
+                } else { // Anything else
+                    vga_printChar(keycodeToASCII(key));
+                }
             }
         }
     }
 
     // Return Esel
     return 0x7353;
+}
+
+global releaseKeyWasPressed = false;
+global shiftKeyPressed = false;
+
+func var getKeyPressed() {
+    var retval = 0;
+    var rdptr;
+    var wrptr;
+
+    _reg_assign(1, rdptr);
+    _reg_assign(2, wrptr);
+    _asm {
+        setpage 0x1
+        loadla B 0x100
+        loadla C 0x101
+        rstpage
+    }
+
+    if rdptr != wrptr {
+        _reg_assign(0, retval);
+        _reg_assign(1, rdptr);
+        _asm {
+            setpage 0x1
+            load A B // retval <- sram[rdptr]
+            inc B
+            storla B 0x100 // Increment rdptr
+            rstpage
+        }
+
+        if retval == 0x0012 {
+            shiftKeyPressed = ~releaseKeyWasPressed;
+            releaseKeyWasPressed = false;
+
+            return 0;
+        }
+
+        if retval == 0x00F0 {
+            releaseKeyWasPressed = true;
+            return 0;
+        }
+
+        if releaseKeyWasPressed {
+            releaseKeyWasPressed = false;
+            return 0;
+        }
+    }
+
+    return retval;
+}
+
+func var keycodeToASCII(key) {
+    if (shiftKeyPressed) {
+
+        if (key == 0x1c) {
+            return 'A';
+        }
+
+    } else {
+
+        if (key == 0x1c) {
+            return 'a';
+        }
+
+    }
+
+    return '?';
 }
