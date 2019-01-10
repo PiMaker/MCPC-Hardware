@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"os"
+	"strconv"
 	"time"
 	"unicode"
 
@@ -13,19 +15,85 @@ import (
 var (
 	keycodeLookupRunes = map[rune]uint32{
 		'a': 0x1c,
+		'b': 0x32,
+		'c': 0x21,
+		'd': 0x23,
+		'e': 0x24,
+		'f': 0x2b,
+		'g': 0x34,
+		'h': 0x33,
+		'i': 0x43,
+		'j': 0x3b,
+		'k': 0x42,
+		'l': 0x4b,
+		'm': 0x3a,
+		'n': 0x31,
+		'o': 0x44,
+		'p': 0x4d,
+		'q': 0x15,
+		'r': 0x2d,
+		's': 0x1b,
+		't': 0x2c,
+		'u': 0x3c,
+		'v': 0x2a,
+		'w': 0x1d,
+		'x': 0x22,
+		'z': 0x35,
+		'y': 0x1a,
+
+		'0': 0x45,
+		'1': 0x16,
+		'2': 0x1e,
+		'3': 0x26,
+		'4': 0x25,
+		'5': 0x2e,
+		'6': 0x36,
+		'7': 0x3d,
+		'8': 0x3e,
+		'9': 0x46,
+
+		'!': 0x45,
+		'"': 0x16,
+		'§': 0x1e,
+		'$': 0x26,
+		'%': 0x25,
+		'&': 0x2e,
+		'/': 0x36,
+		'(': 0x3d,
+		')': 0x3e,
+		'=': 0x46,
+
+		'-':  0x4a,
+		'_':  0x4a,
+		'ß':  0x4e,
+		'\\': 0x4e,
+		',':  0x41,
+		';':  0x41,
+		'.':  0x49,
+		':':  0x49,
+		'ä':  0x52,
+		'ö':  0x4c,
+		'ü':  0x54,
+		'+':  0x5b,
 	}
 
 	keycodeLookupTermbox = map[termbox.Key]uint32{
-		termbox.KeyBackspace: 0x66,
+		termbox.KeyBackspace:  0x66,
+		termbox.KeyBackspace2: 0x66,
+		termbox.KeyEnter:      0x5A,
+		termbox.KeyEsc:        0x76,
+		termbox.KeyTab:        0x0D,
+		termbox.KeySpace:      0x29,
 	}
 
-	keycodeBreak   = uint32(0x00F00000)
-	keycodeLSHFT   = uint32(0x00120000)
-	keyboardIrqNum = uint32(0xA)
+	keycodeBreak     = uint32(0x00F00000)
+	keycodeLSHFT     = uint32(0x00120000)
+	keyboardIrqNum   = uint32(0xA)
+	invalidKeyIrqNum = uint32(0xB)
 )
 
 // VMRun executes the given file in a virtual MCPC
-func VMRun(file string) {
+func VMRun(file, traceFile string) {
 
 	// Termbox init
 	err := termbox.Init()
@@ -102,6 +170,9 @@ func VMRun(file string) {
 						// Send BREAK
 						irqChan <- keycodeBreak | keyboardIrqNum
 						irqChan <- keyCode | keyboardIrqNum
+					} else {
+						// Invalid key interrupt
+						irqChan <- invalidKeyIrqNum
 					}
 				} else {
 					// Character key
@@ -123,6 +194,9 @@ func VMRun(file string) {
 						// Send BREAK
 						irqChan <- keycodeBreak | keyboardIrqNum
 						irqChan <- keyCode | keyboardIrqNum
+					} else {
+						// Invalid key interrupt
+						irqChan <- invalidKeyIrqNum
 					}
 
 					// Send SHFT BREAK in case of uppercase
@@ -151,6 +225,22 @@ func VMRun(file string) {
 	// VM init
 	vm := NewVM(data16, uint16(width-2), uint16(height-4))
 	writeVMState(vm, height, -1)
+
+	// Trace-handler
+	var f *os.File
+	if traceFile != "" {
+		f, err = os.Create(traceFile)
+		if err != nil {
+			log.Fatalln("ERROR: " + err.Error())
+		}
+
+		f.WriteString(time.Now().Format(time.RFC3339) + " CPU tracing started. VM loaded file: " + file + "\n")
+		vm.TraceCallback = func(msg string, step int64) {
+			f.WriteString(time.Now().Format(time.RFC3339) + " [" + strconv.FormatInt(step, 10) + "] " + msg + "\n")
+		}
+
+		defer f.Close()
+	}
 
 	// Attach VGA update handler
 	vgaChanged := false
@@ -197,6 +287,9 @@ func VMRun(file string) {
 
 			if err != nil {
 				termbox.Close()
+				if f != nil {
+					f.Close()
+				}
 				log.Fatalln("VM ERROR: " + err.Error())
 			}
 

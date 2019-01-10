@@ -27,7 +27,7 @@ func main() {
 Usage:
   mcpc assemble <file> <output> [--library=<library>...] [--debug-symbols] [--offset=<offset>] [--enable-offset-jump] [--ascii] [--hex] [--length=<length>]
   mcpc debug <file> [--symbols=<msym>]
-  mcpc vm <file>
+  mcpc vm <file> [--trace=<file>]
   mcpc attach <port> [--symbols=<msym>]
   mcpc autotest <directory> [--mscr=<mscrcmd>] [--library=<library>...]
   mcpc -h | --help
@@ -48,6 +48,7 @@ Options:
   --hex                   Outputs raw binary in Verilog HEX format.
   --length=<length>       Length of hex output in bytes (one instruction word is 2 bytes!) [default: 4096].
   --mscr=<mscrcmd>        Specify a command line to use to compile .mscr files before testing them with autotest. Leave empty to skip .mscr files.
+  --trace=<file>          Write out a CPU trace file in VM mode. NOTE: This will decrease VM performance drastically.
   -h --help               Show this screen.
   --version               Show version.`
 
@@ -93,7 +94,7 @@ Options:
 	} else if argBool(args, "vm") {
 
 		// Run virtual MCPC
-		interpreter.VMRun(argString(args, "<file>"))
+		interpreter.VMRun(argString(args, "<file>"), argStringWithDefault(args, "--trace", ""))
 
 	} else {
 		log.Println("Invalid command, use -h for help")
