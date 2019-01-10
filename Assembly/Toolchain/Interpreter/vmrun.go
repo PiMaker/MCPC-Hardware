@@ -5,6 +5,8 @@ import (
 	"github.com/nsf/termbox-go"
 	"io/ioutil"
 	"log"
+	"os"
+	"strconv"
 	"time"
 	"unicode"
 )
@@ -24,7 +26,7 @@ var (
 )
 
 // VMRun executes the given file in a virtual MCPC
-func VMRun(file string) {
+func VMRun(file, traceFile string) {
 
 	// Termbox init
 	err := termbox.Init()
@@ -151,6 +153,22 @@ func VMRun(file string) {
 	vm := NewVM(data16, uint16(width-2), uint16(height-4))
 	writeVMState(vm, height, -1)
 
+	// Trace-handler
+	var f *os.File
+	if traceFile != "" {
+		f, err = os.Create(traceFile)
+		if err != nil {
+			log.Fatalln("ERROR: " + err.Error())
+		}
+
+		f.WriteString(time.Now().Format(time.RFC3339) + " CPU tracing started. VM loaded file: " + file + "\n")
+		vm.TraceCallback = func(msg string, step int64) {
+			f.WriteString(time.Now().Format(time.RFC3339) + " [" + strconv.FormatInt(step, 10) + "] " + msg + "\n")
+		}
+
+		defer f.Close()
+	}
+
 	// Attach VGA update handler
 	vgaChanged := false
 	vm.VgaChangeCallback = func(addr, x, y, old, new uint16) {
@@ -196,6 +214,9 @@ func VMRun(file string) {
 
 			if err != nil {
 				termbox.Close()
+				if f != nil {
+					f.Close()
+				}
 				log.Fatalln("VM ERROR: " + err.Error())
 			}
 
