@@ -2,11 +2,12 @@ package interpreter
 
 import (
 	"fmt"
-	"github.com/nsf/termbox-go"
 	"io/ioutil"
 	"log"
 	"time"
 	"unicode"
+
+	"github.com/nsf/termbox-go"
 )
 
 var (
@@ -43,7 +44,7 @@ func VMRun(file string) {
 	// Draw border
 	for y := 0; y < height; y++ {
 		for x := 0; x < width; x++ {
-			if x == 0 || x == width-1 || (x == 121 && y <= 66 && y > 0) {
+			if x == 0 || x == width-1 || (x == 121 && y <= 67 && y > 0 && y < height-3) {
 				// Left/Right border
 				termbox.SetCell(x, y, '|', termbox.ColorWhite, termbox.ColorBlack)
 			}
