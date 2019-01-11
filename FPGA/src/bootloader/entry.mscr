@@ -18,7 +18,6 @@ func var main(argc, argp) {
         storla 1 0x9001 // IRQ_EN
     }
 
-    vga_init();
     vga_clearScreen();
 
     while (true) {
@@ -71,6 +70,7 @@ func var getKeyPressed() {
             rstpage
         }
 
+        // Shift and Make/Break code support
         if retval == 0x0012 {
             shiftKeyPressed = ~releaseKeyWasPressed;
             releaseKeyWasPressed = false;

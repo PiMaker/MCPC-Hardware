@@ -13,11 +13,10 @@ CFG register layout
 * [0xD000-0xD800] r ... Bootloader ROM read-only access
 
 = VGA subsystem =
-* [0xDFFC] w ... Start address of ASCII buffer read ("y-shift", ignored if bigger than CFG[0xDFFF], wraps around if !=0)
 * [0xDFFD] r ... Width of display (maximum x, exclusive, 98 on hardware, 120 max)
 * [0xDFFE] r ... Height of display (maximum y, exclusive, 35 on hardware, 65 max)
 * [0xDFFF] r ... Last valid address of ASCII buffer
-* [0xE000-{0xDFFF}] w ... ASCII buffer (one ascii characted per data word, high bits unused)
+* [0xE000-{0xDFFF}] rw ... ASCII buffer (one ascii characted per data word, high bits unused)
 
 = Interrupt/Timer subsystem =
 * [0x9000] rw(k) ... Interrupt handler address

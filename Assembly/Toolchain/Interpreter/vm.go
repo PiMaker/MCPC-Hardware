@@ -24,7 +24,6 @@ type VM struct {
 	SRAMPageIrq uint16
 	VgaWidth    uint16
 	VgaHeight   uint16
-	VgaOffset   uint16
 	VgaBuffer   []uint16
 
 	IrqEn      bool
@@ -35,7 +34,6 @@ type VM struct {
 
 	// addr relative to VgaBuffer (0 is x=y=0)
 	VgaChangeCallback func(addr, x, y, old, new uint16)
-	VgaResyncCallback func()
 
 	TraceCallback func(msg string, step int64)
 	StepCounter   int64
@@ -109,7 +107,6 @@ func NewVM(program []uint16, vgaWidth, vgaHeight uint16) *VM {
 		SRAMPageIrq: 0,
 		VgaWidth:    vgaWidth,
 		VgaHeight:   vgaHeight,
-		VgaOffset:   0,
 		VgaBuffer:   make([]uint16, vgaWidth*vgaHeight),
 
 		InIrq:      false,
@@ -239,6 +236,10 @@ func (vm *VM) Step() (bool, error) {
 			} else if addrReg.Value == 0xDFFF {
 				writeToReg.Value = 0xE000 + vm.VgaWidth*vm.VgaHeight - 1
 				vm.t("CFG, VgaMaxAddr = h%04X", writeToReg.Value)
+			} else if addrReg.Value >= 0xE000 && addrReg.Value < uint16(0xE000+len(vm.VgaBuffer)) {
+				// Read from ASCII buffer
+				writeToReg.Value = vm.VgaBuffer[addrReg.Value-0xE000]
+				vm.t("CFG, read from VGA buffer [abs=h%04X,rel=h%04X] == h%04X", addrReg.Value, addrReg.Value-0xE000, writeToReg.Value)
 			} else if addrReg.Value == 0x9000 {
 				// IRQs
 				writeToReg.Value = vm.IrqHandler
@@ -297,10 +298,10 @@ func (vm *VM) Step() (bool, error) {
 			vm.t("Direct, SRAM[h%07X] <- h%04X", uint(vm.SRAMPage()&SRAMPageMask)<<16|uint(addrReg.Value), dataReg.Value)
 		} else if addrReg.Value >= 0xE000 && addrReg.Value < uint16(0xE000+len(vm.VgaBuffer)) {
 			// VGA
-			relAddr := (addrReg.Value - 0xE000 + vm.VgaOffset) % (vm.VgaWidth * vm.VgaHeight)
+			relAddr := addrReg.Value - 0xE000
 			old := vm.VgaBuffer[relAddr]
 			vm.VgaBuffer[relAddr] = dataReg.Value
-			vm.t("CFG, VGA, write to x=%d y=%d (offset=h%04x) rune=%v(%s)", relAddr%vm.VgaWidth, relAddr/vm.VgaWidth, vm.VgaOffset, rune(dataReg.Value), string(rune(dataReg.Value)))
+			vm.t("CFG, VGA, write to addr=h%04X (rel=h%04X), x=%d y=%d rune=%v/('%s')", addrReg.Value, relAddr, relAddr%vm.VgaWidth, relAddr/vm.VgaWidth, rune(dataReg.Value), string(rune(dataReg.Value)))
 			if vm.VgaChangeCallback != nil {
 				vm.VgaChangeCallback(relAddr,
 					relAddr%vm.VgaWidth,
@@ -308,15 +309,6 @@ func (vm *VM) Step() (bool, error) {
 					old,
 					dataReg.Value)
 				vm.t("VGA change callback fired")
-			}
-		} else if addrReg.Value == 0xDFFC {
-			// VGA start offset
-			pre := vm.VgaOffset
-			vm.VgaOffset = dataReg.Value
-			vm.t("CFG, VGA, offset changed from %04X to %04X", pre, vm.VgaOffset)
-			if pre != vm.VgaOffset && vm.VgaResyncCallback != nil {
-				vm.VgaResyncCallback()
-				vm.t("VGA resync callback fired")
 			}
 		} else if addrReg.Value == 0x9000 { // IRQs
 			vm.IrqHandler = dataReg.Value

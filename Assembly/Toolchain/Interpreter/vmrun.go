@@ -66,6 +66,7 @@ var (
 		'-':  0x4a,
 		'_':  0x4a,
 		'ß':  0x4e,
+		'?':  0x4e,
 		'\\': 0x4e,
 		',':  0x41,
 		';':  0x41,
@@ -112,7 +113,7 @@ func VMRun(file, traceFile string) {
 	// Draw border
 	for y := 0; y < height; y++ {
 		for x := 0; x < width; x++ {
-			if x == 0 || x == width-1 || (x == 121 && y <= 67 && y > 0 && y < height-3) {
+			if x == 0 || x == width-1 || (x == 121 && y < 67 && y > 0 && y < height-3) {
 				// Left/Right border
 				termbox.SetCell(x, y, '|', termbox.ColorWhite, termbox.ColorBlack)
 			}
@@ -144,7 +145,7 @@ func VMRun(file, traceFile string) {
 
 	// Event loop (goroutine)
 	closeChan := make(chan bool, 1)
-	irqChan := make(chan uint32, 256)
+	cpuIrqChan := make(chan uint32, 256)
 	go func() {
 		for {
 			event := termbox.PollEvent()
@@ -165,14 +166,14 @@ func VMRun(file, traceFile string) {
 					keyCode = keyCode << 16
 					if ok {
 						// Send MAKE
-						irqChan <- keyCode | keyboardIrqNum
+						cpuIrqChan <- keyCode | keyboardIrqNum
 
 						// Send BREAK
-						irqChan <- keycodeBreak | keyboardIrqNum
-						irqChan <- keyCode | keyboardIrqNum
+						cpuIrqChan <- keycodeBreak | keyboardIrqNum
+						cpuIrqChan <- keyCode | keyboardIrqNum
 					} else {
 						// Invalid key interrupt
-						irqChan <- invalidKeyIrqNum
+						cpuIrqChan <- invalidKeyIrqNum
 					}
 				} else {
 					// Character key
@@ -181,7 +182,7 @@ func VMRun(file, traceFile string) {
 					uppercase := unicode.IsUpper(letter)
 					if uppercase {
 						// Uppercase letter, send shift first
-						irqChan <- keycodeLSHFT | keyboardIrqNum
+						cpuIrqChan <- keycodeLSHFT | keyboardIrqNum
 						letter = unicode.ToLower(letter)
 					}
 
@@ -189,20 +190,20 @@ func VMRun(file, traceFile string) {
 					keyCode = keyCode << 16
 					if ok {
 						// Send MAKE
-						irqChan <- keyCode | keyboardIrqNum
+						cpuIrqChan <- keyCode | keyboardIrqNum
 
 						// Send BREAK
-						irqChan <- keycodeBreak | keyboardIrqNum
-						irqChan <- keyCode | keyboardIrqNum
+						cpuIrqChan <- keycodeBreak | keyboardIrqNum
+						cpuIrqChan <- keyCode | keyboardIrqNum
 					} else {
 						// Invalid key interrupt
-						irqChan <- invalidKeyIrqNum
+						cpuIrqChan <- invalidKeyIrqNum
 					}
 
 					// Send SHFT BREAK in case of uppercase
 					if uppercase {
-						irqChan <- keycodeBreak | keyboardIrqNum
-						irqChan <- keycodeLSHFT | keyboardIrqNum
+						cpuIrqChan <- keycodeBreak | keyboardIrqNum
+						cpuIrqChan <- keycodeLSHFT | keyboardIrqNum
 					}
 				}
 			}
@@ -268,8 +269,8 @@ func VMRun(file, traceFile string) {
 	// Event loop
 	for {
 		// Inject IRQ if needed
-		for len(irqChan) > 0 {
-			vm.InjectIRQ(<-irqChan)
+		for len(cpuIrqChan) > 0 {
+			vm.InjectIRQ(<-cpuIrqChan)
 		}
 
 		flushTerminal := false
@@ -350,9 +351,9 @@ func writeVMState(vm *VM, height, speed int) {
 	state += fmt.Sprintf(" | #q_irq <%3d>", len(vm.IrqQueue))
 
 	if speed > 1000000 {
-		state += fmt.Sprintf(" | <%6.3f> MIPS", float64(speed)/1000000)
+		state += fmt.Sprintf(" | <%7.3f> MIPS", float64(speed)/1000000)
 	} else if speed > 1000 {
-		state += fmt.Sprintf(" | <%6.3f> kIPS", float64(speed)/1000)
+		state += fmt.Sprintf(" | <%7.3f> kIPS", float64(speed)/1000)
 	} else {
 		state += fmt.Sprintf(" | <%7d>  IPS", speed)
 	}
