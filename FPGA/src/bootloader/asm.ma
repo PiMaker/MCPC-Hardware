@@ -43,11 +43,15 @@ setpage 0x1 ; set page for rest of function
 loadla B 0x100 ; rd
 loadla C 0x101 ; wr
 
+; Check for overflow and ignore IRQ if necessary
+setreg G 0x00FF
+jmpeq .irq_return C G
+
 ; Reset rd and wr if possible
-;jmpnq .irq_skip_reset B C
-;jmpez .irq_skip_reset B 
-;storla 0 0x100 ; rd is invalid from here on out
-;mov 0 C
+jmpnq .irq_skip_reset B C
+jmpez .irq_skip_reset B 
+storla 0 0x100 ; rd is invalid from here on out
+mov 0 C
 
 .irq_skip_reset __LABEL_SET
 ; Write to FIFO and increment wr ptr
