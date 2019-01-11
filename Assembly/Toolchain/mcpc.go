@@ -12,6 +12,8 @@ import (
 	"github.com/PiMaker/MCPC/Assembly/Toolchain/Assembler"
 	"github.com/PiMaker/MCPC/Assembly/Toolchain/Autotest"
 	"github.com/PiMaker/MCPC/Assembly/Toolchain/Interpreter"
+
+	"github.com/pkg/profile"
 )
 
 const LicenseNotice string = `
@@ -22,7 +24,7 @@ under certain conditions.
 See https://github.com/PiMaker/mscr/blob/master/LICENSE for more.`
 
 func main() {
-	usage := `MCPC Toolchain (Assembler/Debugger/Test-runner).
+	usage := `MCPC Toolchain (Assembler/Debugger/VM/Test-runner).
 
 Usage:
   mcpc assemble <file> <output> [--library=<library>...] [--debug-symbols] [--offset=<offset>] [--enable-offset-jump] [--ascii] [--hex] [--length=<length>]
@@ -35,10 +37,10 @@ Usage:
 
 Options:
   assemble                Assembles an assembler file to assembly.
-  debug                   Uses the MCPC interpreter to run the specified binary file and shows a TUI interface for debugging purposes.
+  debug                   Uses a virtual MCPC to run the specified binary file and shows a TUI interface for debugging purposes.
   vm                      Run a specified binary (.mb format) on a virtual MCPC. Supports user IO.
   attach                  Attaches to a physical MCPC device at <port> (e.g. /dev/ttyUSB0) and launches the hardware debugger.
-  autotest                Runs the autotest test-suite on all files in the specified <directory>.
+  autotest                Runs the autotest test-suite on all files in the specified directory.
   --library=<library>     Includes a library, specified in mlib format, which allows higher-level instructions to be compiled down.
   --debug-symbols         Writes a symbol file to use with the MCPC debugger next to the output file (will overwrite existing symbol files!)
   --symbols=<msym>        Path to .msym debug symbol file. "debug" mode has <file>.msym as default, attach mode requires manual specification if symbols are wanted.
@@ -54,6 +56,11 @@ Options:
 
 	// Parse command line arguments
 	args, _ := docopt.ParseArgs(usage, os.Args[1:], "MCPC Assembler Toolchain - Version 0.5.1\r\n"+LicenseNotice)
+
+	// CPU profiling
+	if os.Getenv("MCPC_PROFILE_ENABLED") != "" {
+		defer profile.Start().Stop()
+	}
 
 	// Choose function to call based on arguments
 	if argBool(args, "assemble") {
