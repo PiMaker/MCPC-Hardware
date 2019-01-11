@@ -55,7 +55,7 @@ Options:
   --version               Show version.`
 
 	// Parse command line arguments
-	args, _ := docopt.ParseArgs(usage, os.Args[1:], "MCPC Assembler Toolchain - Version 0.5.1\r\n"+LicenseNotice)
+	args, _ := docopt.ParseArgs(usage, os.Args[1:], "MCPC Assembler Toolchain - Version 0.5.2\r\n"+LicenseNotice)
 
 	// CPU profiling
 	if os.Getenv("MCPC_PROFILE_ENABLED") != "" {
