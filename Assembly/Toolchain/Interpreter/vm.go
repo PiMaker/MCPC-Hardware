@@ -430,7 +430,15 @@ func (vm *VM) InjectIRQ(irqData uint32) {
 // GetReg extracts details about a register from an instruction in the context of a VM
 func GetReg(vm *VM, ins uint16, reg uint16) *Register {
 	addr := ins & reg
-	addr >>= getFirstSet(reg)
+
+	if reg == 0x00F0 {
+		addr >>= 4
+	} else if reg == 0x0F00 {
+		addr >>= 8
+	} else if reg == 0xF000 {
+		addr >>= 12
+	}
+
 	switch byte(addr) {
 	case vm.Registers().A.Address:
 		return vm.Registers().A
@@ -494,15 +502,6 @@ func (vm *VM) tReg() {
 		vm.Registers().One.Value,
 		vm.Registers().NegOne.Value,
 		vm.Registers().BUS.Value)
-}
-
-func getFirstSet(val uint16) byte {
-	var ret byte
-	for val&0x1 == 0 {
-		val >>= 1
-		ret++
-	}
-	return ret
 }
 
 func (vm *VM) registerFromNumber(regNum uint16) *Register {
