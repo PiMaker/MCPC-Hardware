@@ -10,7 +10,7 @@ CFG register layout
 * [0x8800] rw ... Memory high bits (RAM uses 25 bit addressing, lower 15 bit are set by MEMR/MEMW directly, the next 5 bits are loaded from the lower bits of this CFG register, the missing 5 bits are the lower kernel memory bits)
 
 = Bootloader ROM =
-* [0xD000-0xD800] r ... Bootloader ROM read-only access
+* [0xD000-0xD800] r ... Bootloader ROM read-only access (up to 0x800 relative)
 
 = VGA subsystem =
 * [0xDFFD] r ... Width of display (maximum x, exclusive, 98 on hardware, 120 max)

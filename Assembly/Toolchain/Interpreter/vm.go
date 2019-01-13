@@ -259,11 +259,21 @@ func (vm *VM) Step() (bool, error) {
 				}
 				vm.t("CFG, IN_IRQ = h%04X", writeToReg.Value)
 			} else if addrReg.Value == 0x9010 {
-				writeToReg.Value = uint16(vm.irqDataBuf)
-				vm.t("CFG, IrqBuf_low = h%04X", writeToReg.Value)
+				if vm.InIrq {
+					writeToReg.Value = uint16(vm.irqDataBuf)
+					vm.t("CFG, IrqBuf_low = h%04X", writeToReg.Value)
+				} else {
+					writeToReg.Value = 0
+					vm.t("CFG, IrqBuf_low = 0 (not in IRQ)")
+				}
 			} else if addrReg.Value == 0x9011 {
-				writeToReg.Value = uint16(vm.irqDataBuf >> 16)
-				vm.t("CFG, IrqBuf_high = h%04X", writeToReg.Value)
+				if vm.InIrq {
+					writeToReg.Value = uint16(vm.irqDataBuf >> 16)
+					vm.t("CFG, IrqBuf_high = h%04X", writeToReg.Value)
+				} else {
+					writeToReg.Value = 0
+					vm.t("CFG, IrqBuf_high = 0 (not in IRQ)")
+				}
 			} else {
 				// other CFGs return 0 (not implemented)
 				writeToReg.Value = 0

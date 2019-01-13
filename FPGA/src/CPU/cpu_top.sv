@@ -30,7 +30,7 @@
 `define INSDECOMP_IF(ins) ins[12+:4]
 
 // General defines
-`define BOOTLOADER_ROM_SIZE 2047
+`define BOOTLOADER_ROM_SIZE 8191
 
 
 module cpu(
@@ -161,7 +161,8 @@ module cpu(
 
 	// DEBUGGER
 	assign debugEnOut = debugEn;
-    wire [15:0] dbgDbg, dbgRomAddr;
+    wire [15:0] dbgRomAddr;
+    wire [15:0] dbgDbg;
 	cpu_debugger debugger (
 		.clk(clkCore),
 		.clk50(clk50),
@@ -185,7 +186,7 @@ module cpu(
 		.regAddrOvrEn(debugRegRead),
 
 		.ARDUINO_IO(ARDUINO_IO),
-        .dbgDbg() // dbgDbg
+        .dbgDbg(dbgDbg) // dbgDbg
 	);
 
 
@@ -207,8 +208,6 @@ module cpu(
 		.rdusedw(irq_count)
 	);
 
-	//assign dbgDbg = {irq_dout[16 +: 16]};
-
 	
 	// CORE COMPONENTS
 	wire [3:0] reg_addr_read_wire;
@@ -221,7 +220,6 @@ module cpu(
 	reg in_irq_context_prev = 1'h0;
 
 	reg [15:0] irq_handler_addr, irq_last_ins_debug;
-	assign dbgDbg = irq_last_ins_debug;
 
 	core_registers  u_core_registers (
 		.clk                     ( clk            ),
@@ -591,12 +589,12 @@ module cpu(
 		mem_addr_ext_kernel;
 
 	// Read (MEMR)
-    reg [16:0] task_memr_state;
+    reg [15:0] task_memr_state, task_memr_writeback_buffer;
     reg task_memr_is_cfg;
 	task task_memr;
 	begin
 		if (reg_data_read[15] || task_memr_is_cfg) begin
-            task_memr_is_cfg <= 1'b1;
+            task_memr_is_cfg = 1'b1;
         end
 
 		case (task_memr_state)
@@ -609,27 +607,34 @@ module cpu(
 				if (task_memr_is_cfg) begin
 					// CFG register reads
 
-					reg_data_write_inputs[`INS_MEMR] <= 16'h0; // Default to 0x0000
-
-					if (reg_data_read >= 16'hD000 && reg_data_read < (16'hD000 + `BOOTLOADER_ROM_SIZE)) begin
-						reg_data_write_inputs[`INS_MEMR] <= {bootloader_rom[reg_data_read - 16'hD000], 1'b1}; // Bootloader ROM read
+					if (reg_data_read >= 16'hD000 && reg_data_read <= 16'hD800) begin // TODO: Include full bootloader ROM somehow (maybe?)
+						task_memr_writeback_buffer = bootloader_rom[reg_data_read - 16'hD000]; // Bootloader ROM read
 					end else if (reg_data_read == 16'h8004) begin
-						reg_data_write_inputs[`INS_MEMR] <= {11'h0, mem_addr_ext_kernel, 1'b1};
+						task_memr_writeback_buffer = mem_addr_ext_kernel;
 					end else if (reg_data_read == 16'h8800) begin
-						reg_data_write_inputs[`INS_MEMR] <= {11'h0, mem_addr_ext_user, 1'b1};
+						task_memr_writeback_buffer = mem_addr_ext_user;
+					end else if (reg_data_read == 16'hDFFD) begin
+						task_memr_writeback_buffer = 98;
+					end else if (reg_data_read == 16'hDFFE) begin
+						task_memr_writeback_buffer = 35;
+					end else if (reg_data_read == 16'hDFFF) begin
+						task_memr_writeback_buffer = 16'hED66;
+					end else if (reg_data_read >= 16'hE000 && reg_data_read <= 16'hED66) begin
+						task_memr_writeback_buffer = 0; // TODO: Framebuffer read
 					end else if (reg_data_read == 16'h9000) begin
-						reg_data_write_inputs[`INS_MEMR] <= irq_handler_addr;
+						task_memr_writeback_buffer = irq_handler_addr;
 					end else if (reg_data_read == 16'h9001) begin
-						reg_data_write_inputs[`INS_MEMR] <= irq_en ? 16'hFFFF : 16'h0;
+						task_memr_writeback_buffer = irq_en ? 16'hFFFF : 16'h0;
 					end else if (reg_data_read == 16'h9002) begin
-						reg_data_write_inputs[`INS_MEMR] <= in_irq_context ? 16'hFFFF : 16'h0;
+						task_memr_writeback_buffer = in_irq_context ? 16'hFFFF : 16'h0;
 					end else if (reg_data_read == 16'h9010 && in_irq_context) begin
-						reg_data_write_inputs[`INS_MEMR] <= irq_dout[0+:16];
+						task_memr_writeback_buffer = irq_dout[0+:16];
 					end else if (reg_data_read == 16'h9011 && in_irq_context) begin
-						reg_data_write_inputs[`INS_MEMR] <= irq_dout[16+:16];
+						task_memr_writeback_buffer = irq_dout[16+:16];
 					end
 
 					mem_read <= 1'h0;
+					reg_data_write_inputs[`INS_MEMR] <= {task_memr_writeback_buffer, 1'b1};
                     write_enable_register[`INS_MEMR] <= 1'h1;
                     continue_execution_register[`INS_MEMR] <= 1'h1;
 
@@ -669,7 +674,7 @@ module cpu(
             1: begin
                 if (task_memw_is_cfg) begin
 					// CFG register writes
-                    if (task_memw_addr_buffer >= 16'hE000 && task_memw_addr_buffer <= 16'hF2BF) begin
+                    if (task_memw_addr_buffer >= 16'hE000 && task_memw_addr_buffer <= 16'hED66) begin
 						// Framebuffer write
                         fb_addr = task_memw_addr_buffer - 16'hE000;
                         fb_data = reg_data_read[0 +: 8];
@@ -728,6 +733,7 @@ module cpu(
 
 		task_memr_state <= 0;
 		task_memr_is_cfg <= 0;
+		task_memr_writeback_buffer <= 16'h0;
 		task_memw_state <= 0;
 		task_memw_addr_buffer <= 0;
         task_memw_is_cfg <= 0;
