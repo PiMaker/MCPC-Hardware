@@ -1,7 +1,7 @@
 Assembly language instruction set
 =================================
 
-**Memory locations:**
+**Memory locations**
 
 * EEPROM (read-only)
 * SRAM

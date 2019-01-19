@@ -25,4 +25,4 @@ This document uses Verilog-style number formatting. See examples below:
 For memory locations, the following notation is used:
 
 * [h1234] refers to the memory cell at 25'h0001234 (memory addressing is 25 bit total)
-* [p2.h1234] refers to the memory cell at 25'h0021234 ("p2" denoting page 2~10~)
+* [pA.h1234] refers to the memory cell at 25'h0015234 ("pA" denoting page 10~10~)
