@@ -52,22 +52,21 @@ var (
 		'8': 0x3e,
 		'9': 0x46,
 
-		'!': 0x45,
-		'"': 0x16,
-		'§': 0x1e,
-		'$': 0x26,
-		'%': 0x25,
-		'&': 0x2e,
-		'/': 0x36,
-		'(': 0x3d,
-		')': 0x3e,
-		'=': 0x46,
+		'!': 0x16,
+		'"': 0x1e,
+		'§': 0x26,
+		'$': 0x25,
+		'%': 0x2e,
+		'&': 0x36,
+		'/': 0x3d,
+		'(': 0x3e,
+		')': 0x46,
+		'=': 0x45,
 
 		'-':  0x4a,
 		'_':  0x4a,
 		'ß':  0x4e,
 		'?':  0x4e,
-		'\\': 0x4e,
 		',':  0x41,
 		';':  0x41,
 		'.':  0x49,
@@ -76,6 +75,32 @@ var (
 		'ö':  0x4c,
 		'ü':  0x54,
 		'+':  0x5b,
+		'*':  0x5b,
+		'#':  0x5d,
+		'\'': 0x5d,
+		'´':  0x55,
+		'`':  0x55,
+	}
+
+	keycodeLookupRunesSpecialShifted = map[rune]uint32{
+		'!': 0x16,
+		'"': 0x1e,
+		'§': 0x26,
+		'$': 0x25,
+		'%': 0x2e,
+		'&': 0x36,
+		'/': 0x3d,
+		'(': 0x3e,
+		')': 0x46,
+		'=': 0x45,
+
+		'_':  0x4e,
+		'?':  0x55,
+		';':  0x41,
+		':':  0x49,
+		'*':  0x5b,
+		'\'': 0x5d,
+		'`':  0x55,
 	}
 
 	keycodeLookupTermbox = map[termbox.Key]uint32{
@@ -95,6 +120,8 @@ var (
 
 // VMRun executes the given file in a virtual MCPC
 func VMRun(file, traceFile string) {
+
+	log.Println("Starting VM...")
 
 	// Termbox init
 	err := termbox.Init()
@@ -178,12 +205,20 @@ func VMRun(file, traceFile string) {
 				} else {
 					// Character key
 					letter := event.Ch
+					sentShift := false
 
 					uppercase := unicode.IsUpper(letter)
 					if uppercase {
 						// Uppercase letter, send shift first
 						cpuIrqChan <- keycodeLSHFT | keyboardIrqNum
+						sentShift = true
 						letter = unicode.ToLower(letter)
+					}
+
+					// Check for and perform special SHIFT handling
+					if _, ok := keycodeLookupRunesSpecialShifted[letter]; ok {
+						cpuIrqChan <- keycodeLSHFT | keyboardIrqNum
+						sentShift = true
 					}
 
 					keyCode, ok := keycodeLookupRunes[letter]
@@ -200,8 +235,8 @@ func VMRun(file, traceFile string) {
 						cpuIrqChan <- invalidKeyIrqNum
 					}
 
-					// Send SHFT BREAK in case of uppercase
-					if uppercase {
+					// Send SHFT BREAK in case of uppercase or special shift handling
+					if sentShift {
 						cpuIrqChan <- keycodeBreak | keyboardIrqNum
 						cpuIrqChan <- keycodeLSHFT | keyboardIrqNum
 					}
@@ -248,7 +283,7 @@ func VMRun(file, traceFile string) {
 	vm.VgaChangeCallback = func(addr, x, y, old, new uint16) {
 		r := rune(new & 0x00FF)
 
-		// Treat special characters like spaces/blanks
+		// Treat special characters like errors
 		if r < ' ' {
 			r = ' '
 		}

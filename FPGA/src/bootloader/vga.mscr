@@ -1,11 +1,9 @@
 /*
-Provides helper functions regarding the integrated VGA framebuffer.
+    Provides helper functions regarding the integrated VGA framebuffer.
 */
 
 #ifndef LIB_VGA
 #define LIB_VGA
-
-#include "base.mscr"
 
 // Starting address of VGA framebuffer CFG region
 #define VGA_BASE_ADDR 0xE000
@@ -68,6 +66,16 @@ func void vga_printString(str) {
     }
 }
 
+func void vga_printStringh(hptr) {
+    var i = 0;
+    var charAt = $_(hptr);
+    while charAt != 0 {
+        vga_printChar(charAt);
+        i += 1;
+        charAt = $_(hptr + i);
+    }
+}
+
 // Prints a value as 4 hexadecimal characters
 global vga_hex_char_lookup = "0123456789ABCDEF";
 func void vga_printHex(value) {
@@ -114,6 +122,20 @@ func void vga_shiftConsoleDown(lines) {
 func void vga_setCursorPos(x, y) {
     vga_buf_pos_x = x;
     vga_buf_pos_y = y;
+
+    while (vga_buf_pos_x > vga_dim_x) {
+        vga_buf_pos_x -= vga_dim_x;
+        vga_buf_pos_y += 1;
+    }
+}
+
+func void vga_offsetLineCursor(offset) {
+    vga_buf_pos_x += offset;
+
+    while (vga_buf_pos_x < 0) {
+        vga_buf_pos_x += vga_dim_x;
+        vga_buf_pos_y -= 1;
+    }
 
     while (vga_buf_pos_x > vga_dim_x) {
         vga_buf_pos_x -= vga_dim_x;

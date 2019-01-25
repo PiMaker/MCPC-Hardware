@@ -3,6 +3,7 @@ package interpreter
 import (
 	"errors"
 	"fmt"
+	"unsafe"
 )
 
 const (
@@ -391,8 +392,15 @@ func (vm *VM) Step() (bool, error) {
 				registerTo.Value = GetReg(vm, ins, regFrom).Value * GetReg(vm, ins, regOp).Value
 				vm.t("ALU *")
 			case 0xE:
+				// Unsafe cast to int16 to preserve bit values (two's complement) for size checking
+				var op1, op2 int16
+				op1u := GetReg(vm, ins, regFrom).Value
+				op2u := GetReg(vm, ins, regOp).Value
+				op1 = *(*int16)(unsafe.Pointer(&op1u))
+				op2 = *(*int16)(unsafe.Pointer(&op2u))
+
 				var val uint16
-				if GetReg(vm, ins, regFrom).Value > GetReg(vm, ins, regOp).Value {
+				if op1 > op2 {
 					val = 0xFFFF
 				}
 				registerTo.Value = val

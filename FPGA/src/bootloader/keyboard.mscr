@@ -1,0 +1,188 @@
+/*
+    Provides helper functions regarding the integrated VGA framebuffer.
+*/
+
+#ifndef LIB_KB
+#define LIB_KB
+
+#include "base.mscr"
+
+/*
+    Keypress IRQ handling (FIFO reading)
+*/
+global kb_releaseKeyWasPressed = false;
+global kb_shiftKeyPressed = false;
+
+func var kb_getKeyPressed(outptr_shiftKeyPressed) {
+    var retval = 0;
+    var rdptr;
+    var wrptr;
+
+    _reg_assign(1, rdptr);
+    _reg_assign(2, wrptr);
+    _asm {
+        setpage 0x1
+        loadla B 0x100
+        loadla C 0x101
+        rstpage
+    }
+
+    if rdptr != wrptr {
+        _reg_assign(0, retval);
+        _reg_assign(1, rdptr);
+        _asm {
+            setpage 0x1
+            load A B // retval <- sram[rdptr]
+            inc B
+            storla B 0x100 // Increment rdptr
+            rstpage
+        }
+
+        // Shift and Make/Break code support
+        if (retval == 0x0012) {
+            kb_shiftKeyPressed = ~kb_releaseKeyWasPressed;
+            kb_releaseKeyWasPressed = false;
+
+            return 0;
+        }
+
+        if (retval == 0x00F0) {
+            kb_releaseKeyWasPressed = true;
+            return 0;
+        }
+
+        if (kb_releaseKeyWasPressed) {
+            kb_releaseKeyWasPressed = false;
+            return 0;
+        }
+    }
+
+    // Output if shift key was pressed for this stroke
+    $$(outptr_shiftKeyPressed, kb_shiftKeyPressed);
+
+    return retval;
+}
+
+/*
+    Keycode translation
+*/
+#define KB_KEYCODE_LOOKUP_MAX 77
+global kb_keycodeLookup = "1q??zsaw2??cxde43?? vftr5??nbhgy6???mju78???kio09????l?p";
+
+func var kb_keycodeToASCII(key, shiftKeyPressed) {
+    if (key >= 21 & key <= KB_KEYCODE_LOOKUP_MAX) {
+        var retval = $(kb_keycodeLookup + (key - 22)); // My logic tells me this should be 21, but it only works with 22 *shrug*
+        if (retval != '?') { // '?' means not found in lookup table
+            if (shiftKeyPressed) {
+                return kb_toUppercase(retval, true);
+            } else {
+                return retval;
+            }
+        }
+    }
+
+    // Special characters
+    if (key == 0x4e) {
+        if (shiftKeyPressed) {
+            return '_';
+        } else {
+            return '-';
+        }
+    }
+
+    if (key == 0x55) {
+        if (shiftKeyPressed) {
+            return '+';
+        } else {
+            return '=';
+        }
+    }
+
+    if (key == 0x41) {
+        if (shiftKeyPressed) {
+            return '<';
+        } else {
+            return ',';
+        }
+    }
+
+    if (key == 0x49) {
+        if (shiftKeyPressed) {
+            return '>';
+        } else {
+            return '.';
+        }
+    }
+
+    if (key == 0x4a) {
+        if (shiftKeyPressed) {
+            return '?';
+        } else {
+            return '/';
+        }
+    }
+
+    if (key == 0x54) {
+        if (shiftKeyPressed) {
+            return '{';
+        } else {
+            return '[';
+        }
+    }
+
+    if (key == 0x5b) {
+        if (shiftKeyPressed) {
+            return '}';
+        } else {
+            return ']';
+        }
+    }
+
+    if (key == 0x4c) {
+        if (shiftKeyPressed) {
+            return ':';
+        } else {
+            return ';';
+        }
+    }
+
+    if (key == 0x52) {
+        if (shiftKeyPressed) {
+            return '"';
+        } else {
+            return '\'';
+        }
+    }
+
+    if (key == 0x5d) {
+        if (shiftKeyPressed) {
+            return '|';
+        } else {
+            return '\\';
+        }
+    }
+
+    // Default is '?' character for unknown keys
+    return '?';
+}
+
+/*
+    Translate ASCII letters (0x61-0x7a) to uppercase (and additionally numbers if requested).
+    Returns char unmodified if no conversion could be found.
+*/
+global kb_uppercaseLookup = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+global kb_uppercaseNumberLookup = ")!@#$%^&*(";
+
+func var kb_toUppercase(char, convertNumbers) {
+    if (convertNumbers & char >= 0x30 & char <= 0x39) {
+        return $(kb_uppercaseNumberLookup + char - 0x30);
+    }
+
+    if (char >= 0x61 & char <= 0x7a) {
+        return $(kb_uppercaseLookup + char - 0x61);
+    }
+
+    return char;
+}
+
+#endif

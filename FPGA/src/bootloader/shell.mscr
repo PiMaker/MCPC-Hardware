@@ -1,0 +1,61 @@
+/*
+    Provides a simple shell implementation with a few builtins.
+*/
+
+#ifndef LIB_SHELL
+#define LIB_SHELL
+
+#include "base.mscr"
+#include "vga.mscr"
+#include "memalloc.mscr"
+#include "strings.mscr"
+
+global shell_cmd_echo = "echo";
+global shell_cmd_halt = "halt";
+global shell_cmd_ip = "ip";
+
+global shell_text_error = "Error, check syntax.";
+global shell_text_unknown = "Error, unknown command.";
+
+global shell_text_halt = "Halting.";
+
+func void shell_run(hptr_input) {
+    var inputLength = strlenh(hptr_input);
+    var exec = false;
+
+    if (inputLength >= 4 & strcmph(hptr_input, shell_cmd_echo)) {
+        // echo: Print whatever is passed as parameters
+        if (inputLength < 6) {
+            vga_printString(shell_text_error);
+        } else {
+            vga_printStringh(hptr_input + 5);
+        }
+
+        exec = true;
+    }
+
+    if (inputLength >= 4 & strcmph(hptr_input, shell_cmd_halt)) {
+        // halt: HALT the machine immediately
+        vga_printString(shell_text_halt);
+        _asm { HALT }
+    }
+
+    if (inputLength >= 2 & strcmph(hptr_input, shell_cmd_ip)) {
+        // echo: Print whatever is passed as parameters
+        if (inputLength < 4) {
+            vga_printString(shell_text_error);
+        } else {
+            ip_run(hptr_input + 3);
+        }
+
+        exec = true;
+    }
+
+    if (~exec) {
+        vga_printString(shell_text_unknown);
+    }
+
+    vga_printChar('\n');
+}
+
+#endif

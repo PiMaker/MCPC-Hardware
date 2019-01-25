@@ -17,11 +17,12 @@ import (
 )
 
 const LicenseNotice string = `
-Copyright (C) 2019  Stefan Reiter (pimaker.at)
+Copyright (C) 2019 Stefan Reiter (pimaker.at)
 This program comes with ABSOLUTELY NO WARRANTY.
 This is free software, and you are welcome to redistribute it
 under certain conditions.
-See https://github.com/PiMaker/mscr/blob/master/LICENSE for more.`
+See https://github.com/PiMaker/MCPC/blob/master/LICENSE for more.
+`
 
 func main() {
 	usage := `MCPC Toolchain (Assembler/Debugger/VM/Test-runner).
@@ -55,12 +56,15 @@ Options:
   --version               Show version.`
 
 	// Parse command line arguments
-	args, _ := docopt.ParseArgs(usage, os.Args[1:], "MCPC Assembler Toolchain - Version 0.5.2\r\n"+LicenseNotice)
+	preamble := "MCPC Assembler Toolchain - Version 0.5.2\r\n" + LicenseNotice
+	args, _ := docopt.ParseArgs(usage, os.Args[1:], preamble)
 
 	// CPU profiling
 	if os.Getenv("MCPC_PROFILE_ENABLED") != "" {
 		defer profile.Start().Stop()
 	}
+
+	fmt.Println(preamble)
 
 	// Choose function to call based on arguments
 	if argBool(args, "assemble") {

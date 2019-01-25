@@ -31,12 +31,12 @@ jmpeq .irq_keycode_unknown A B
 mov H A
 jmp .irq_append_to_fifo
 .irq_keycode_unknown  __LABEL_SET
-setreg A 0x0
+setreg A 0x3f ; '?'
 jmp .irq_append_to_fifo
 
 
 ; FIFO controller
-; A contains keycode
+; regA contains keycode
 .irq_append_to_fifo  __LABEL_SET
 
 setpage 0x1 ; set page for rest of function
