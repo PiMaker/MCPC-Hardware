@@ -1,13 +1,19 @@
 /*
-Main entry point for the MCPC bootloader.
-Function "var main(argc, argp)" will be called by the the bootloader preamble at h0.
+    Main entry point for the MCPC bootloader.
+    Function "var main(argc, argp)" will be called by the the bootloader preamble at h0.
 */
 
 #include "base.mscr"
+#include "memalloc.mscr"
 #include "vga.mscr"
+#include "keyboard.mscr"
+#include "shell.mscr"
+#include "interpreter.mscr"
 
-//global text = "Hello, world!\n";
-global prompt = "MCPC> ";
+#define PROMPT_INPUT_MAX_LENGTH 256
+
+global welcomeText = "Welcome to mVIRA OS, version 0.1\n(C) Stefan Reiter 2019, (tm) TheRealVira\nThis program comes with ABSOLUTELY NO WARRANTY.\n\n";
+global prompt = "mVIRA> ";
 
 func var main(argc, argp) {
     // Enable interrupts
@@ -19,93 +25,60 @@ func var main(argc, argp) {
     }
 
     vga_clearScreen();
+    vga_printString(welcomeText);
+
+    /*
+        Loop console functionality below.
+    */
+    var hptr_currentInput = malloc(PROMPT_INPUT_MAX_LENGTH+1);
+    var currentInputOffset = 0;
 
     while (true) {
         vga_printString(prompt);
 
         var read_en = true;
         while (read_en) {
-            // Check for new keyboard input
-            var key = getKeyPressed();
+            // Check for new keyboard input (busy loop)
+            var shiftKeyPressed;
+            var key = kb_getKeyPressed($$(shiftKeyPressed));
+
             if (key != 0) {
                 if (key == 0x5A) { // Enter
                     vga_printChar('\n');
                     read_en = false;
-                } else { // Anything else
-                    vga_printChar(keycodeToASCII(key));
+                } else {
+                    if (key == 0x66) { // Backspace
+                        if (currentInputOffset > 0) {
+                            vga_offsetLineCursor(-1);
+                            vga_printChar(' ');
+                            vga_offsetLineCursor(-1);
+                            currentInputOffset -= 1;
+                        }
+                    } else { // Anything else, including space (defaults to '?' if unknown)
+                        if (currentInputOffset < PROMPT_INPUT_MAX_LENGTH) {
+                            var charPressed = kb_keycodeToASCII(key, shiftKeyPressed);
+                            vga_printChar(charPressed);
+                            $$_(hptr_currentInput + currentInputOffset, charPressed);
+                            currentInputOffset += 1;
+                        }
+                    }
                 }
             }
         }
+
+        // Pass off input to interpreter
+        if (currentInputOffset > 0) {
+            
+            // Always null-terminate your strings kids!
+            $$_(hptr_currentInput + currentInputOffset, 0);
+
+            shell_run(hptr_currentInput);
+        }
+
+        // Reset state for next input
+        currentInputOffset = 0;
     }
 
-    // Return Esel
+    // Return Esel (should not happen, ever - we're not donkeys after all)
     return 0x7353;
-}
-
-global releaseKeyWasPressed = false;
-global shiftKeyPressed = false;
-
-func var getKeyPressed() {
-    var retval = 0;
-    var rdptr;
-    var wrptr;
-
-    _reg_assign(1, rdptr);
-    _reg_assign(2, wrptr);
-    _asm {
-        setpage 0x1
-        loadla B 0x100
-        loadla C 0x101
-        rstpage
-    }
-
-    if rdptr != wrptr {
-        _reg_assign(0, retval);
-        _reg_assign(1, rdptr);
-        _asm {
-            setpage 0x1
-            load A B // retval <- sram[rdptr]
-            inc B
-            storla B 0x100 // Increment rdptr
-            rstpage
-        }
-
-        // Shift and Make/Break code support
-        if retval == 0x0012 {
-            shiftKeyPressed = ~releaseKeyWasPressed;
-            releaseKeyWasPressed = false;
-
-            return 0;
-        }
-
-        if retval == 0x00F0 {
-            releaseKeyWasPressed = true;
-            return 0;
-        }
-
-        if releaseKeyWasPressed {
-            releaseKeyWasPressed = false;
-            return 0;
-        }
-    }
-
-    return retval;
-}
-
-func var keycodeToASCII(key) {
-    if (shiftKeyPressed) {
-
-        if (key == 0x1c) {
-            return 'A';
-        }
-
-    } else {
-
-        if (key == 0x1c) {
-            return 'a';
-        }
-
-    }
-
-    return '?';
 }

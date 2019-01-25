@@ -1,0 +1,19 @@
+/*
+    Provides a simple lisp-style language interpreter. (mLISP)
+*/
+
+#ifndef LIB_INTERPRETER
+#define LIB_INTERPRETER
+
+#include "base.mscr"
+#include "vga.mscr"
+#include "memalloc.mscr"
+
+global ip_pre = "mLISP: ";
+
+func void ip_run(hptr_input) {
+    vga_printString(ip_pre);
+    vga_printStringh(hptr_input);
+}
+
+#endif

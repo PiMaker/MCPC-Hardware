@@ -1,0 +1,86 @@
+/*
+    Provides helper functions for null-terminated strings.
+*/
+
+#ifndef LIB_STRINGS
+#define LIB_STRINGS
+
+#include "base.mscr"
+#include "memalloc.mscr"
+
+func var strlen(ptr) {
+    var i = 0;
+    while ($(ptr+i) != 0) {
+        i += 1;
+    }
+    return i;
+}
+
+func var strlenh(hptr) {
+    var i = 0;
+    while ($_(hptr+i) != 0) {
+        i += 1;
+    }
+    return i;
+}
+
+/*
+    strcmp returns true if the two strings being compared are equal.
+    Note: If one string is shorter than the other, comparison will only be done to the length of the shorter string.
+    => Thus, "hello world" would equal "hello"!
+*/
+func var strcmp(ptr1, ptr2) {
+    var i = 0;
+    var p1val = $(ptr1+i);
+    var p2val = $(ptr2+i);
+
+    while (p1val != 0 & p2val != 0) {
+        if (p1val != p2val) {
+            return false;
+        }
+
+        i += 1;
+        p1val = $(ptr1+i);
+        p2val = $(ptr2+i);
+    }
+
+    return true;
+}
+
+func var strcmph(hptr1, ptr2) {
+    var i = 0;
+    var p1val = $_(hptr1+i);
+    var p2val = $(ptr2+i);
+
+    while (p1val != 0 & p2val != 0) {
+        if (p1val != p2val) {
+            return false;
+        }
+
+        i += 1;
+        p1val = $_(hptr1+i);
+        p2val = $(ptr2+i);
+    }
+
+    return true;
+}
+
+func var strcmphh(hptr1, hptr2) {
+    var i = 0;
+    var p1val = $_(hptr1+i);
+    var p2val = $_(hptr2+i);
+
+    while (p1val != 0 & p2val != 0) {
+        if (p1val != p2val) {
+            return false;
+        }
+
+        i += 1;
+        p1val = $_(hptr1+i);
+        p2val = $_(hptr2+i);
+    }
+
+    return true;
+}
+
+#endif

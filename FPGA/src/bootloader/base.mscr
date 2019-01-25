@@ -1,5 +1,5 @@
 /*
-Provides general helper functions and macros.
+    Provides general helper functions and macros.
 */
 
 #ifndef LIB_BASE
