@@ -7,7 +7,7 @@
 `define DEBUGGER_OPCODE_DUMP_ROM 4'hE
 `define DEBUGGER_OPCODE_DUMP_REGS 4'hA
 
-`define BOOTLOADER_ROM_SIZE 2047
+`define BOOTLOADER_ROM_SIZE 2**15
 
 module cpu_debugger(
 	//////////// GLOBALS ////////////

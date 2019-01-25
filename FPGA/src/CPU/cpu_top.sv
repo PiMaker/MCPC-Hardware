@@ -30,7 +30,7 @@
 `define INSDECOMP_IF(ins) ins[12+:4]
 
 // General defines
-`define BOOTLOADER_ROM_SIZE 16382
+`define BOOTLOADER_ROM_SIZE 2**15
 
 
 module cpu(
@@ -311,11 +311,20 @@ module cpu(
 		.out                     ( reg_data_write  )
 	);
 
+	// Bootloader ROM
+	wire [15:0] bootloader_rom_dout, bootloader_rom_dout_ovr;
+	reg [15:0] bootloader_rom_addr_ovr = 0;
+	bootloader_rom u_bootloader_rom (
+		.addr1(pc_out),
+		.addr2(bootloader_rom_addr_ovr),
+		.clk(clk),
+		.q1(bootloader_rom_dout),
+		.q2(bootloader_rom_dout_ovr)
+	);
 
 	// CORE LOGIC
 	reg [7:0] cpu_state;
 	reg [15:0] instruction_buffer;
-	reg [15:0] bootloader_rom [0:`BOOTLOADER_ROM_SIZE];
 
 	reg [15:0] continue_execution_register;
 	reg [15:0] write_enable_register;
@@ -332,11 +341,7 @@ module cpu(
 	reg ins_started_in_irq = 0;
 
 
-	initial begin
-		$readmemh("bootloader.hex", bootloader_rom);
-	end
-
-
+	// CPU clock logic
 	always @(posedge clk) begin
 	  
 		if (rst) begin
@@ -374,7 +379,7 @@ module cpu(
 							instruction_buffer = debugInsOvrData[31:16];
 						end
 					end else begin
-						instruction_buffer = bootloader_rom[pc_out];
+						instruction_buffer = bootloader_rom_dout;
 					end
 
 					ins_started_in_irq <= in_irq_context;
@@ -533,13 +538,18 @@ module cpu(
 						task_set_buffer <= debugInsOvrData[31:16];
 					end
 				end else begin
-					task_set_buffer <= bootloader_rom[pc_out + 1];
+					bootloader_rom_addr_ovr <= pc_out + 1;
 				end
 			end
 			1'h1: begin
 				task_set_state <= 1'h0;
 
-				reg_data_write_inputs[`INS_SET] <= {task_set_buffer, 1'b1};
+				if (debugInsOvr) begin
+					reg_data_write_inputs[`INS_SET] <= {task_set_buffer, 1'b1};
+				end else begin
+					reg_data_write_inputs[`INS_SET] <= {bootloader_rom_dout_ovr, 1'b1};
+				end
+
 				write_enable_register[`INS_SET] <= 1'b1;
 
 				pc_inc <= 1; // Skip data value
@@ -626,13 +636,14 @@ module cpu(
 				mem_readaddr <= {mem_addr_ext_kernel,mem_addr_ext_user,reg_data_read[14:0]};
 				mem_read <= 1'h1;
 				task_memr_state <= task_memr_is_cfg ? 2 : 1;
+				bootloader_rom_addr_ovr <= reg_data_read - 16'hD000;
 			end
             2: begin
 				if (task_memr_is_cfg) begin
 					// CFG register reads
 
 					if (reg_data_read >= 16'hD000 && reg_data_read <= 16'hD800) begin // TODO: Include full bootloader ROM somehow (maybe?)
-						task_memr_writeback_buffer = bootloader_rom[reg_data_read - 16'hD000]; // Bootloader ROM read
+						task_memr_writeback_buffer = bootloader_rom_dout_ovr; // Bootloader ROM read
 					end else if (reg_data_read == 16'h8004) begin
 						task_memr_writeback_buffer = mem_addr_ext_kernel;
 					end else if (reg_data_read == 16'h8800) begin

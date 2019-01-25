@@ -24,7 +24,9 @@ VGA subsystem
 * [hDFFF] r ... Last valid address of ASCII buffer
 * [hE000-{hDFFF}] rw ... ASCII buffer (one ascii characted per data word, high bits unused)
 
-= Interrupt/Timer subsystem =
+Interrupt/Timer subsystem
+-------------------------
+
 * [h9000] rw(k) ... Interrupt handler address
 * [h9001] rw(k) ... Interrupt enable
 * [h9002] rw(k) ... Interrupt context state (can only write 0 to exit IRQ, other writes are ignored)

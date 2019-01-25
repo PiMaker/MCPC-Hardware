@@ -9,11 +9,11 @@ help:
 	@echo "bootloader:     Build bootloader source in src/bootloader/ directory and overwrite current bootloader.hex"
 
 
-bootloader: src/CPU/bootloader.hex
+bootloader:
 	cd src/bootloader; mscr ./entry.mscr ../../build/bootloader.ma --bootloader
 	sed -i '$$d' build/bootloader.ma # Remove last line
 	cat src/bootloader/asm.ma >> build/bootloader.ma # Append hand-crafted ASM
-	mcpc assemble --library=../Assembly/Libraries/base.mlib --library=../Assembly/Libraries/sram.mlib --library=../Assembly/Libraries/sram_paged.mlib build/bootloader.ma src/CPU/bootloader.hex --hex --length 16384 --debug-symbols
+	mcpc assemble --library=../Assembly/Libraries/base.mlib --library=../Assembly/Libraries/sram.mlib --library=../Assembly/Libraries/sram_paged.mlib build/bootloader.ma src/CPU/bootloader.hex --hex --length 65536 --debug-symbols
 
 
 ###############################################################################
