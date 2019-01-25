@@ -30,7 +30,7 @@
 `define INSDECOMP_IF(ins) ins[12+:4]
 
 // General defines
-`define BOOTLOADER_ROM_SIZE 8191
+`define BOOTLOADER_ROM_SIZE 16382
 
 
 module cpu(
@@ -196,17 +196,41 @@ module cpu(
 	wire irq_empty;
 	wire [31:0] irq_dout;
 
-	irq_fifo u_irq_fifo(
+	// Debug stuff
+	reg [31:0] irq_dbg_data_in = 32'h001C000A;
+
+	// Asynchronous FIFO
+	/*irq_fifo u_irq_fifo(
 		.aclr(rst),
-		.data({8'h0,ps2_data,16'h000A}),
+		//.data({8'h0,ps2_data,16'h000A}),
+		.data(irq_dbg_data_in),
 		.rdclk(clk),
 		.rdreq(irq_rd_en),
 		.wrclk(clk50),
-		.wrreq(ps2_data_en && irq_en),
+		//.wrreq(ps2_data_en && irq_en),
+		.wrreq(dbgIRQwr),
 		.q(irq_dout),
 		.rdempty(irq_empty),
 		.rdusedw(irq_count)
+	);*/
+
+	async_fifo u_async_fifo (
+		.wclk                    ( clk50      ),
+		.wrst_n                  ( !rst    ),
+		.winc                    ( ps2_data_en && irq_en      ),
+		.wdata                   ( irq_dbg_data_in     ),
+		.rclk                    ( clk      ),
+		.rrst_n                  ( !rst    ),
+		.rinc                    ( irq_rd_en      ),
+
+		.wfull                   (      ),
+		.awfull                  (     ),
+		.rdata                   ( irq_dout     ),
+		.rempty                  (  irq_empty   ),
+		.arempty                 (    )
 	);
+
+	assign irq_count = irq_empty ? 16'h00 : 16'hFF; // Useless for now
 
 	
 	// CORE COMPONENTS
@@ -262,9 +286,9 @@ module cpu(
 	wire [15:0] reg_data_read_irq_on, reg_data_read_irq_off;
 	wire [15:0] pc_out_irq_on, pc_out_irq_off;
 
-	assign reg_we_irq_on = in_irq_context ? reg_we : 1'h0;
+	assign reg_we_irq_on = in_irq_context ? reg_we : reg_we; //?
 	assign reg_we_irq_off = in_irq_context ? 1'h0 : reg_we;
-	assign pc_inc_real_irq_on = in_irq_context ? pc_inc_real : 1'h0;
+	assign pc_inc_real_irq_on = in_irq_context ? pc_inc_real : pc_inc_real; //?
 	assign pc_inc_real_irq_off = in_irq_context ? 1'h0 : pc_inc_real;
 
 	assign reg_data_read = in_irq_context ? reg_data_read_irq_on : reg_data_read_irq_off;
@@ -317,6 +341,8 @@ module cpu(
 	  
 		if (rst) begin
 
+			// Called on full CPU reset only
+
 			cpu_state <= `CPU_STATE_INS_LOAD;
 			continue_execution_register <= 16'h0;
 			write_enable_register <= 16'h0;
@@ -365,7 +391,9 @@ module cpu(
 
 				`CPU_STATE_WAITING: begin
 					if (continue_execution) begin
-						cpu_state <= `CPU_STATE_COMMIT;
+						// Only commit and increment PC if we didn't just leave an IRQ context
+						cpu_state <= (!in_irq_context && ins_started_in_irq) ? `CPU_STATE_PC_INC : `CPU_STATE_COMMIT;
+						
 						continue_execution_register <= 16'h0;
 						pc_inc <= 1'b0; // A bit messy but avoids triple increments during SET
 					end else begin
@@ -388,12 +416,8 @@ module cpu(
 				end
 
 				`CPU_STATE_COMMIT: begin
-					// Only commit and increment PC if we didn't just leave an IRQ context
-					if (!(!in_irq_context && ins_started_in_irq)) begin
-						reg_we_approved <= 1'b1;
-						pc_inc <= 1'b1;
-					end
-
+					reg_we_approved <= 1'b1;
+					pc_inc <= 1'b1;
 					cpu_state <= `CPU_STATE_PC_INC;
 				end
 				
@@ -661,6 +685,7 @@ module cpu(
 	reg [16:0] task_memw_state;
 	reg [15:0] task_memw_addr_buffer;
     reg task_memw_is_cfg;
+	reg newval_iic;
 	task task_memw;
 	begin
         task_memw_is_cfg = task_memw_addr_buffer[15] || task_memw_is_cfg;
@@ -689,7 +714,8 @@ module cpu(
 						irq_en <= (|reg_data_read) ? 1'h1 : 1'h0;
 					end else if (task_memw_addr_buffer == 16'h9002) begin
 						if (in_irq_context) begin
-							in_irq_context <= (|reg_data_read) ? 1'h1 : 1'h0;
+							newval_iic = (|reg_data_read) ? 1'h1 : 1'h0;
+							in_irq_context = newval_iic;
 						end
 					end else if (task_memw_addr_buffer == 16'hFFFF) begin
 						clkbreak <= (|reg_data_read) ? 1'h1 : 1'h0;

@@ -18,7 +18,7 @@ loadla H 0x9011
 setreg B 0xA
 jmpeq .irq_keycode_known A B
 
-; Unknown keycode
+; Unknown keycode (VM only)
 setreg B 0xB
 jmpeq .irq_keycode_unknown A B
 
