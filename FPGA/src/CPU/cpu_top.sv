@@ -179,14 +179,14 @@ module cpu(
 		.instructionOverrideEn(debugInsOvr),
 
 		.rom_addr(dbgRomAddr),
-		.rom_data(bootloader_rom[dbgRomAddr]),
+		.rom_data(bootloader_rom_dout), // TODO: Unbork
 
 		.regRead(reg_data_read),
 		.regAddrOvr(reg_addr_dbg),
 		.regAddrOvrEn(debugRegRead),
 
 		.ARDUINO_IO(ARDUINO_IO),
-        .dbgDbg(dbgDbg) // dbgDbg
+        .dbgDbg() // dbgDbg
 	);
 
 
@@ -197,28 +197,26 @@ module cpu(
 	wire [31:0] irq_dout;
 
 	// Debug stuff
-	reg [31:0] irq_dbg_data_in = 32'h001C000A;
+	//reg [31:0] irq_dbg_data_in = 32'h001C000A;
 
 	// Asynchronous FIFO
-	/*irq_fifo u_irq_fifo(
+	irq_fifo u_irq_fifo(
 		.aclr(rst),
-		//.data({8'h0,ps2_data,16'h000A}),
-		.data(irq_dbg_data_in),
+		.data({8'h0,ps2_data,16'h000A}),
 		.rdclk(clk),
 		.rdreq(irq_rd_en),
 		.wrclk(clk50),
-		//.wrreq(ps2_data_en && irq_en),
-		.wrreq(dbgIRQwr),
+		.wrreq(ps2_data_en && irq_en),
 		.q(irq_dout),
 		.rdempty(irq_empty),
 		.rdusedw(irq_count)
-	);*/
+	);
 
-	async_fifo u_async_fifo (
+	/*async_fifo u_async_fifo (
 		.wclk                    ( clk50      ),
 		.wrst_n                  ( !rst    ),
-		.winc                    ( ps2_data_en && irq_en      ),
-		.wdata                   ( irq_dbg_data_in     ),
+		.winc                    ( ps2_data_en & irq_en      ),
+		.wdata                   ( {ps2_data,16'h000A}     ),
 		.rclk                    ( clk      ),
 		.rrst_n                  ( !rst    ),
 		.rinc                    ( irq_rd_en      ),
@@ -228,9 +226,10 @@ module cpu(
 		.rdata                   ( irq_dout     ),
 		.rempty                  (  irq_empty   ),
 		.arempty                 (    )
-	);
+	);*/
 
-	assign irq_count = irq_empty ? 16'h00 : 16'hFF; // Useless for now
+	//assign irq_count = irq_empty ? 16'h00 : 16'hFF;
+	assign dbgDbg = ps2_data;
 
 	
 	// CORE COMPONENTS
@@ -241,9 +240,8 @@ module cpu(
 	assign pc_inc_real = debugInsOvr ? 1'b0 : pc_inc;
 
 	reg in_irq_context = 1'h0;
-	reg in_irq_context_prev = 1'h0;
 
-	reg [15:0] irq_handler_addr, irq_last_ins_debug;
+	reg [15:0] irq_handler_addr;
 
 	core_registers  u_core_registers (
 		.clk                     ( clk            ),
@@ -286,9 +284,9 @@ module cpu(
 	wire [15:0] reg_data_read_irq_on, reg_data_read_irq_off;
 	wire [15:0] pc_out_irq_on, pc_out_irq_off;
 
-	assign reg_we_irq_on = in_irq_context ? reg_we : reg_we; //?
+	assign reg_we_irq_on = in_irq_context ? reg_we : 1'h0;
 	assign reg_we_irq_off = in_irq_context ? 1'h0 : reg_we;
-	assign pc_inc_real_irq_on = in_irq_context ? pc_inc_real : pc_inc_real; //?
+	assign pc_inc_real_irq_on = in_irq_context ? pc_inc_real : 1'h0;
 	assign pc_inc_real_irq_off = in_irq_context ? 1'h0 : pc_inc_real;
 
 	assign reg_data_read = in_irq_context ? reg_data_read_irq_on : reg_data_read_irq_off;
@@ -296,9 +294,6 @@ module cpu(
 
 	// Reset logic for IRQ registers
 	reg rst_irq_regs = 1'h0;
-	always @(posedge clk) begin
-		in_irq_context_prev = in_irq_context;
-	end
 
 	// Register data write arbitration
 	reg [16:0] reg_data_write_inputs [0:15];
@@ -314,13 +309,24 @@ module cpu(
 	// Bootloader ROM
 	wire [15:0] bootloader_rom_dout, bootloader_rom_dout_ovr;
 	reg [15:0] bootloader_rom_addr_ovr = 0;
-	bootloader_rom u_bootloader_rom (
+	bootloader_ram bootloader_ram_inst (
+		.address_a ( pc_out ),
+		.address_b ( bootloader_rom_addr_ovr ),
+		.clock ( clk50 ),
+		.data_a ( bootloader_rom_dout ),
+		.data_b ( bootloader_rom_dout_ovr ),
+		.wren_a ( 0 ),
+		.wren_b ( 0 ),
+		.q_a ( bootloader_rom_dout ),
+		.q_b ( bootloader_rom_dout_ovr )
+	);
+	/*bootloader_rom u_bootloader_rom (
 		.addr1(pc_out),
 		.addr2(bootloader_rom_addr_ovr),
 		.clk(clk),
 		.q1(bootloader_rom_dout),
 		.q2(bootloader_rom_dout_ovr)
-	);
+	);*/
 
 	// CORE LOGIC
 	reg [7:0] cpu_state;
@@ -348,15 +354,19 @@ module cpu(
 
 			// Called on full CPU reset only
 
-			cpu_state <= `CPU_STATE_INS_LOAD;
+			cpu_state <= 8'h10; // Start in different state to allow pc_out to select bootloader_rom address on resulting clk tick
 			continue_execution_register <= 16'h0;
 			write_enable_register <= 16'h0;
 			reg_we_approved <= 0;
 			instruction_buffer <= 16'h0;
 			pc_inc <= 0;
 			pc_dbg_virt <= 0;
-			mem_addr_ext_kernel <= 0;
-			mem_addr_ext_user <= 0;
+
+			mem_addr_ext_kernel_def <= 0;
+			mem_addr_ext_user_def <= 0;
+			mem_addr_ext_kernel_irq <= 0;
+			mem_addr_ext_user_irq <= 0;
+
 			irq_rd_en <= 0;
 			in_irq_context <= 0;
 			irq_en <= 0;
@@ -383,10 +393,6 @@ module cpu(
 					end
 
 					ins_started_in_irq <= in_irq_context;
-
-					if (!in_irq_context) begin
-						irq_last_ins_debug <= instruction_buffer; // Debug only
-					end
 
 					// Decompose instruction into different register busses
 					reg_addr_write <= `INSDECOMP_TO(instruction_buffer);
@@ -619,8 +625,17 @@ module cpu(
 
 	// Address extension registers
 	reg [4:0]
+		mem_addr_ext_user_def = 0,
+		mem_addr_ext_kernel_def = 0,
+		mem_addr_ext_user_irq = 0,
+		mem_addr_ext_kernel_irq = 0;
+
+	wire [4:0]
 		mem_addr_ext_user,
 		mem_addr_ext_kernel;
+
+	assign mem_addr_ext_user = in_irq_context ? mem_addr_ext_user_irq : mem_addr_ext_user_def;
+	assign mem_addr_ext_kernel = in_irq_context ? mem_addr_ext_kernel_irq : mem_addr_ext_kernel_def;
 
 	// Read (MEMR)
     reg [15:0] task_memr_state, task_memr_writeback_buffer;
@@ -696,7 +711,6 @@ module cpu(
 	reg [16:0] task_memw_state;
 	reg [15:0] task_memw_addr_buffer;
     reg task_memw_is_cfg;
-	reg newval_iic;
 	task task_memw;
 	begin
         task_memw_is_cfg = task_memw_addr_buffer[15] || task_memw_is_cfg;
@@ -716,17 +730,26 @@ module cpu(
                         fb_data = reg_data_read[0 +: 8];
                         fb_we = 1'b1;
                     end else if (task_memw_addr_buffer == 16'h8004) begin
-						mem_addr_ext_kernel <= reg_data_read[4:0];
+						if (in_irq_context) begin
+							mem_addr_ext_kernel_irq <= reg_data_read[4:0];
+						end else begin
+							mem_addr_ext_kernel_def <= reg_data_read[4:0];
+						end
 					end else if (task_memw_addr_buffer == 16'h8800) begin
-						mem_addr_ext_user <= reg_data_read[4:0];
+						if (in_irq_context) begin
+							mem_addr_ext_user_irq <= reg_data_read[4:0];
+						end else begin
+							mem_addr_ext_user_def <= reg_data_read[4:0];
+						end
 					end else if (task_memw_addr_buffer == 16'h9000) begin
 						irq_handler_addr <= reg_data_read;
 					end else if (task_memw_addr_buffer == 16'h9001) begin
 						irq_en <= (|reg_data_read) ? 1'h1 : 1'h0;
 					end else if (task_memw_addr_buffer == 16'h9002) begin
-						if (in_irq_context) begin
-							newval_iic = (|reg_data_read) ? 1'h1 : 1'h0;
-							in_irq_context = newval_iic;
+						if (in_irq_context == 1'h1 && reg_data_read == 0) begin
+							in_irq_context <= 1'h0;
+							mem_addr_ext_kernel_irq <= 0;
+							mem_addr_ext_user_irq <= 0;
 						end
 					end else if (task_memw_addr_buffer == 16'hFFFF) begin
 						clkbreak <= (|reg_data_read) ? 1'h1 : 1'h0;

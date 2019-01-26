@@ -1,4 +1,4 @@
-module bootloader_rom (
+(* romstyle = "M9K" *) module bootloader_rom (
     input [(addr_width-1):0] addr1, addr2,
     input clk, 
     output reg [(data_width-1):0] q1, q2

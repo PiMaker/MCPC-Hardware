@@ -13,7 +13,8 @@ bootloader:
 	cd src/bootloader; mscr ./entry.mscr ../../build/bootloader.ma --bootloader
 	sed -i '$$d' build/bootloader.ma # Remove last line
 	cat src/bootloader/asm.ma >> build/bootloader.ma # Append hand-crafted ASM
-	mcpc assemble --library=../Assembly/Libraries/base.mlib --library=../Assembly/Libraries/sram.mlib --library=../Assembly/Libraries/sram_paged.mlib build/bootloader.ma src/CPU/bootloader.hex --hex --length 65536 --debug-symbols
+	mcpc assemble --library=../Assembly/Libraries/base.mlib --library=../Assembly/Libraries/sram.mlib --library=../Assembly/Libraries/sram_paged.mlib build/bootloader.ma src/CPU/bootloader.mb --debug-symbols #--hex --length 65536
+	srec_cat src/CPU/bootloader.mb -binary -o src/CPU/bootloader.mif -mif 16
 
 
 ###############################################################################
@@ -149,6 +150,7 @@ $(OUTDIR)$(PROJECT).sta.rpt: $(OUTDIR)sta.chg $(OUTDIR)$(PROJECT).fit.rpt
 $(OUTDIR)smart.log: $(ASSIGNMENT_FILES)
 	cp -n DE10_Lite.SDC build/
 	ln -s ../src build/src || true
+	rm -rf build/db || true # Delete cached bootloader files
 	quartus_sh --determine_smart_action $(OUTDIR)$(PROJECT) -c $(PROJECT) > $(OUTDIR)smart.log
 
 ###################################################################
