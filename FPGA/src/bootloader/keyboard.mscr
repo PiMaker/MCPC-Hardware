@@ -39,7 +39,7 @@ func var kb_getKeyPressed(outptr_shiftKeyPressed) {
         }
 
         // Shift and Make/Break code support
-        if (retval == 0x0012) {
+        if (retval == 0x0012 | retval == 0x0059) {
             kb_shiftKeyPressed = ~kb_releaseKeyWasPressed;
             kb_releaseKeyWasPressed = false;
 

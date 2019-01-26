@@ -12,7 +12,7 @@
 
 #define PROMPT_INPUT_MAX_LENGTH 256
 
-global welcomeText = "Welcome to mVIRA OS, version 0.1\n(C) Stefan Reiter 2019, (tm) TheRealVira\nThis program comes with ABSOLUTELY NO WARRANTY.\n\n";
+global welcomeText = "Welcome to mVIRA OS, version 0.1.1\n(C) Stefan Reiter 2019, (tm) TheRealVira\nThis program comes with ABSOLUTELY NO WARRANTY.\n\n";
 global prompt = "mVIRA> ";
 
 func var main(argc, argp) {

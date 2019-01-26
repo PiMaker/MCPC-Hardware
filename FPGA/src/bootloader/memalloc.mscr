@@ -7,7 +7,7 @@
 
 #include "base.mscr"
 
-#define MEMALLOW_PAGE_NUM 0x1
+#define MEMALLOW_PAGE_NUM 0x2
 
 #define MEMALLOC_HEADER_LENGTH 3
 #define MEMALLOC_HEADER_OFFSET_SIZE 0
