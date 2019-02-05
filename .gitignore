@@ -1,4 +1,3 @@
 FPGA/build
 FPGA/a.out
-FPGA/icarus.out
-FPGA/waves.lxt
+.vscode
