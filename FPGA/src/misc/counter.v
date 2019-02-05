@@ -1,29 +1,19 @@
-//-----------------------------------------------------
-// Design Name : up_counter
-// File Name   : up_counter.v
-// Function    : Up counter
-// Coder   	   : Deepak
-//-----------------------------------------------------
-module counter    (
-out     ,  // Output of the counter
-enable  ,  // enable for counter
-clk     ,  // clock Input
-reset      // reset Input
+module counter (
+    out,
+    enable,
+    clk,
+    reset
 );
-//----------Output Ports--------------
-    output [31:0] out;
-//------------Input Ports--------------
-     input enable, clk, reset;
-//------------Internal Variables--------
-    reg [31:0] out;
-//-------------Code Starts Here-------
+
+output [31:0] out;
+input enable, clk, reset;
+
+reg [31:0] out;
+
 always @(posedge clk)
-if (reset) begin
-  out <= 31'b0 ;
-end else if (enable) begin
-  out <= out + 1;
-end
-
-
+    if (reset) begin
+        out <= 31'b0 ;
+    end else if (enable) begin
+        out <= out + 1;
+    end
 endmodule 
-

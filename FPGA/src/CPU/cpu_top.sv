@@ -212,22 +212,6 @@ module cpu(
 		.rdusedw(irq_count)
 	);
 
-	/*async_fifo u_async_fifo (
-		.wclk                    ( clk50      ),
-		.wrst_n                  ( !rst    ),
-		.winc                    ( ps2_data_en & irq_en      ),
-		.wdata                   ( {ps2_data,16'h000A}     ),
-		.rclk                    ( clk      ),
-		.rrst_n                  ( !rst    ),
-		.rinc                    ( irq_rd_en      ),
-
-		.wfull                   (      ),
-		.awfull                  (     ),
-		.rdata                   ( irq_dout     ),
-		.rempty                  (  irq_empty   ),
-		.arempty                 (    )
-	);*/
-
 	//assign irq_count = irq_empty ? 16'h00 : 16'hFF;
 	assign dbgDbg = ps2_data;
 
