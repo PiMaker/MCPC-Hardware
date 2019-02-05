@@ -1,10 +1,10 @@
+.PHONY: default
+default: program;
+
 help:
 	@echo "build:          Build .sof file with Quartus II"
 	@echo "program:        Program FPGA device via JTAG"
 	@echo "clean:          Clean unnecessary file and empty build/ directory"
-
-.PHONY: default
-default: build program;
 
 # Custom Altera-specific target
 OUTDIR = build/

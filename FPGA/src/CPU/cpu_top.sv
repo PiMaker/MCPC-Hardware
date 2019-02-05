@@ -1,3 +1,5 @@
+`define MCPC_VERSION 16'h0219
+
 // CPU States
 `define CPU_STATE_INS_LOAD 8'h00
 `define CPU_STATE_WAITING 8'h01
@@ -58,6 +60,9 @@ module cpu(
     output reg [7:0] fb_data,
     output reg [11:0] fb_addr,
     output reg fb_we,
+	output reg framebuffer_rd_en,
+	input wire [7:0] framebuffer_data_rd,
+	output wire [11:0] framebuffer_addr_rd,
 
 	//////////// PS2 ////////////
 	input [7:0] ps2_data,
@@ -195,9 +200,6 @@ module cpu(
 	reg irq_rd_en;
 	wire irq_empty;
 	wire [31:0] irq_dout;
-
-	// Debug stuff
-	//reg [31:0] irq_dbg_data_in = 32'h001C000A;
 
 	// Asynchronous FIFO
 	irq_fifo u_irq_fifo(
@@ -636,6 +638,8 @@ module cpu(
 				mem_read <= 1'h1;
 				task_memr_state <= task_memr_is_cfg ? 2 : 1;
 				bootloader_rom_addr_ovr <= reg_data_read - 16'hD000;
+				framebuffer_rd_en <= 1'h1;
+				framebuffer_addr_rd <= reg_data_read - 16'hE000;
 			end
             2: begin
 				if (task_memr_is_cfg) begin
@@ -643,7 +647,9 @@ module cpu(
 
 					if (reg_data_read >= 16'hD000 && reg_data_read <= 16'hD800) begin // TODO: Include full bootloader ROM somehow (maybe?)
 						task_memr_writeback_buffer = bootloader_rom_dout_ovr; // Bootloader ROM read
-					end else if (reg_data_read == 16'h8004) begin
+					end else if (reg_data_read == 16'h8000) begin
+						task_memr_writeback_buffer = `MCPC_VERSION;
+						end else if (reg_data_read == 16'h8004) begin
 						task_memr_writeback_buffer = mem_addr_ext_kernel;
 					end else if (reg_data_read == 16'h8800) begin
 						task_memr_writeback_buffer = mem_addr_ext_user;
@@ -654,7 +660,7 @@ module cpu(
 					end else if (reg_data_read == 16'hDFFF) begin
 						task_memr_writeback_buffer = 16'hED66;
 					end else if (reg_data_read >= 16'hE000 && reg_data_read <= 16'hED66) begin
-						task_memr_writeback_buffer = 0; // TODO: Framebuffer read
+						task_memr_writeback_buffer = framebuffer_data_rd;
 					end else if (reg_data_read == 16'h9000) begin
 						task_memr_writeback_buffer = irq_handler_addr;
 					end else if (reg_data_read == 16'h9001) begin
@@ -788,6 +794,8 @@ module cpu(
 		mem_write <= 0;
 		mem_writeaddr <= 0;
 		mem_writedata <= 0;
+
+		framebuffer_rd_en <= 0;
 
 		clkbreak <= 0;
 

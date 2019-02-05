@@ -84,7 +84,7 @@ module hsync(clk50, hsync_out, blank_out, newline_out);
 endmodule // hsync
 
 
-module vga_controller(clk50, rst, hsync_out, vsync_out, red_out, blue_out, green_out, fb_data, fb_addr, fb_we);
+module vga_controller(clk50, rst, hsync_out, vsync_out, red_out, blue_out, green_out, fb_data, fb_addr, fb_we, framebuffer_addr_rd, framebuffer_data_rd, framebuffer_rd_en);
 	input clk50;
 	input rst;
 	input [7:0] fb_data;
@@ -93,10 +93,13 @@ module vga_controller(clk50, rst, hsync_out, vsync_out, red_out, blue_out, green
 	output hsync_out, vsync_out;
 	output [3:0] red_out, blue_out, green_out;
 	wire line_clk, blank, hblank, vblank;
+	input wire [11:0] framebuffer_addr_rd;
+	output wire [7:0] framebuffer_data_rd;
+	input wire framebuffer_rd_en;
 
 	hsync   hs(clk50, hsync_out, hblank, line_clk);
 	vsync   vs(line_clk, vsync_out, vblank);
-	framebuffer   fb(clk50, rst, blank, red_out, green_out, blue_out, line_clk, vblank, fb_data, fb_addr, fb_we);
+	framebuffer   fb(clk50, rst, blank, red_out, green_out, blue_out, line_clk, vblank, fb_data, fb_addr, fb_we, framebuffer_addr_rd, framebuffer_data_rd, framebuffer_rd_en);
 
 	assign blank 	 = hblank || vblank;
 

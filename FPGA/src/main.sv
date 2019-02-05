@@ -118,6 +118,9 @@ hex_bus_display hex_bus_display_instance_5 (
 wire [7:0] fb_data_bus;
 wire [11:0] fb_addr_bus;
 wire fb_we;
+wire [11:0] framebuffer_addr_rd;
+wire [7:0] framebuffer_data_rd;
+wire framebuffer_rd_en;
 
 
 // VGA controller
@@ -131,7 +134,10 @@ vga_controller vga_controller_instance (
 	.green_out(VGA_G),
 	.fb_data(fb_data_bus),
 	.fb_addr(fb_addr_bus),
-	.fb_we(fb_we)
+	.fb_we(fb_we),
+	.framebuffer_addr_rd(framebuffer_addr_rd),
+	.framebuffer_data_rd(framebuffer_data_rd),
+	.framebuffer_rd_en(framebuffer_rd_en)
 );
 
 
@@ -225,6 +231,9 @@ cpu cpu_instance (
     .fb_data(fb_data_bus),
     .fb_addr(fb_addr_bus),
     .fb_we(fb_we),
+	.framebuffer_rd_en(framebuffer_rd_en),
+	.framebuffer_data_rd(framebuffer_data_rd),
+	.framebuffer_addr_rd(framebuffer_addr_rd),
 
 	.debugEnOut(debugEn),
 	.rstReq(rstReq),

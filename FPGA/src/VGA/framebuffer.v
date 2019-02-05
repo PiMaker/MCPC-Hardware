@@ -1,23 +1,30 @@
-module framebuffer(clk, rst, blank, red_out, green_out, blue_out, line_clk, vblank, framebuffer_data, framebuffer_addr, framebuffer_write_enable);
+module framebuffer(clk, rst, blank, red_out, green_out, blue_out, line_clk, vblank, framebuffer_data, framebuffer_addr, framebuffer_write_enable, framebuffer_addr_rd, framebuffer_data_rd, framebuffer_rd_en);
 	input clk, rst, blank, vblank, line_clk;
 	output wire [3:0] green_out, blue_out;
     output reg [3:0] red_out;
 
 	input [7:0] framebuffer_data;
-	input [11:0] framebuffer_addr;
-	input wire framebuffer_write_enable;
+	output wire [7:0] framebuffer_data_rd;
+	input [11:0] framebuffer_addr, framebuffer_addr_rd;
+	input wire framebuffer_write_enable, framebuffer_rd_en;
 	
 	// Framebuffer
 	wire [11:0] framebuffer_read_addr;
     wire [7:0] fb_data_read;
 
-    fb_ram	fb_ram_inst (
-        .clock ( clk ),
-        .data ( framebuffer_data ),
-        .rdaddress ( framebuffer_read_addr ),
-        .wraddress ( framebuffer_addr ),
-        .wren ( framebuffer_write_enable ),
-        .q ( fb_data_read )
+	// Dual-port RAM implementation
+	// Bus A: Reading for VGA
+	// Bus B: Writing, reading for rd output
+    fb_ram_dual	fb_ram_inst (
+		.address_a(framebuffer_read_addr),
+		.address_b(framebuffer_rd_en ? framebuffer_addr_rd : framebuffer_addr),
+		.clock(clk),
+		.data_a(8'h0),
+		.data_b(framebuffer_data),
+		.wren_a(1'h0),
+		.wren_b(framebuffer_write_enable),
+		.q_a(fb_data_read),
+		.q_b(framebuffer_data_rd)
 	);
 	
 	// ASCII logic
