@@ -1,7 +1,0 @@
-;autotest reg=0 val=42;
-
-func var main(argc, argp) {
-    var x = 43;
-    x = x - 1;
-    return x;
-}
