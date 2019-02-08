@@ -1,3 +1,4 @@
 FPGA/build
 FPGA/a.out
 .vscode
+FPGA/src/CPU/bootloader.mif
