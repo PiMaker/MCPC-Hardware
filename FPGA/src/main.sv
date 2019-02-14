@@ -193,7 +193,7 @@ PS2_Controller ps2_instance (
 );
 
 wire a, b;
-assign debug_bus = {3'h0, ps2_data_en, 2'h0, b, a, ps2_data};
+//assign debug_bus = {3'h0, ps2_data_en, 2'h0, b, a, ps2_data};
 
 
 // Main CPU instance
@@ -223,7 +223,7 @@ cpu cpu_instance (
 	.ps2_data(ps2_data),
 	.ps2_data_en(ps2_data_en),
 	
-	.DEBUG_BUS(),
+	.DEBUG_BUS(debug_bus),
 	.LEDR(LEDR),
 	.SW(SW),
 	.irq_count(irq_count),
