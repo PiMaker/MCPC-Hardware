@@ -40,8 +40,8 @@ module cpu(
 	input clkCore,
 	input clk50,
 	input rst,
-	
-	
+
+
 	//////////// SDRAM ////////////
 	output		    [12:0]		DRAM_ADDR,
 	output		     [1:0]		DRAM_BA,
@@ -54,7 +54,7 @@ module cpu(
 	output		          		DRAM_RAS_N,
 	output		          		DRAM_UDQM,
 	output		          		DRAM_WE_N,
-	
+
 
     //////////// VGA ////////////
     output reg [7:0] fb_data,
@@ -132,19 +132,19 @@ module cpu(
 	wire [15:0]
 		reg_data_read,
 		reg_data_write,
-		
+
 		reg_h_out,
 		reg_h_out_irq,
 		pc_out,
 
 		bus_datain;
-		
+
 	reg [3:0]
 		reg_addr_read,
 		reg_addr_write,
 		reg_addr_if,
 		reg_addr_dbg;
-		
+
 	wire
 		clk,
 
@@ -217,7 +217,7 @@ module cpu(
 	//assign irq_count = irq_empty ? 16'h00 : 16'hFF;
 	assign dbgDbg = ps2_data;
 
-	
+
 	// CORE COMPONENTS
 	wire [3:0] reg_addr_read_wire;
 	assign reg_addr_read_wire = debugRegRead ? reg_addr_dbg : (reg_if_en ? reg_addr_if : reg_addr_read);
@@ -335,7 +335,7 @@ module cpu(
 
 	// CPU clock logic
 	always @(posedge clk) begin
-	  
+
 		if (rst) begin
 
 			// Called on full CPU reset only
@@ -390,7 +390,7 @@ module cpu(
 					if (continue_execution) begin
 						// Only commit and increment PC if we didn't just leave an IRQ context
 						cpu_state <= (!in_irq_context && ins_started_in_irq) ? `CPU_STATE_PC_INC : `CPU_STATE_COMMIT;
-						
+
 						continue_execution_register <= 16'h0;
 						pc_inc <= 1'b0; // A bit messy but avoids triple increments during SET
 					end else begin
@@ -417,7 +417,7 @@ module cpu(
 					pc_inc <= 1'b1;
 					cpu_state <= `CPU_STATE_PC_INC;
 				end
-				
+
 				`CPU_STATE_PC_INC: begin
 					pc_inc <= 1'b0;
 					reg_we_approved <= 1'b0;
@@ -437,7 +437,7 @@ module cpu(
 							pc_dbg_virt <= pc_dbg_virt + 1'b1;
 						end
 					end
-					
+
 					reset_instruction_tasks();
 				end
 
