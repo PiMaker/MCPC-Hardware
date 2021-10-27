@@ -2,7 +2,7 @@
 
 The MCPC (MineCraft Personal Computer) project is a real-life adaption of a conceptual (and partially built) minecraft computer. It is based on an Altera MAX10 FPGA (Field Programmable Gate Array) and implements a fully custom 16-bit CPU architecture (RISC-style). See `doc/doc.pdf` or the related markdown files for more information on the architecture.
 
-![Retro Ad](/promo/ad_retro.jpg?raw=true)
+![Retro Ad](/promo/retro_ad_fixed.jpg)
 
 # Software
 
